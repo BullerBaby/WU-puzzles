@@ -23,7 +23,7 @@ export const BOARDS = {
   'embergard-1': Object.assign({
     name: 'Embergard 1 — Spinning Scythes',
     stagger:  ['g2', 'e7'], blocked: [], waystone: [],
-    starting: ['b2','b5','c2','c7','d4','d8','e6', 'g3','h2','h7','i2','i4','j7','k7'],
+    starting: ['b3','b6','c2','c7','d4','d8','e6', 'g3','h2','h7','i2','i4','j7','k7'],
   }, BOARD_SHAPE),
   'embergard-2': Object.assign({
     name: 'Embergard 2 — Chained Pillars',

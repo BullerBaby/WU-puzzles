@@ -164,43 +164,10 @@ export const GAMES = [
       },
     ],
   },
-
-  {
-    id: 'three-vs-five-stub',
-    title: 'Stub: 3-fighter warband on Spitewood 2',
-    description: "Placeholder showing variable fighter counts and a different board. Replace with a real game when notated.",
-    round: 1,
-    board: 'spitewood-2',
-    boardRotation: 0,
-    fighters: {
-      L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
-      A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
-      Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
-      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
-      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
-      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
-      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
-      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
-    },
-    steps: [
-      {
-        notation: '(R1 setup — deployment)',
-        title: 'Round 1 — opening deployment',
-        explanation: "3 vs 5 on Spitewood 2. Four waystones around corners, central stagger.",
-        state: {
-          positions: { L:'e1', A:'c1', Z:'g1', e1:'e9', e2:'c9', e3:'g9', e4:'i9', e5:'d8' },
-          wounds: {}, slain: [], inspired: [],
-          glory: [0, 0],
-          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
-          powerStep: [],
-        },
-      },
-    ],
-  },
   
   {
     id: 'Test 13may2026',
-    title: "'Headsmen's Curse vs Kurnoths Heralds'",
+    title: "Headsmen's Curse vs Kurnoths Heralds",
     description: "description",
     round: 1,
     board: 'spitewood-2',

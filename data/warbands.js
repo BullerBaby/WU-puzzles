@@ -23,7 +23,7 @@ export const WARBANDS = {
              { name: "Headsman's Axe", range: 1, dice: 3, damage: 3, type: 'hammer' },
            ],
            attacksInspired: [
-             { name: "Headsman's Axe", range: 1, dice: 4, damage: 3, type: 'hammer', note: 'Cleave' },
+             { name: "Headsman's Axe", range: 1, dice: 4, damage: 3, type: 'hammer', note: '' },
            ] },
       B: { label: 'B', name: 'Bearer of the Block',
            move: 3, wounds: 5, glory: 1,

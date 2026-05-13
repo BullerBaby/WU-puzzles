@@ -1,0 +1,2924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underworlds replay</title>
+<style>
+:root {
+  --bg: #FAF9F4;
+  --surface: #FFFFFF;
+  --surface-2: #F1EFE8;
+  --text: #2C2C2A;
+  --text-2: #5F5E5A;
+  --text-3: #888780;
+  --border: rgba(0,0,0,0.1);
+  --border-strong: rgba(0,0,0,0.22);
+  --accent: #185FA5;
+  --accent-bg: #E6F1FB;
+  --danger: #A32D2D;
+  --success: #04734E;
+  --me-fill: #85B7EB;
+  --me-stroke: #0C447C;
+  --me-text: #042C53;
+  --opp-fill: #F0997B;
+  --opp-stroke: #712B13;
+  --opp-text: #4A1B0C;
+  --inspired: #BA7517;
+  --stagger: #F6DBA8;
+  --stagger-border: #BA7517;
+  --waystone: #C0DD97;
+  --waystone-border: #3B6D11;
+  --blocked: #888780;
+  --blocked-pattern: #5F5E5A;
+  --your-zone: rgba(133, 183, 235, 0.07);
+  --opp-zone: rgba(240, 153, 123, 0.07);
+  --die-bg: #EBE9E0;
+  --die-bg-c: #FAC775;
+  --die-bg-d: #9FE1CB;
+  --die-blank: #D3D1C7;
+  --obj-bg: #E6F1FB;
+  --obj-text: #0C447C;
+  --obj-border: #B5D4F4;
+  --pow-bg: #FAEEDA;
+  --pow-text: #633806;
+  --pow-border: #FAC775;
+  --hidden: #BBBAB1;
+  --opp-soft-bg: rgba(240, 153, 123, 0.18);
+  --opp-soft-text: #4A1B0C;
+  --opp-soft-border: rgba(112, 43, 19, 0.35);
+  --tok-move: #4A89C9;
+  --tok-charge: #E69E3B;
+  --tok-guard: #6C6C66;
+  --tok-stagger: #C03030;
+  --tok-cleave: #913333;
+  --tok-defence: #2D8F4D;
+  --tok-other: #5F5E5A;
+  --treasure-bg: #E4B23E;
+  --treasure-border: #8C6D1F;
+  --treasure-text: #2C2C2A;
+  --aqua-bg: #4DB8A0;
+  --aqua-border: #1F6D5E;
+  --aqua-text: #FFFFFF;
+  --hex-feature-bg: #F0E5C5;
+  --hex-feature-border: rgba(140, 109, 31, 0.55);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161614;
+    --surface: #22221C;
+    --surface-2: #2B2B23;
+    --text: #E8E6D8;
+    --text-2: #B4B2A9;
+    --text-3: #888780;
+    --border: rgba(255,255,255,0.1);
+    --border-strong: rgba(255,255,255,0.22);
+    --accent: #85B7EB;
+    --accent-bg: rgba(133, 183, 235, 0.12);
+    --success: #6ECEAA;
+    --me-stroke: #B5D4F4;
+    --opp-stroke: #F5C4B3;
+    --stagger: #6E5520;
+    --stagger-border: #FAC775;
+    --waystone: #2D4A12;
+    --waystone-border: #97C459;
+    --blocked: #444441;
+    --blocked-pattern: #B4B2A9;
+    --your-zone: rgba(133, 183, 235, 0.06);
+    --opp-zone: rgba(240, 153, 123, 0.06);
+    --die-bg: #3A3A30;
+    --die-blank: #4A4A40;
+    --obj-bg: rgba(133, 183, 235, 0.15);
+    --obj-text: #B5D4F4;
+    --obj-border: rgba(133, 183, 235, 0.4);
+    --pow-bg: rgba(250, 199, 117, 0.15);
+    --pow-text: #FAC775;
+    --pow-border: rgba(250, 199, 117, 0.4);
+    --hidden: #4A4A40;
+    --opp-soft-bg: rgba(240, 153, 123, 0.15);
+    --opp-soft-text: #F5C4B3;
+    --opp-soft-border: rgba(240, 153, 123, 0.35);
+    --tok-move: #7AB0DD;
+    --tok-charge: #F2B95F;
+    --tok-guard: #9F9E97;
+    --tok-stagger: #E36464;
+    --tok-cleave: #C25151;
+    --tok-defence: #6FCB87;
+    --tok-other: #B4B2A9;
+    --treasure-bg: #D9A536;
+    --treasure-border: #FAC775;
+    --treasure-text: #161614;
+    --aqua-bg: #3D9B85;
+    --aqua-border: #6FCEB8;
+    --aqua-text: #161614;
+    --hex-feature-bg: #383224;
+    --hex-feature-border: rgba(212, 178, 88, 0.5);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+header { margin-bottom: 1.5rem; }
+h1 { font-size: 26px; font-weight: 500; margin: 0; }
+section { margin-bottom: 1.5rem; }
+
+.game-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.game-row label { font-size: 13px; color: var(--text-2); }
+select {
+  padding: 7px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font-size: 14px; font-family: inherit; cursor: pointer;
+}
+select:hover { border-color: var(--border-strong); }
+
+.board-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.board-area { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 0.5rem; }
+.board-side { flex: 1; min-width: 0; display: flex; justify-content: center; }
+.legend-side { flex: 0 0 200px; padding-top: 4px; }
+
+.legend-block { margin-bottom: 1rem; font-size: 12px; }
+.legend-block h4 { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); margin: 0 0 6px; }
+.legend-block ul { list-style: none; padding: 0; margin: 0; }
+.legend-block li { display: flex; align-items: center; gap: 8px; padding: 2px 0; line-height: 1.4; }
+.legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid transparent; }
+.legend-dot.me { background: var(--me-fill); border-color: var(--me-stroke); }
+.legend-dot.opp { background: var(--opp-fill); border-color: var(--opp-stroke); }
+.legend-dot.leader { border-width: 2.5px; }
+.legend-dot.inspired { background: var(--me-fill); border-color: var(--inspired); border-width: 2.5px; }
+.legend-hex { width: 16px; height: 14px; flex-shrink: 0; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.legend-hex.stagger { background: var(--stagger); }
+.legend-hex.waystone { background: var(--waystone); }
+.legend-hex.blocked { background: var(--blocked); }
+.legend-hex.starting { background: var(--surface-2); position: relative; }
+.legend-hex.starting::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; border-radius: 50%; background: var(--text-2); }
+
+.controls-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; flex-wrap: wrap;
+  padding-top: 14px; margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.stats { display: flex; align-items: center; gap: 18px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+.stats strong { color: var(--text); font-weight: 500; margin-left: 2px; }
+.pip { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
+.me-pip { background: var(--me-stroke); }
+.opp-pip { background: var(--opp-stroke); }
+.buttons { display: flex; align-items: center; gap: 8px; }
+button {
+  padding: 7px 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-size: 13px; font-family: inherit;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
+button:hover:not(:disabled) { background: var(--surface-2); border-color: var(--border-strong); }
+button:disabled { opacity: 0.4; cursor: default; }
+button.icon { padding: 7px 10px; min-width: 36px; }
+button.primary { background: var(--accent); color: #FFF; border-color: var(--accent); }
+button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; }
+@media (prefers-color-scheme: dark) {
+  button.primary { color: var(--bg); }
+}
+#step-indicator { font-size: 13px; color: var(--text-2); min-width: 56px; text-align: center; }
+
+.step-panel { background: var(--surface-2); padding: 14px 18px; border-radius: var(--radius); margin: 16px 0 12px; }
+.step-notation { font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; font-size: 14px; color: var(--accent); margin-bottom: 4px; word-break: break-word; }
+.step-title { font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
+.step-dice { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); }
+.step-dice:empty { display: none; }
+.dice-group { display: inline-flex; align-items: center; gap: 4px; }
+.dice-group .lbl { color: var(--text-3); margin-right: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+.die {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 5px;
+  background: var(--die-bg); border-radius: 4px;
+  font-family: ui-monospace, monospace; font-size: 11px; font-weight: 600; color: var(--text);
+}
+.die.crit { background: var(--die-bg-c); color: #633806; }
+.die.dodge, .die.shield { background: var(--die-bg-d); color: #04342C; }
+.die.blank { background: var(--die-blank); color: var(--text-3); }
+.dice-sep { margin: 0 2px; color: var(--text-3); }
+
+.power-step { margin-bottom: 10px; display: none; }
+.power-step.has-events { display: block; }
+.power-step-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+.power-events { display: flex; flex-wrap: wrap; gap: 5px; }
+.power-event {
+  font-size: 11px; padding: 3px 8px; border-radius: 4px;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  line-height: 1.5;
+}
+.power-event-side {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.4px;
+  padding-right: 5px; margin-right: 1px;
+  border-right: 0.5px solid currentColor;
+  opacity: 0.6;
+  font-weight: 500;
+}
+.power-event-prefix {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  opacity: 0.7;
+  margin-right: 1px;
+}
+.power-event.me { background: var(--obj-bg); color: var(--obj-text); border-color: var(--obj-border); }
+.power-event.opp { background: var(--opp-soft-bg); color: var(--opp-soft-text); border-color: var(--opp-soft-border); }
+.power-event.ability { font-style: italic; }
+
+.step-explanation { font-size: 14px; line-height: 1.6; margin: 0; }
+
+.poll-panel { margin-top: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.poll-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.poll-question { font-size: 12px; color: var(--text); font-weight: 500; }
+.poll-meta { font-size: 11px; color: var(--text-3); }
+.poll-options { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+.poll-option {
+  position: relative; padding: 6px 10px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 4px; cursor: pointer;
+  font-size: 12px; transition: background 0.15s, border-color 0.15s;
+  overflow: hidden; text-align: left; color: var(--text);
+  font-family: inherit;
+}
+.poll-option:hover { border-color: var(--accent); }
+.poll-option-bar {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--accent-bg); z-index: 0;
+  transition: width 0.3s;
+}
+.poll-option-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.poll-option-text { flex: 1; min-width: 0; word-break: break-word; }
+.poll-option-count { font-family: ui-monospace, monospace; color: var(--text-2); font-size: 11px; white-space: nowrap; }
+.poll-option.is-actual { border-color: var(--success); }
+.poll-option.is-actual .poll-option-text::after { content: " ✓ played"; color: var(--success); font-size: 10px; font-weight: 500; }
+.poll-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.poll-hint { font-size: 11px; color: var(--text-3); }
+.poll-reset { font-size: 11px; padding: 2px 8px; color: var(--text-3); background: transparent; border: none; cursor: pointer; }
+.poll-reset:hover { color: var(--danger); text-decoration: underline; }
+
+/* Round number sits alone in the column to the left of the board,
+ * vertically centred next to the middle ranks. The .board-with-stats
+ * wrapper keeps the stats column the same height as the board (not the
+ * full board-area, which would include the taller legend). */
+.board-with-stats {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  min-width: 0;
+}
+.stats-side {
+  flex: 0 0 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+}
+.round-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.round-banner .round-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.round-banner .round-number {
+  font-size: 42px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+/* Standalone stats strip: a horizontal bar tucked against its warband panel
+ * (opp strip below opp panel, you strip above your panel). */
+.stats-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border-left: 3px solid transparent;
+}
+.stats-strip.opp { border-left-color: var(--opp-stroke); margin: 4px 0 0; }
+.stats-strip.me  { border-left-color: var(--me-stroke);  margin: 0 0 4px; }
+.stats-strip-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.stats-strip.me  .stats-strip-label::before { content: '● '; color: var(--me-stroke); }
+.stats-strip.opp .stats-strip-label::before { content: '● '; color: var(--opp-stroke); }
+
+/* Activation tokens */
+.activations {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.activation-token {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset -1px -1px 0 rgba(0,0,0,0.18), inset 1px 1px 0 rgba(255,255,255,0.28);
+}
+.stats-strip.me  .activation-token,
+.side-panel.me   .activation-token { background: var(--me-stroke); }
+.stats-strip.opp .activation-token,
+.side-panel.opp  .activation-token { background: var(--opp-stroke); }
+.activation-token.used {
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* Glory badge (golden coin) */
+.glory-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #FBE198 0%, #E4B23E 55%, #B5851D 100%);
+  color: #2C2C2A;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  border: 1px solid #8C6D1F;
+  box-shadow: inset -1.5px -1.5px 0 rgba(0,0,0,0.18), inset 1.5px 1.5px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.1);
+  line-height: 1;
+}
+@media (prefers-color-scheme: dark) {
+  .glory-badge {
+    background: radial-gradient(circle at 30% 30%, #E4B23E 0%, #B5851D 55%, #6B5318 100%);
+    color: #161614;
+    border-color: #FAC775;
+  }
+}
+
+.side-panel {
+  background: var(--surface-2);
+  padding: 8px 12px 10px;
+  border-radius: var(--radius);
+  border-left: 3px solid transparent;
+}
+.side-panel.opp { border-left-color: var(--opp-stroke); margin-bottom: 10px; }
+.side-panel.me  { border-left-color: var(--me-stroke);  margin-top: 10px; }
+.hand-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+.hand-header-left { display: flex; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; flex: 1; min-width: 0; }
+.hand-label { font-size: 12px; font-weight: 500; color: var(--text); }
+.side-panel.me  .hand-label::before { content: "● "; color: var(--me-stroke); }
+.side-panel.opp .hand-label::before { content: "● "; color: var(--opp-stroke); }
+
+/* Deck pair + plot cards in the warband panel header */
+.warband-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+.warband-meta:empty { display: none; }
+.deck-pair {
+  font-style: italic;
+}
+.deck-pair::before {
+  content: 'Deck: ';
+  font-style: normal;
+  color: var(--text-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 2px;
+}
+.plot-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+.plot-chips::before {
+  content: 'Plots:';
+  color: var(--text-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 2px;
+}
+.plot-chip {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-left-width: 3px;
+  white-space: nowrap;
+  font-style: normal;
+}
+.side-panel.me  .plot-chip { border-left-color: var(--me-stroke); }
+.side-panel.opp .plot-chip { border-left-color: var(--opp-stroke); }
+.hand-counts { display: inline-flex; gap: 4px; }
+.hand-pill { font-size: 11px; padding: 1px 7px; border-radius: 10px; line-height: 1.5; }
+.hand-pill.obj { background: var(--obj-bg); color: var(--obj-text); }
+.hand-pill.pow { background: var(--pow-bg); color: var(--pow-text); }
+.hand-group { margin-bottom: 4px; }
+.hand-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-3); margin-bottom: 4px; }
+.hand-cards { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.hand-cards:empty::after { content: "—"; color: var(--text-3); font-size: 11px; }
+.card-chip {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px;
+  line-height: 1.5; max-width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-chip.obj { background: var(--obj-bg); color: var(--obj-text); border: 0.5px solid var(--obj-border); }
+.card-chip.power { background: var(--pow-bg); color: var(--pow-text); border: 0.5px solid var(--pow-border); }
+.card-chip.hidden { background: var(--hidden); color: transparent; width: 18px; padding: 2px 0; user-select: none; }
+
+.log-section { margin-top: 1rem; }
+.log-label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+.notation-line { font-family: ui-monospace, monospace; font-size: 12px; padding: 4px 10px; border-radius: 4px; color: var(--text-2); cursor: pointer; line-height: 1.65; }
+.notation-line:hover { background: var(--surface-2); }
+.notation-line.current { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+
+.custom-section { margin-top: 1.25rem; }
+.custom-details {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 0 1.25rem;
+}
+.custom-details[open] { padding-bottom: 1rem; }
+.custom-details summary {
+  padding: 0.85rem 0; cursor: pointer; font-size: 14px; font-weight: 500;
+  user-select: none; list-style: none; display: flex; align-items: center; gap: 8px;
+}
+.custom-details summary::-webkit-details-marker { display: none; }
+.custom-details summary::before {
+  content: "▸"; font-size: 10px; color: var(--text-3);
+  transition: transform 0.15s;
+}
+.custom-details[open] summary::before { transform: rotate(90deg); }
+.custom-details summary:hover { color: var(--accent); }
+.custom-body { padding-top: 0.5rem; }
+.custom-help { font-size: 12px; color: var(--text-2); margin: 0 0 0.6rem; line-height: 1.5; }
+.custom-help code { font-family: ui-monospace, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 11px; color: var(--text); }
+#custom-input {
+  width: 100%; font-family: ui-monospace, monospace; font-size: 12px;
+  padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); resize: vertical; min-height: 180px;
+  line-height: 1.5;
+}
+#custom-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.custom-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.6rem; }
+.custom-status {
+  margin-top: 0.6rem; font-size: 12px; min-height: 18px;
+  white-space: pre-wrap; line-height: 1.4;
+}
+.custom-status.success { color: var(--success); }
+.custom-status.error { color: var(--danger); font-family: ui-monospace, monospace; }
+
+.docs-section { margin-top: 2.5rem; padding-top: 1.75rem; border-top: 1px solid var(--border); }
+.docs-section h2 { font-size: 18px; font-weight: 500; margin: 0 0 1rem; }
+.docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem 1.5rem; }
+.docs-block { font-size: 13px; line-height: 1.75; }
+.docs-block h3 { font-size: 12px; font-weight: 500; color: var(--text-3); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.6px; }
+.docs-block code { font-family: ui-monospace, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 12px; color: var(--text); }
+
+.hex-poly { fill: var(--surface-2); stroke: var(--border); stroke-width: 0.5; }
+.hex-poly.your-zone { fill: var(--your-zone); }
+.hex-poly.opp-zone { fill: var(--opp-zone); }
+.hex-poly.stagger { fill: var(--stagger); stroke: var(--stagger-border); stroke-width: 0.8; }
+.hex-poly.waystone { fill: var(--waystone); stroke: var(--waystone-border); stroke-width: 1.2; }
+.hex-poly.blocked { fill: var(--blocked); stroke: var(--blocked-pattern); stroke-width: 0.8; }
+/* Tint hexes that hold a feature token. Plain hexes only — terrain types (stagger / waystone / blocked) keep their look. */
+.hex-poly.has-feature:not(.stagger):not(.waystone):not(.blocked) {
+  fill: var(--hex-feature-bg);
+  stroke: var(--hex-feature-border);
+  stroke-width: 1.0;
+}
+.starting-dot { fill: var(--text-3); }
+.coord-label { font-size: 9px; fill: var(--text-3); font-family: ui-monospace, monospace; }
+.fighter { transition: transform 0.7s cubic-bezier(.5,.1,.3,1.05), opacity 0.5s; }
+.fighter.slain { opacity: 0.22; }
+.fighter.inspired circle.bg { stroke: var(--inspired) !important; stroke-width: 3 !important; }
+.tok-circle { stroke: var(--surface); stroke-width: 0.6; }
+.tok-label { font-size: 5.5px; fill: #FFFFFF; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
+
+.legend-tok { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: #FFF; font-size: 8px; font-weight: 700; font-family: ui-monospace, monospace; border: 0.5px solid rgba(0,0,0,0.15); }
+.legend-tok.move { background: var(--tok-move); }
+.legend-tok.charge { background: var(--tok-charge); }
+.legend-tok.guard { background: var(--tok-guard); }
+.legend-tok.stagger { background: var(--tok-stagger); }
+.legend-tok.cleave { background: var(--tok-cleave); }
+.legend-tok.defence { background: var(--tok-defence); }
+
+.legend-feat { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; font-family: ui-monospace, monospace; }
+.legend-feat.treasure { background: var(--treasure-bg); color: var(--treasure-text); border: 1px solid var(--treasure-border); }
+.legend-feat.aqua { background: var(--aqua-bg); color: var(--aqua-text); border: 1px solid var(--aqua-border); }
+.legend-feat.delved { background: var(--treasure-bg); color: var(--treasure-text); border: 2px solid var(--danger); }
+
+.feature-token { pointer-events: none; }
+.feature-circle.treasure { fill: var(--treasure-bg); stroke: var(--treasure-border); stroke-width: 0.6; }
+.feature-circle.aqua { fill: var(--aqua-bg); stroke: var(--aqua-border); stroke-width: 0.6; }
+.feature-circle.delved { stroke: var(--danger); stroke-width: 1.4; }
+.feature-label { font-size: 4.8px; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
+.feature-label.treasure { fill: var(--treasure-text); }
+.feature-label.aqua { fill: var(--aqua-text); }
+@keyframes dmgPop {
+  0% { opacity: 0; transform: translateY(0) scale(0.7); }
+  20% { opacity: 1; transform: translateY(-6px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+}
+.dmg-flash { animation: dmgPop 1.5s ease-out forwards; transform-origin: center; transform-box: fill-box; }
+
+/* ===== Fighter cards (inside the side panels) ===== */
+.fighter-cards-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.fighter-cards-row:empty { display: none; }
+
+.fighter-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px 6px 4px;
+  flex: 1 1 90px;
+  min-width: 0;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  transition: border-color 0.15s, transform 0.15s, opacity 0.3s;
+  cursor: default;
+}
+.fighter-card:hover { border-color: var(--border-strong); z-index: 20; }
+.fighter-card.me { border-left: 3px solid var(--me-stroke); }
+.fighter-card.opp { border-left: 3px solid var(--opp-stroke); }
+.fighter-card.inspired { box-shadow: inset 0 0 0 1px var(--inspired); }
+.fighter-card.slain {
+  opacity: 0.42;
+  filter: grayscale(0.9);
+  border-style: dashed;
+  background: var(--surface-2);
+}
+.fighter-card.slain:hover { opacity: 0.65; }
+.fighter-card.slain .fighter-card-badge {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--text-2);
+}
+.fighter-card.slain .fighter-card-upgrades { opacity: 0.6; }
+
+.fighter-card-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.fighter-card-badge {
+  flex-shrink: 0;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 9px;
+  line-height: 1;
+}
+.fighter-card.me .fighter-card-badge {
+  background: var(--me-fill);
+  color: var(--me-text);
+  border: 1.5px solid var(--me-stroke);
+}
+.fighter-card.opp .fighter-card-badge {
+  background: var(--opp-fill);
+  color: var(--opp-text);
+  border: 1.5px solid var(--opp-stroke);
+}
+.fighter-card.leader .fighter-card-badge { border-width: 2.5px; }
+.fighter-card.inspired .fighter-card-badge { border-color: var(--inspired); }
+
+.fighter-card-name { display: none; }
+
+.fighter-card-wounds {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 9px;
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  color: #FFF;
+  background: var(--danger);
+  border-radius: 9px;
+  padding: 0 5px;
+  min-width: 17px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.fighter-card-wounds[hidden] { display: none; }
+
+.fighter-card-upgrades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.fighter-card-upgrades:empty { display: none; }
+.upgrade-chip {
+  font-size: 9px;
+  padding: 0 5px;
+  border-radius: 3px;
+  line-height: 1.55;
+  background: var(--pow-bg);
+  color: var(--pow-text);
+  border: 0.5px solid var(--pow-border);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Warscroll abilities row (inside each side panel) */
+.abilities-list { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.abilities-list:empty::after { content: "—"; color: var(--text-3); font-size: 11px; }
+.ability-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  padding: 2px 9px 2px 6px;
+  border-radius: 12px;
+  line-height: 1.5;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.15s;
+}
+.ability-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ability-token {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset -1px -1px 0 rgba(0,0,0,0.18), inset 1px 1px 0 rgba(255,255,255,0.28);
+}
+.side-panel.me  .ability-chip .ability-token { background: var(--me-stroke); }
+.side-panel.opp .ability-chip .ability-token { background: var(--opp-stroke); }
+.ability-chip.used {
+  color: var(--text-3);
+  text-decoration: line-through;
+  opacity: 0.6;
+  border-style: dashed;
+}
+.ability-chip.used .ability-token {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* Hover tooltip */
+.fighter-tooltip {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  top: calc(100% + 6px);
+  min-width: 220px;
+  max-width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s, visibility 0.12s;
+}
+.fighter-card:hover .fighter-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+.fighter-tooltip-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.fighter-tooltip-name .leader-tag {
+  font-size: 9px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.fighter-tooltip-name .inspired-tag {
+  font-size: 9px;
+  color: #FFF;
+  background: var(--inspired);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.fighter-tooltip-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-2);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.fighter-tooltip-stats .stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.fighter-tooltip-stats .stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-3);
+}
+.fighter-tooltip-stats .stat-value {
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 12px;
+}
+.fighter-tooltip-stats .stat-suffix {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-2);
+  background: var(--die-bg-d);
+  color: #04342C;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 1px;
+  line-height: 1;
+}
+@media (prefers-color-scheme: dark) {
+  .fighter-tooltip-stats .stat-suffix { color: var(--die-bg-d); background: rgba(159, 225, 203, 0.15); }
+}
+.fighter-tooltip-section-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+.attack-profile {
+  padding: 5px 7px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  margin-bottom: 3px;
+}
+.attack-profile:last-child { margin-bottom: 0; }
+.attack-profile.inspired-profile {
+  background: var(--pow-bg);
+  border: 0.5px solid var(--pow-border);
+}
+.attack-profile-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.attack-profile-name .star {
+  color: var(--inspired);
+  font-size: 10px;
+}
+.attack-profile-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--text-2);
+}
+.attack-profile-stats .ap-stat strong { color: var(--text); font-weight: 600; }
+.attack-profile-stats .ap-suffix {
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 2px;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+.attack-profile-stats .ap-suffix.sword  { background: #CCE0F2; color: #1F4878; }
+.attack-profile-stats .ap-suffix.hammer { background: #FAD5C0; color: #7A3413; }
+@media (prefers-color-scheme: dark) {
+  .attack-profile-stats .ap-suffix.sword  { background: rgba(135, 175, 220, 0.18); color: #B5D4F4; }
+  .attack-profile-stats .ap-suffix.hammer { background: rgba(220, 140, 110, 0.18); color: #F5C4B3; }
+}
+.attack-profile-empty {
+  font-size: 11px;
+  color: var(--text-3);
+  font-style: italic;
+}
+
+footer { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); }
+footer code { font-family: ui-monospace, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; color: var(--text-2); }
+
+@media (max-width: 720px) {
+  .container { padding: 1.5rem 1rem 2rem; }
+  h1 { font-size: 22px; }
+  .board-area { flex-direction: column; }
+  .legend-side { flex: 1; width: 100%; padding-top: 12px; border-top: 1px solid var(--border); }
+  .legend-side > .legend-block { display: inline-block; vertical-align: top; min-width: 160px; margin-right: 1rem; }
+  .hands-panel { grid-template-columns: 1fr; }
+  .stats { gap: 12px; font-size: 12px; }
+  .buttons { gap: 6px; }
+  button { padding: 6px 10px; font-size: 12px; }
+  #custom-input { font-size: 11px; }
+  .fighter-card { flex: 1 1 75px; max-width: none; padding: 3px 5px 4px; }
+  .fighter-tooltip { min-width: 180px; max-width: 240px; }
+  /* On mobile the stats column becomes a slim row, round only */
+  .board-with-stats { flex-direction: column; }
+  .stats-side {
+    flex: 1; width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stats-side .round-banner { flex-direction: row; gap: 6px; align-items: baseline; }
+  .stats-side .round-banner .round-number { font-size: 24px; }
+  .stats-strip { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header>
+  <h1>Warhammer Underworlds Puzzles</h1>
+</header>
+
+<section class="game-row">
+  <label for="game-select">Game:</label>
+  <select id="game-select"></select>
+</section>
+
+<section class="board-card">
+
+  <div class="side-panel opp">
+    <div class="hand-header">
+      <div class="hand-header-left">
+        <span class="hand-label">Opponent's warband</span>
+        <div class="warband-meta" id="opp-warband-meta"></div>
+      </div>
+      <span class="hand-counts">
+        <span class="hand-pill obj"><strong id="opp-obj-count">0</strong> obj</span>
+        <span class="hand-pill pow"><strong id="opp-pow-count">0</strong> pow</span>
+      </span>
+    </div>
+    <div id="fighter-cards-opp" class="fighter-cards-row opp"></div>
+    <div class="hand-group" id="abilities-group-opp" hidden>
+      <div class="hand-group-label">Abilities</div>
+      <div class="abilities-list" id="abilities-opp"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Objectives</div>
+      <div class="hand-cards" id="opp-obj-cards"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Power</div>
+      <div class="hand-cards" id="opp-pow-cards"></div>
+    </div>
+  </div>
+
+  <div class="stats-strip opp">
+    <span class="stats-strip-label">Opponent</span>
+    <span class="activations" id="opp-activations"></span>
+    <span class="glory-badge" id="glory-opp" title="Opponent glory">0</span>
+  </div>
+
+  <div class="board-area">
+    <div class="board-with-stats">
+      <div class="stats-side">
+        <div class="round-banner">
+          <span class="round-label">Round</span>
+          <span class="round-number" id="current-round">1</span>
+        </div>
+      </div>
+      <div class="board-side">
+        <svg id="board-svg" width="100%" viewBox="0 0 320 280" role="img" aria-label="Underworlds replay board"></svg>
+      </div>
+    </div>
+    <aside class="legend-side" id="legend-side"></aside>
+  </div>
+
+  <div class="stats-strip me">
+    <span class="stats-strip-label">You</span>
+    <span class="activations" id="my-activations"></span>
+    <span class="glory-badge" id="glory-me" title="Your glory">0</span>
+  </div>
+
+  <div class="side-panel me">
+    <div class="hand-header">
+      <div class="hand-header-left">
+        <span class="hand-label">Your warband</span>
+        <div class="warband-meta" id="me-warband-meta"></div>
+      </div>
+      <span class="hand-counts">
+        <span class="hand-pill obj"><strong id="my-obj-count">0</strong> obj</span>
+        <span class="hand-pill pow"><strong id="my-pow-count">0</strong> pow</span>
+      </span>
+    </div>
+    <div id="fighter-cards-me" class="fighter-cards-row me"></div>
+    <div class="hand-group" id="abilities-group-me" hidden>
+      <div class="hand-group-label">Abilities</div>
+      <div class="abilities-list" id="abilities-me"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Objectives</div>
+      <div class="hand-cards" id="my-obj-cards"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Power</div>
+      <div class="hand-cards" id="my-pow-cards"></div>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <div class="buttons">
+      <button id="btn-prev" type="button">← Prev</button>
+      <span id="step-indicator">1 / 1</span>
+      <button id="btn-next" type="button">Next →</button>
+      <button id="btn-play" type="button">▶ Play</button>
+      <button id="btn-rotate" class="icon" type="button" title="Rotate board 180°">↻</button>
+    </div>
+  </div>
+
+  <div class="step-panel">
+    <div class="step-notation" id="curr-notation"></div>
+    <div class="step-title" id="curr-title"></div>
+    <div class="step-dice" id="curr-dice"></div>
+    <div class="power-step" id="power-step">
+      <div class="power-step-label">Power step</div>
+      <div class="power-events" id="power-events"></div>
+    </div>
+    <p class="step-explanation" id="curr-explanation"></p>
+  </div>
+
+  <div class="poll-panel" id="poll-panel" hidden>
+    <div class="poll-header">
+      <span class="poll-question" id="poll-question"></span>
+      <span class="poll-meta" id="poll-meta"></span>
+    </div>
+    <div class="poll-options" id="poll-options"></div>
+    <div class="poll-actions">
+      <span class="poll-hint">Click an option to vote — totals stay on this device.</span>
+      <button class="poll-reset" id="poll-reset" type="button">Reset votes</button>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-label">Notation log — click to jump (←/→/space also work)</div>
+    <div id="notation-log"></div>
+  </div>
+</section>
+
+<section class="custom-section">
+  <details class="custom-details" id="custom-details">
+    <summary>Load your own game (paste JSON)</summary>
+    <div class="custom-body">
+      <p class="custom-help">
+        Paste a game as JSON below, then click <strong>Load game</strong>. The easiest start is <strong>Use current as template</strong>: it dumps the game you're viewing into the box so you can edit it. Custom games are saved in your browser (<code>localStorage</code>) and added to the dropdown. Single game or a JSON array of games both work. Required fields: <code>title</code>, <code>board</code>, <code>fighters</code>, <code>steps</code>. See the docs below for the full data shape.
+      </p>
+      <textarea id="custom-input" rows="14" spellcheck="false" placeholder='{ "title": "My game", "board": "embergard-1", "round": 1, "fighters": { ... }, "steps": [ ... ] }'></textarea>
+      <div class="custom-buttons">
+        <button id="btn-load-custom" class="primary" type="button">Load game</button>
+        <button id="btn-template" type="button">Use current as template</button>
+        <button id="btn-download" type="button">Download current as JSON</button>
+        <button id="btn-clear-custom" type="button">Clear saved customs</button>
+      </div>
+      <div id="custom-status" class="custom-status"></div>
+    </div>
+  </details>
+</section>
+
+<section class="docs-section">
+  <h2>Notation reference</h2>
+  <div class="docs-grid">
+    <div class="docs-block">
+      <h3>Coordinates</h3>
+      Files <code>a–k</code> left to right, ranks <code>1–9</code> from your edge (rank 1) up to opponent's (rank 9).
+    </div>
+    <div class="docs-block">
+      <h3>Fighters</h3>
+      Yours UPPERCASE, opponent lowercase. <code>↑F</code> = inspired. Leaders have thicker outline.
+    </div>
+    <div class="docs-block">
+      <h3>Actions</h3>
+      <code>-</code> move &nbsp; <code>&gt;</code> charge &nbsp; <code>x</code> attack &nbsp; <code>~</code> disengage &nbsp; <code>^</code> guard &nbsp; <code>:</code> teleport &nbsp; <code>@</code> end-hex
+    </div>
+    <div class="docs-block">
+      <h3>Attack results</h3>
+      <code>×N</code> damage &nbsp; <code>†</code> slain &nbsp; <code>!</code> crit &nbsp; <code>0</code> miss &nbsp; <code>/N</code> defender saves
+    </div>
+    <div class="docs-block">
+      <h3>Dice</h3>
+      Attack: <code>H</code> hammer, <code>S</code> sword, <code>C</code> crit, <code>-</code> blank.<br>
+      Defence: <code>D</code> dodge, <code>Sh</code> shield, <code>C</code> crit, <code>-</code> blank.
+    </div>
+    <div class="docs-block">
+      <h3>Hands</h3>
+      <code>hand: { me: { objectives: [...], power: [...] }, opp: { objectives: N, power: N } }</code>. Arrays show as named chips, numbers as face-down placeholders.
+    </div>
+    <div class="docs-block">
+      <h3>Power step events</h3>
+      Per step, <code>powerStep: [{ side, type, name, kind?, target? }]</code>. <code>type</code>: <code>card</code> | <code>ability</code> | <code>reaction</code>. <code>kind</code>: <code>upgrade</code> | <code>gambit</code>.
+    </div>
+    <div class="docs-block">
+      <h3>Action tokens</h3>
+      Per step, <code>tokens: { FighterCode: ['charge', 'guard'] }</code>. Built-in types: <code>move</code>, <code>charge</code>, <code>guard</code>, <code>stagger</code>, <code>cleave</code>, <code>defence</code>. Any other string renders with its first letter on a neutral chip. Clear tokens at end-of-round.
+    </div>
+    <div class="docs-block">
+      <h3>Features</h3>
+      Per step, <code>features: [{ type, hex, label?, delved? }]</code>. Types: <code>treasure</code> (use <code>label: "1"</code>–<code>"5"</code>) and <code>aqua</code> (Aqua Ghyranis). Hexes with feature tokens get a warm tint so they stand out. Set <code>hex: null</code> when off-board. Add <code>delved: true</code> to outline the token in red (the number still shows inside).
+    </div>
+    <div class="docs-block">
+      <h3>Polls</h3>
+      Per step, <code>poll: { question?, options: [...], actual? }</code>. A vote panel appears when a step has a poll; clicking an option adds 1 vote. Tallies are saved in the browser's <code>localStorage</code> per game-id + step-index, so they persist across reloads but stay local to that device (no server, no cross-device sync). Optional <code>actual</code> index marks which option was played — gets a green ✓ once votes exist.
+    </div>
+    <div class="docs-block">
+      <h3>Fighter cards & stats</h3>
+      Each warband panel (opponent's above the board, yours below) shows fighter cards alongside the hand. Cards show wounds taken and upgrades; hover for full stats and attack profiles. Per fighter, optional fields: <code>move</code>, <code>wounds</code>, <code>glory</code>, <code>save: { dice, type }</code> (type: <code>block</code> or <code>dodge</code>), <code>attacks: [{ name, range, dice, damage, type, cleave?, note? }]</code> (attack type: <code>sword</code> or <code>hammer</code>), <code>attacksInspired: [...]</code>.
+    </div>
+    <div class="docs-block">
+      <h3>Upgrades</h3>
+      Per step, <code>upgrades: { FighterCode: ['Upgrade name', ...] }</code>. Shown as chips on the fighter card. Persists per step like <code>tokens</code> — repeat in each step the upgrade is in play.
+    </div>
+    <div class="docs-block">
+      <h3>Warscroll abilities</h3>
+      Game-level <code>abilities: { me: ['Ability name', ...], opp: [...] }</code> lists each warband's named abilities. Per step, <code>abilitiesUsed: { me: ['Ability name', ...], opp: [...] }</code> marks which have been used so far. Shown as chips with a side-colored round token; when used, the token is removed and the name is struck through.
+    </div>
+    <div class="docs-block">
+      <h3>Warbands registry</h3>
+      Define a warband once in the <code>WARBANDS</code> object (at the top of the script): <code>{ id: { name, fighters: { code: { label, name?, ... } }, abilities: [...] } }</code>. A game can then use <code>warbands: { me: 'id-a', opp: 'id-b' }</code> in place of inlining <code>fighters</code> and <code>abilities</code>. Inline <code>fighters[code]</code> and <code>abilities</code> still work and merge over the warband definition, so you can override a single fighter's stats per game without copying the whole warband.
+    </div>
+    <div class="docs-block">
+      <h3>Step inheritance (diff mode)</h3>
+      A step can declare its state as <code>state: { ... }</code> (full snapshot — old style) or <code>diff: { ... }</code> (merged onto the previous step's expanded state). In diff mode, OBJECT fields (<code>positions</code>, <code>wounds</code>, <code>tokens</code>, <code>upgrades</code>, <code>abilitiesUsed</code>, <code>hand</code>) deep-merge — only the keys you specify change. ARRAY fields (<code>slain</code>, <code>inspired</code>, <code>features</code>) and <code>glory</code> replace when present. <code>powerStep</code> never inherits (defaults to <code>[]</code>). Use <code>null</code> as a field value to reset to default — e.g. <code>tokens: null</code> at end of round.
+    </div>
+    <div class="docs-block">
+      <h3>Activations & glory</h3>
+      Each side has 4 activation tokens shown in the panel header. Per step, <code>activationsUsed: { me: N, opp: N }</code> sets how many have been used so far — the right-most tokens go hollow. Reset with <code>activationsUsed: null</code> at end of round. The golden coin next to the tokens reads from <code>state.glory[0]</code> (yours) and <code>state.glory[1]</code> (opp). The current round number shows centred at the top of the board card.
+    </div>
+    <div class="docs-block">
+      <h3>Decks & plot cards</h3>
+      Per game, <code>decks: { me: { pair, plots }, opp: { pair, plots } }</code>. <code>pair</code> is a string like the deck pair name (e.g. "Hunter's Cunning / Stalking Shadows"); <code>plots</code> is an array of up to 2 plot-card names. Shown in the warband panel header below the side label — deck pair as italic text, plot cards as small side-colored chips.
+    </div>
+    <div class="docs-block">
+      <h3>Game schema</h3>
+      <code>{ title, description?, board, round, boardRotation?, warbands?: { me, opp }, fighters?: {...}, abilities?: { me, opp }, decks?: { me, opp }, steps: [{notation, title, explanation, dice?, anim?, poll?, state | diff}] }</code>. State fields: <code>positions, wounds, slain, inspired, glory, tokens, upgrades, abilitiesUsed, activationsUsed, features, hand, powerStep</code>.
+    </div>
+    <div class="docs-block">
+      <h3>Board rotation</h3>
+      <code>boardRotation: 180</code> mirrors special-hex positions, or press <code>↻</code> / <code>R</code>.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Single-file replay tool. Built-in games live in the <code>GAMES</code> object at the top of the script; custom games loaded via the panel above are stored in your browser. Drop the file on any static host (GitHub Pages, Netlify, Cloudflare Pages). Board shapes and special-hex positions are best-effort approximations — adjust to match your physical boards.</p>
+</footer>
+
+</div>
+
+<script>
+(function() {
+'use strict';
+
+/* ==================== BOARDS ==================== */
+const BOARD_SHAPE = {
+  cols: 11, rows: 9,
+  excluded: ['a1','b1','j1','k1','a8','a9','b9','c9','e9','g9','i9','k9','j9','k8'],
+};
+
+const BOARDS = {
+  'embergard-1': Object.assign({
+    name: 'Embergard 1 — Spinning Scythes',
+    stagger:  ['g2', 'e7'], blocked: [], waystone: [],
+    starting: ['b2','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+  }, BOARD_SHAPE),
+  'embergard-2': Object.assign({
+    name: 'Embergard 2 — Chained Pillars',
+    stagger:  ['b3', 'j7'], blocked: ['e4', 'g6'], waystone: [],
+    starting: ['c1','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+  }, BOARD_SHAPE),
+  'spitewood-1': Object.assign({
+    name: 'Spitewood 1 — brown',
+    stagger:  ['d3', 'h7'], blocked: [], waystone: ['c3', 'i7'],
+    starting: ['c1','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+  }, BOARD_SHAPE),
+  'spitewood-2': Object.assign({
+    name: 'Spitewood 2 — green',
+    stagger:  ['f5'], blocked: [], waystone: ['c3', 'i3', 'c7', 'i7'],
+    starting: ['c1','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+  }, BOARD_SHAPE),
+};
+
+/* ==================== WARBANDS ====================
+ * Shared warband definitions. Each entry has a name, a fighters object
+ * (without `side` — that's assigned per-game), and an optional abilities
+ * list. A game can reference warbands via `warbands: { me: id, opp: id }`
+ * instead of inlining `fighters` + `abilities`. Per-game `fighters`/`abilities`
+ * still work and override (or augment) anything from the warband. */
+const WARBANDS = {
+  'headsmens-curse': {
+    name: "Headsmen's Curse",
+    abilities: ['Trial and Execution', 'Discorporate', 'Whet the Blade'],
+    fighters: {
+      W: { label: 'W', name: 'Wielder of the Blade', isLeader: true,
+           move: 3, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: "Headsman's Axe", range: 1, dice: 3, damage: 3, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: "Headsman's Axe", range: 1, dice: 4, damage: 3, type: 'hammer', note: 'Cleave' },
+           ] },
+      B: { label: 'B', name: 'Bearer of the Block',
+           move: 3, wounds: 5, glory: 1,
+           save: { dice: 2, type: 'block' },
+           attacks: [
+             { name: 'Heavy Block', range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: 'Heavy Block', range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      S: { label: 'S', name: 'Scriptor — range 3',
+           move: 4, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Cursed Quill', range: 3, dice: 2, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { name: 'Cursed Quill', range: 3, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      H: { label: 'H', name: 'Sharpener of the Blade',
+           move: 4, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Whetted Knife', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { name: 'Whetted Knife', range: 1, dice: 3, damage: 3, type: 'sword' },
+           ] },
+    },
+  },
+  'generic-4': {
+    name: 'Generic 4-fighter warband',
+    abilities: ["Veteran's Resolve", 'Tactical Withdrawal'],
+    fighters: {
+      o1: { label: 'o1', name: 'Opp leader', isLeader: true,
+            move: 3, wounds: 5, glory: 2,
+            save: { dice: 2, type: 'block' },
+            attacks: [
+              { name: 'Two-handed Sword', range: 1, dice: 3, damage: 3, type: 'sword' },
+            ] },
+      o2: { label: 'o2', name: 'Opp 2',
+            move: 4, wounds: 3, glory: 1,
+            save: { dice: 1, type: 'dodge' },
+            attacks: [
+              { name: 'Short Blade', range: 1, dice: 2, damage: 2, type: 'sword' },
+            ] },
+      o3: { label: 'o3', name: 'Opp 3',
+            move: 4, wounds: 3, glory: 1,
+            save: { dice: 1, type: 'dodge' },
+            attacks: [
+              { name: 'Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
+            ] },
+      o4: { label: 'o4', name: 'Opp 4',
+            move: 3, wounds: 4, glory: 1,
+            save: { dice: 1, type: 'block' },
+            attacks: [
+              { name: 'Shield Bash', range: 1, dice: 2, damage: 2, type: 'hammer' },
+            ] },
+    },
+  },
+};
+
+/* ==================== GAMES ==================== */
+const GAMES = [
+  {
+    id: 'headsmen-r2-demo',
+    title: "Headsmen's Curse — Round 2 demo (Embergard 1)",
+    description: "Showcases the WARBANDS registry + state-inheritance (diff) features. Round 2 of a hypothetical match between Headsmen's Curse and a generic 4-fighter opponent.",
+    round: 2,
+    board: 'embergard-1',
+    boardRotation: 0,
+    warbands: { me: 'headsmens-curse', opp: 'generic-4' },
+    decks: {
+      me:  { pair: 'Verdict of Blood / Headsman Rites', plots: ['Trial in Absentia', 'Mark for Execution'] },
+      opp: { pair: 'Veteran Tactics / Iron Resolve',    plots: ["Soldier's Tenacity"] },
+    },
+    steps: [
+      {
+        notation: '(R2 setup — positions after R1 advance)',
+        title: 'Round 2 — opening position',
+        explanation: "Both warbands closed up after R1. The Wielder threatens the centre. Hands shown are after R1's end-phase draw.",
+        state: {
+          positions: { W:'e4', B:'c3', S:'d4', H:'g4', o1:'e6', o2:'h7', o3:'f6', o4:'g6' },
+          glory: [0, 0],
+          upgrades: { W: ['Veteran'], B: ['Heroic Resolve'], o1: ['Champion'] },
+          hand: {
+            me:  { objectives: ['Off with Their Heads', "Headsman's Mark", 'No Survivors'],
+                   power:      ['Terminus', 'Great Strength', 'Twist the Knife', 'Confusion'] },
+            opp: { objectives: 3, power: 4 },
+          },
+          features: [
+            { type: 'treasure', label: '1', hex: 'd3' },
+            { type: 'treasure', label: '2', hex: 'f3' },
+            { type: 'treasure', label: '3', hex: 'h3' },
+            { type: 'treasure', label: '4', hex: 'e7' },
+            { type: 'treasure', label: '5', hex: 'g7' },
+            { type: 'aqua', hex: 'd5' },
+            { type: 'aqua', hex: 'h5' },
+          ],
+        },
+      },
+      {
+        notation: 'R2 — Condemn: o3',
+        title: 'Start of round — Trial and Execution',
+        explanation: "Scriptor's Trial and Execution marks o3 as Condemned. Closest enemy in range, a clean target for the Wielder.",
+        poll: {
+          question: 'Who should the Scriptor mark Condemned this round?',
+          options: [
+            'o3 at f6 — closest, clean charge target',
+            'o1 at e6 — opp leader, biggest bounty',
+            'o4 at g6 — flank threat to the Sharpener',
+            "o2 at h7 — out of range now (don't condemn)",
+          ],
+          actual: 0,
+        },
+        diff: {
+          abilitiesUsed: { me: ['Trial and Execution'] },
+          powerStep: [{ side: 'me', type: 'ability', name: 'Trial and Execution' }],
+        },
+      },
+      {
+        notation: 'W>f6 @e5 ×4† o3  (HC / -)  [+P]  ↑W  (G:1-0)',
+        title: 'R2.1 — Wielder charges and executes',
+        explanation: "W charges e4 → e5, attacks o3 at f6. Hammer + crit vs blank: 2 hits, 3 base + 1 Condemned = 4. Twist the Knife played in the following power step adds glory on the kill. Trial and Execution gives +1 power card (Murderous Charge). W inspires.",
+        dice: { attack: ['H', 'C'], defense: ['-'] },
+        anim: { attack: { target: 'o3', dmg: 4 } },
+        diff: {
+          positions: { W: 'e5' },
+          slain: ['o3'],
+          inspired: ['W'],
+          glory: [1, 0],
+          tokens: { W: ['charge'] },
+          activationsUsed: { me: 1 },
+          hand: { me: { power: ['Terminus', 'Great Strength', 'Confusion', 'Murderous Charge'] } },
+          features: [
+            { type: 'treasure', label: '1', hex: 'd3' },
+            { type: 'treasure', label: '2', hex: 'f3' },
+            { type: 'treasure', label: '3', hex: 'h3' },
+            { type: 'treasure', label: '4', hex: 'e7', delved: true },
+            { type: 'treasure', label: '5', hex: 'g7' },
+            { type: 'aqua', hex: 'd5' },
+            { type: 'aqua', hex: 'h5' },
+          ],
+          powerStep: [{ side: 'me', type: 'card', kind: 'gambit', name: 'Twist the Knife' }],
+        },
+      },
+      {
+        notation: 'o1 xe5 ×2  W[w×2]  (SS / D-)',
+        title: 'R2.2 — Opponent leader retaliates',
+        explanation: "o1 attacks W from e6 (no move). Two swords vs two dodge: 2 hits − 1 save = 1 net, 2 damage. Opponent plays Sidestep in the power step to reposition after. Wielder on 3 HP.",
+        dice: { attack: ['S', 'S'], defense: ['D', '-'] },
+        anim: { attack: { target: 'W', dmg: 2 } },
+        diff: {
+          wounds: { W: 2 },
+          activationsUsed: { opp: 1 },
+          hand: { opp: { objectives: 3, power: 3 } },
+          powerStep: [{ side: 'opp', type: 'card', kind: 'gambit', name: 'Sidestep' }],
+        },
+      },
+      {
+        notation: 'S xe6 ×1  o1[w×1]  (H- / -)',
+        title: 'R2.3 — Scriptor pings the leader',
+        explanation: "S range attack on o1 (3 hexes from d4). Hammer + blank, opponent rolls blank shield — 1 damage. Bearer (B) has gone on Guard this round for defensive coverage in our deployment zone.",
+        dice: { attack: ['H', '-'], defense: ['-'] },
+        anim: { attack: { target: 'o1', dmg: 1 } },
+        diff: {
+          wounds: { o1: 1 },
+          tokens: { B: ['guard'] },
+          activationsUsed: { me: 2 },
+        },
+      },
+      {
+        notation: '[Discorporate: H → h6]',
+        title: 'R2.4 — Discorporate (warscroll ability)',
+        explanation: "Teleport Sharpener from g4 to h6, flanking o2 and o4 for R3. No card spent.",
+        poll: {
+          question: 'Where should we Discorporate the Sharpener?',
+          options: [
+            'h6 — flank o2 and o4 for R3',
+            'd6 — engage opp leader from behind',
+            'f4 — stack next to W for Whet the Blade',
+            "Hold — save Discorporate for next round",
+          ],
+          actual: 0,
+        },
+        diff: {
+          positions: { H: 'h6' },
+          abilitiesUsed: { me: ['Trial and Execution', 'Discorporate'] },
+          activationsUsed: { me: 3 },
+          powerStep: [{ side: 'me', type: 'ability', name: 'Discorporate', target: 'H → h6' }],
+        },
+      },
+      {
+        notation: 'End R2:  G 1-0  |  draw +1 obj, +2 pow each',
+        title: 'End of Round 2',
+        explanation: "Bounty stays at 1-0. End-phase: each player draws 1 objective and 2 power cards. Action tokens reset for R3.",
+        diff: {
+          tokens: null,
+          activationsUsed: null,
+          upgrades: { W: ['Veteran', 'Murderous Charge'] },
+          hand: {
+            me: { objectives: ['Off with Their Heads', "Headsman's Mark", 'No Survivors', 'Judge, Lest Ye Be Judged'],
+                  power:      ['Terminus', 'Great Strength', 'Confusion', 'Murderous Charge', 'Eternal Service', 'Heads Will Roll'] },
+            opp: { objectives: 4, power: 5 },
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'three-vs-five-stub',
+    title: 'Stub: 3-fighter warband on Spitewood 2',
+    description: "Placeholder showing variable fighter counts and a different board. Replace with a real game when notated.",
+    round: 1,
+    board: 'spitewood-2',
+    boardRotation: 0,
+    fighters: {
+      L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
+      A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
+      Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
+      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
+      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
+      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
+      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
+      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
+    },
+    steps: [
+      {
+        notation: '(R1 setup — deployment)',
+        title: 'Round 1 — opening deployment',
+        explanation: "3 vs 5 on Spitewood 2. Four waystones around corners, central stagger.",
+        state: {
+          positions: { L:'e1', A:'c1', Z:'g1', e1:'e9', e2:'c9', e3:'g9', e4:'i9', e5:'d8' },
+          wounds: {}, slain: [], inspired: [],
+          glory: [0, 0],
+          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
+          powerStep: [],
+        },
+      },
+    ],
+  },
+  
+  {
+    id: 'Test 13may2026',
+    title: "'Headsmen's Curse vs Kurnoths Heralds'",
+    description: "description",
+    round: 1,
+    board: 'spitewood-2',
+    boardRotation: 0,
+    fighters: {
+      L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
+      A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
+      Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
+      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
+      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
+      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
+      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
+      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
+    },
+    steps: [
+      {
+        notation: '(R1 setup — deployment)',
+        title: 'Round 1 — opening deployment',
+        explanation: "3 vs 5 on Spitewood 2. Four waystones around corners, central stagger.",
+        state: {
+          positions: { L:'e1', A:'c1', Z:'g1', e1:'e9', e2:'c9', e3:'g9', e4:'i9', e5:'d8' },
+          wounds: {}, slain: [], inspired: [],
+          glory: [0, 0],
+          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
+          powerStep: [],
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'frederik-vs-mathias-liga',
+    title: 'Frederik vs Mathias — Epic Liga battle',
+    description: "Recreated from a club-night photo. Round 2: both warbands have closed into a central melee on Spitewood.",
+    round: 2,
+    board: 'spitewood-2',
+    boardRotation: 0,
+    decks: {
+      me:  { pair: "Hunter's Cunning / Stalking Shadows",   plots: ['Sneak Attack', 'Final Lesson'] },
+      opp: { pair: "Power Unbound / Countdown to Cataclysm", plots: ['Ritual Sacrifice'] },
+    },
+    fighters: {
+      // Mathias's warband — visible on the warscroll cards in the photo
+      C: { side: 'me',  label: 'C', name: 'Cullon', isLeader: true,
+           move: 4, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: 'Lance', range: 1, dice: 3, damage: 3, type: 'hammer' },
+           ] },
+      Y: { side: 'me',  label: 'Y', name: 'Ylarin',
+           move: 4, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Hunting Bow', range: 4, dice: 2, damage: 2, type: 'sword' },
+           ] },
+      L: { side: 'me',  label: 'L', name: 'Lerwythe',
+           move: 3, wounds: 4, glory: 1,
+           save: { dice: 2, type: 'block' },
+           attacks: [
+             { name: 'Hooked Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
+           ] },
+      S: { side: 'me',  label: 'S', name: 'Skaen',
+           move: 4, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Twin Daggers', range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      // Frederik's warband — three identical Sentinel-style fighters + a leader
+      f1: { side: 'opp', label: 'f1', name: "Frederik's leader", isLeader: true,
+            move: 3, wounds: 5, glory: 2,
+            save: { dice: 2, type: 'block' },
+            attacks: [
+              { name: 'Two-handed Blade', range: 1, dice: 3, damage: 3, type: 'sword' },
+            ] },
+      f2: { side: 'opp', label: 'f2', name: 'Sentinel',
+            move: 4, wounds: 3, glory: 1,
+            save: { dice: 1, type: 'dodge' },
+            attacks: [
+              { name: 'Sentinel Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
+            ] },
+      f3: { side: 'opp', label: 'f3', name: 'Sentinel',
+            move: 4, wounds: 3, glory: 1,
+            save: { dice: 1, type: 'dodge' },
+            attacks: [
+              { name: 'Sentinel Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
+            ] },
+      f4: { side: 'opp', label: 'f4', name: 'Sentinel',
+            move: 4, wounds: 3, glory: 1,
+            save: { dice: 1, type: 'dodge' },
+            attacks: [
+              { name: 'Sentinel Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
+            ] },
+    },
+    steps: [
+      {
+        notation: 'R2 — central melee snapshot',
+        title: 'Board position (from photo)',
+        explanation: "Snapshot from a club night. Mathias's line (Cullon, Lerwythe, Ylarin, Skaen) presses up from ranks 4-5; Frederik's three Sentinels and their leader meet them at rank 6. Everyone's in striking distance of someone.",
+        state: {
+          positions: {
+            Y: 'c5', S: 'd4', C: 'e5', L: 'f5',
+            f1: 'e6', f2: 'f6', f3: 'g6', f4: 'd6',
+          },
+          glory: [0, 0],
+          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
+        },
+      },
+    ],
+  },
+];
+
+/* ==================== GAME RESOLUTION ====================
+ * Two preprocessing passes run once per game load:
+ *   1. resolveWarbands(game): if game.warbands = { me, opp }, pulls fighters
+ *      and abilities from the WARBANDS registry. Inline game.fighters keys
+ *      override warband fighters (useful for renaming or tweaking one stat).
+ *   2. expandSteps(game): walks game.steps and computes each step's full
+ *      _state. A step can declare its state two ways:
+ *        - state: { ... }    → full snapshot (no inheritance)
+ *        - diff:  { ... }    → merged onto the previous step's _state
+ *      In diff mode, OBJECT fields (positions, wounds, tokens, upgrades,
+ *      abilitiesUsed, hand) deep-merge with the previous; ARRAY fields
+ *      (slain, inspired, features) and scalars (glory) replace when present.
+ *      Field value `null` resets that field to its default (empty).
+ *      `powerStep` always defaults to [] for each step — it never inherits. */
+
+function resolveWarbands(game) {
+  if (!game.warbands) return;
+  const fighters = {};
+  const abilities = { me: [], opp: [] };
+  ['me', 'opp'].forEach(function(side) {
+    const wbId = game.warbands[side];
+    if (!wbId) return;
+    const wb = WARBANDS[wbId];
+    if (!wb) { console.warn('Unknown warband:', wbId); return; }
+    abilities[side] = (wb.abilities || []).slice();
+    for (const code in wb.fighters) {
+      fighters[code] = Object.assign({}, wb.fighters[code], { side: side });
+    }
+  });
+  // Merge inline overrides (per-fighter tweaks)
+  if (game.fighters) {
+    for (const code in game.fighters) {
+      fighters[code] = Object.assign({}, fighters[code] || {}, game.fighters[code]);
+    }
+  }
+  game.fighters = fighters;
+  if (!game.abilities) game.abilities = abilities;
+  else {
+    // Per-side abilities override is allowed
+    if (!game.abilities.me)  game.abilities.me  = abilities.me;
+    if (!game.abilities.opp) game.abilities.opp = abilities.opp;
+  }
+}
+
+function defaultState() {
+  return {
+    positions: {}, wounds: {}, slain: [],
+    inspired: [], glory: [0, 0], tokens: {}, upgrades: {},
+    abilitiesUsed: {}, activationsUsed: {}, features: [], hand: { me: 0, opp: 0 },
+    powerStep: [],
+  };
+}
+
+function isPlainObject(v) {
+  return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
+/* Shallow merge of two objects with null-as-delete on the patch side. */
+function mergeShallow(prev, patch) {
+  const out = Object.assign({}, prev || {});
+  for (const k in patch) {
+    if (patch[k] === null) delete out[k];
+    else out[k] = patch[k];
+  }
+  return out;
+}
+
+/* Merge hand object: top level (me/opp) shallow merge, but each side itself
+ * is also merged (so `hand: { me: { power: [...] } }` keeps me.objectives). */
+function mergeHand(prev, patch) {
+  const out = Object.assign({}, prev || {});
+  ['me', 'opp'].forEach(function(side) {
+    if (!(side in patch)) return;
+    if (patch[side] === null) { out[side] = 0; return; }
+    if (typeof patch[side] === 'number') { out[side] = patch[side]; return; }
+    // Patch is an object — deep-merge with existing
+    const existing = isPlainObject(prev && prev[side]) ? prev[side] : {};
+    out[side] = mergeShallow(existing, patch[side]);
+  });
+  return out;
+}
+
+function applyDiff(prev, diff) {
+  const out = {};
+  for (const k in prev) out[k] = prev[k];
+  out.powerStep = []; // never inherits — must be re-specified each step
+  for (const k in diff) {
+    const v = diff[k];
+    if (v === null) {
+      const def = defaultState()[k];
+      out[k] = Array.isArray(def) ? [] : (isPlainObject(def) ? {} : def);
+      continue;
+    }
+    if (k === 'positions' || k === 'wounds' || k === 'tokens' ||
+        k === 'upgrades'  || k === 'abilitiesUsed' || k === 'activationsUsed') {
+      out[k] = mergeShallow(prev[k] || {}, v);
+    } else if (k === 'hand') {
+      out[k] = mergeHand(prev[k], v);
+    } else {
+      // Arrays (slain, inspired, features), scalars (glory), powerStep: replace
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+function expandSteps(game) {
+  const base = defaultState();
+  let prev = base;
+  game.steps.forEach(function(step) {
+    let next;
+    if (step.state) {
+      // Full state — fill in defaults for any missing fields
+      next = Object.assign({}, base);
+      for (const k in step.state) next[k] = step.state[k];
+    } else if (step.diff) {
+      next = applyDiff(prev, step.diff);
+    } else {
+      // No state and no diff: inherit but reset powerStep
+      next = Object.assign({}, prev);
+      next.powerStep = [];
+    }
+    step._state = next;
+    prev = next;
+  });
+}
+
+/* ==================== HEX MATH ==================== */
+const R = 13;
+const COL_STEP = 19.5;
+const ROW_STEP = 22.5;
+const COL_OFFSET = 11.25;
+const BASE_X = 32;
+const BASE_Y = 26;
+
+function hexCenter(hexStr, boardRows) {
+  const file = hexStr[0];
+  const rank = parseInt(hexStr.slice(1));
+  const col = file.charCodeAt(0) - 97;
+  return {
+    x: BASE_X + col * COL_STEP,
+    y: BASE_Y + (boardRows - rank) * ROW_STEP + (col % 2) * COL_OFFSET,
+  };
+}
+function hexPolyPoints(cx, cy) {
+  const h = R * Math.sqrt(3) / 2;
+  return [
+    [cx + R, cy], [cx + R/2, cy + h], [cx - R/2, cy + h],
+    [cx - R, cy], [cx - R/2, cy - h], [cx + R/2, cy - h],
+  ].map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+}
+function rotateHex(hex, rotation, cols, rows) {
+  if (rotation !== 180) return hex;
+  const col = hex.charCodeAt(0) - 97;
+  const rank = parseInt(hex.slice(1));
+  return String.fromCharCode(97 + (cols - 1 - col)) + (rows + 1 - rank);
+}
+function rotateHexes(arr, rotation, cols, rows) {
+  return (arr || []).map(h => rotateHex(h, rotation, cols, rows));
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(SVG_NS, tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+/* ==================== STATE ==================== */
+const svg = document.getElementById('board-svg');
+let currentGame = null;
+let currentBoard = null;
+let currentStep = 0;
+let playing = false;
+let playTimer = null;
+
+/* ==================== RENDER BOARD ==================== */
+function renderBoard(game) {
+  const board = BOARDS[game.board] || BOARDS['embergard-1'];
+  currentBoard = board;
+  const rotation = game.boardRotation || 0;
+
+  svg.innerHTML = '';
+  const FILES = 'abcdefghijk'.slice(0, board.cols);
+
+  const lastColX = BASE_X + (board.cols - 1) * COL_STEP;
+  const lastRowY = BASE_Y + (board.rows - 1) * ROW_STEP + COL_OFFSET;
+  const vbW = Math.ceil(lastColX + R + 20);
+  const vbH = Math.ceil(lastRowY + R + 22);
+  svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+
+  const excludedSet = new Set(board.excluded || []);
+  const yourZone = [1, 2];
+  const oppZone = [board.rows - 1, board.rows];
+  const staggerSet  = new Set(rotateHexes(board.stagger,  rotation, board.cols, board.rows));
+  const blockedSet  = new Set(rotateHexes(board.blocked,  rotation, board.cols, board.rows));
+  const waystoneSet = new Set(rotateHexes(board.waystone, rotation, board.cols, board.rows));
+  const startingSet = new Set(board.starting || []);
+
+  const hexesG = svgEl('g');
+  svg.appendChild(hexesG);
+  for (let i = 0; i < FILES.length; i++) {
+    for (let rk = 1; rk <= board.rows; rk++) {
+      const hexId = FILES[i] + rk;
+      if (excludedSet.has(hexId)) continue;
+      const { x, y } = hexCenter(hexId, board.rows);
+      let cls = 'hex-poly';
+      if (yourZone.indexOf(rk) >= 0) cls += ' your-zone';
+      else if (oppZone.indexOf(rk) >= 0) cls += ' opp-zone';
+      if (staggerSet.has(hexId))  cls = 'hex-poly stagger';
+      if (waystoneSet.has(hexId)) cls = 'hex-poly waystone';
+      if (blockedSet.has(hexId))  cls = 'hex-poly blocked';
+      const poly = svgEl('polygon', { points: hexPolyPoints(x, y), class: cls, 'data-hex': hexId });
+      const title = svgEl('title', {});
+      title.textContent = hexId;
+      poly.appendChild(title);
+      hexesG.appendChild(poly);
+      if (startingSet.has(hexId)) {
+        hexesG.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
+      }
+    }
+  }
+
+  for (let i = 0; i < FILES.length; i++) {
+    let lowestRank = null;
+    for (let rk = 1; rk <= board.rows; rk++) {
+      if (!excludedSet.has(FILES[i] + rk)) { lowestRank = rk; break; }
+    }
+    if (lowestRank == null) continue;
+    const { x, y } = hexCenter(FILES[i] + lowestRank, board.rows);
+    const t = svgEl('text', { x, y: y + R + 11, 'text-anchor': 'middle', class: 'coord-label' });
+    t.textContent = FILES[i];
+    svg.appendChild(t);
+  }
+  for (let rk = 1; rk <= board.rows; rk++) {
+    let leftCol = null;
+    for (let i = 0; i < FILES.length; i++) {
+      if (!excludedSet.has(FILES[i] + rk)) { leftCol = FILES[i]; break; }
+    }
+    if (!leftCol) continue;
+    const { x, y } = hexCenter(leftCol + rk, board.rows);
+    const t = svgEl('text', { x: x - R - 3, y: y + 3, 'text-anchor': 'end', class: 'coord-label' });
+    t.textContent = rk;
+    svg.appendChild(t);
+  }
+
+  svg.appendChild(svgEl('g', { id: 'fighters-layer' }));
+  svg.appendChild(svgEl('g', { id: 'features-layer' }));
+  svg.appendChild(svgEl('g', { id: 'dmg-layer' }));
+
+  const fightersLayer = document.getElementById('fighters-layer');
+  for (const id in game.fighters) {
+    const info = game.fighters[id];
+    const g = svgEl('g', { id: 'f-' + id, class: 'fighter' });
+    const isMe = info.side === 'me';
+    g.appendChild(svgEl('circle', {
+      r: 10,
+      fill: isMe ? 'var(--me-fill)' : 'var(--opp-fill)',
+      stroke: isMe ? 'var(--me-stroke)' : 'var(--opp-stroke)',
+      'stroke-width': info.isLeader ? 2.5 : 1.5,
+      class: 'bg'
+    }));
+    const t = svgEl('text', {
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      fill: isMe ? 'var(--me-text)' : 'var(--opp-text)',
+      'font-weight': 600,
+      'font-size': info.label.length > 1 ? 7 : 10,
+      'font-family': 'ui-monospace, monospace',
+    });
+    t.textContent = info.label;
+    g.appendChild(t);
+    const wb = svgEl('g', { id: 'w-' + id, opacity: 0 });
+    wb.appendChild(svgEl('circle', { cx: 9, cy: -9, r: 5.5, fill: 'var(--danger)', stroke: 'var(--surface)', 'stroke-width': 1.5 }));
+    const wbt = svgEl('text', { x: 9, y: -9, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#FFF', 'font-size': 8, 'font-weight': 600 });
+    wbt.textContent = '0';
+    wb.appendChild(wbt);
+    g.appendChild(wb);
+    g.appendChild(svgEl('g', { id: 't-' + id, class: 'tokens-group' }));
+    fightersLayer.appendChild(g);
+  }
+}
+
+/* ==================== RENDER LEGEND ==================== */
+function renderLegend(game) {
+  const board = BOARDS[game.board] || BOARDS['embergard-1'];
+  const aside = document.getElementById('legend-side');
+  aside.innerHTML = '';
+
+  function block(title, items) {
+    const b = document.createElement('div');
+    b.className = 'legend-block';
+    const h = document.createElement('h4');
+    h.textContent = title;
+    b.appendChild(h);
+    const ul = document.createElement('ul');
+    items.forEach(function(it) {
+      const li = document.createElement('li');
+      const dot = document.createElement('span');
+      dot.className = it.dotClass;
+      if (it.dotText) dot.textContent = it.dotText;
+      li.appendChild(dot);
+      const label = document.createElement('span');
+      label.textContent = it.label;
+      li.appendChild(label);
+      ul.appendChild(li);
+    });
+    b.appendChild(ul);
+    return b;
+  }
+
+  // (Removed: Yours / Opponent blocks — fighters now live in the warband panels.)
+
+  aside.appendChild(block('Status', [
+    { dotClass: 'legend-dot inspired', label: 'Inspired' },
+  ]));
+
+  aside.appendChild(block('Features', [
+    { dotClass: 'legend-feat treasure', dotText: '1', label: 'Treasure token (1–5)' },
+    { dotClass: 'legend-feat aqua',     dotText: 'A', label: 'Aqua Ghyranis' },
+    { dotClass: 'legend-feat delved',   dotText: '4', label: 'Delved (red outline)' },
+  ]));
+
+  aside.appendChild(block('Action tokens', [
+    { dotClass: 'legend-tok move',    dotText: 'M', label: 'Move action' },
+    { dotClass: 'legend-tok charge',  dotText: 'C', label: 'Charge action' },
+    { dotClass: 'legend-tok guard',   dotText: 'G', label: 'Guard' },
+    { dotClass: 'legend-tok stagger', dotText: 'S', label: 'Stagger' },
+  ]));
+
+  const hexItems = [{ dotClass: 'legend-hex starting', label: 'Starting hex' }];
+  if (board.stagger  && board.stagger.length)  hexItems.push({ dotClass: 'legend-hex stagger',  label: 'Stagger hex' });
+  if (board.blocked  && board.blocked.length)  hexItems.push({ dotClass: 'legend-hex blocked',  label: 'Blocked hex' });
+  if (board.waystone && board.waystone.length) hexItems.push({ dotClass: 'legend-hex waystone', label: 'Waystone hex' });
+  aside.appendChild(block('Hex types', hexItems));
+}
+
+/* ==================== RENDER DICE ==================== */
+function makeDie(face) {
+  const el = document.createElement('span');
+  el.className = 'die';
+  if (face === 'C') el.classList.add('crit');
+  if (face === 'D' || face === 'Sh') el.classList.add('dodge');
+  if (face === '-') el.classList.add('blank');
+  el.textContent = face;
+  return el;
+}
+function renderDice(diceData) {
+  const c = document.getElementById('curr-dice');
+  c.innerHTML = '';
+  if (!diceData) return;
+  if (diceData.attack && diceData.attack.length) {
+    const grp = document.createElement('span'); grp.className = 'dice-group';
+    const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = 'attack';
+    grp.appendChild(lbl);
+    diceData.attack.forEach(f => grp.appendChild(makeDie(f)));
+    c.appendChild(grp);
+  }
+  if (diceData.defense && diceData.defense.length) {
+    const sep = document.createElement('span'); sep.className = 'dice-sep'; sep.textContent = 'vs';
+    c.appendChild(sep);
+    const grp = document.createElement('span'); grp.className = 'dice-group';
+    const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = 'defence';
+    grp.appendChild(lbl);
+    diceData.defense.forEach(f => grp.appendChild(makeDie(f)));
+    c.appendChild(grp);
+  }
+}
+
+/* ==================== RENDER HANDS ==================== */
+function normalizeHand(h) {
+  if (h === undefined || h === null) return { obj: [], pow: [], objCount: 0, powCount: 0 };
+  if (typeof h === 'number') return { obj: [], pow: [], objCount: 0, powCount: h };
+  const objIsArr = Array.isArray(h.objectives);
+  const powIsArr = Array.isArray(h.power);
+  return {
+    obj: objIsArr ? h.objectives : [],
+    pow: powIsArr ? h.power : [],
+    objCount: objIsArr ? h.objectives.length : (typeof h.objectives === 'number' ? h.objectives : 0),
+    powCount: powIsArr ? h.power.length     : (typeof h.power      === 'number' ? h.power      : 0),
+  };
+}
+function fillCards(elId, names, count, cls) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  if (names && names.length) {
+    names.forEach(function(name) {
+      const chip = document.createElement('span');
+      chip.className = 'card-chip ' + cls;
+      chip.textContent = name;
+      chip.title = name;
+      el.appendChild(chip);
+    });
+  } else {
+    for (let i = 0; i < count; i++) {
+      const chip = document.createElement('span');
+      chip.className = 'card-chip hidden ' + cls;
+      chip.textContent = '◆';
+      el.appendChild(chip);
+    }
+  }
+}
+function renderHands(state) {
+  const me = normalizeHand(state.hand && state.hand.me);
+  const opp = normalizeHand(state.hand && state.hand.opp);
+  document.getElementById('my-obj-count').textContent = me.objCount;
+  document.getElementById('my-pow-count').textContent = me.powCount;
+  document.getElementById('opp-obj-count').textContent = opp.objCount;
+  document.getElementById('opp-pow-count').textContent = opp.powCount;
+  fillCards('my-obj-cards',  me.obj,  me.objCount,  'obj');
+  fillCards('my-pow-cards',  me.pow,  me.powCount,  'power');
+  fillCards('opp-obj-cards', opp.obj, opp.objCount, 'obj');
+  fillCards('opp-pow-cards', opp.pow, opp.powCount, 'power');
+}
+
+/* ==================== RENDER POWER STEP ==================== */
+function formatPrefix(ev) {
+  if (ev.type !== 'card') return '';
+  if (ev.kind === 'upgrade' || ev.kind === 'U') return 'U:';
+  if (ev.kind === 'gambit'  || ev.kind === 'G') return 'G:';
+  return '';
+}
+function renderPowerStep(events) {
+  const wrapper = document.getElementById('power-step');
+  const container = document.getElementById('power-events');
+  container.innerHTML = '';
+  if (!events || !events.length) {
+    wrapper.classList.remove('has-events');
+    return;
+  }
+  wrapper.classList.add('has-events');
+  events.forEach(function(ev) {
+    const chip = document.createElement('span');
+    chip.className = 'power-event ' + (ev.side === 'opp' ? 'opp' : 'me');
+    if (ev.type === 'ability') chip.classList.add('ability');
+
+    const side = document.createElement('span');
+    side.className = 'power-event-side';
+    side.textContent = ev.side === 'opp' ? 'Opp' : 'You';
+    chip.appendChild(side);
+
+    const prefix = formatPrefix(ev);
+    if (prefix) {
+      const p = document.createElement('span');
+      p.className = 'power-event-prefix';
+      p.textContent = prefix;
+      chip.appendChild(p);
+    }
+
+    const text = document.createElement('span');
+    let txt = ev.name || '';
+    if (ev.target) txt += ' → ' + ev.target;
+    if (ev.type === 'reaction') txt += ' (reaction)';
+    text.textContent = txt;
+    chip.appendChild(text);
+
+    container.appendChild(chip);
+  });
+}
+
+/* ==================== RENDER FIGHTER TOKENS ==================== */
+const TOKEN_TYPES = {
+  move:    { letter: 'M', color: 'var(--tok-move)',    label: 'Move action used' },
+  charge:  { letter: 'C', color: 'var(--tok-charge)',  label: 'Charge action used (cannot activate again this round)' },
+  guard:   { letter: 'G', color: 'var(--tok-guard)',   label: 'On Guard' },
+  stagger: { letter: 'S', color: 'var(--tok-stagger)', label: 'Staggered' },
+};
+function tokenSpec(rawName) {
+  const k = String(rawName).toLowerCase();
+  if (TOKEN_TYPES[k]) return Object.assign({ key: k }, TOKEN_TYPES[k]);
+  // Aliases
+  if (k === 'attack' || k === 'cleav') return Object.assign({ key: 'cleave' }, TOKEN_TYPES.cleave);
+  if (k === 'def' || k === 'block')     return Object.assign({ key: 'defence' }, TOKEN_TYPES.defence);
+  if (k === 'staggered')                return Object.assign({ key: 'stagger' }, TOKEN_TYPES.stagger);
+  return { key: k, letter: String(rawName).charAt(0).toUpperCase(), color: 'var(--tok-other)', label: rawName };
+}
+function renderFighterTokens(fighterId, tokens, slain) {
+  const g = document.getElementById('t-' + fighterId);
+  if (!g) return;
+  g.innerHTML = '';
+  if (slain) return;
+  if (!tokens || !tokens.length) return;
+  // Position a row of small circles below the fighter (fighter circle r=10, so y=14)
+  const r = 3.5;
+  const spacing = 7.2;
+  const n = tokens.length;
+  const startX = -((n - 1) * spacing) / 2;
+  tokens.forEach(function(t, i) {
+    const spec = tokenSpec(t);
+    const cx = startX + i * spacing;
+    const cy = 14;
+    const c = svgEl('circle', { cx: cx.toFixed(2), cy: cy, r: r, fill: spec.color, class: 'tok-circle' });
+    const tooltip = svgEl('title');
+    tooltip.textContent = spec.label;
+    c.appendChild(tooltip);
+    g.appendChild(c);
+    const lbl = svgEl('text', { x: cx.toFixed(2), y: cy + 0.2, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'tok-label' });
+    lbl.textContent = spec.letter;
+    g.appendChild(lbl);
+  });
+}
+
+/* ==================== RENDER FIGHTER CARDS ==================== */
+/* Two rows of small cards (opp above the board, me below). Each card shows the
+ * fighter's badge, name, current wounds taken (red pill), and upgrades attached.
+ * Hover reveals a tooltip with Move / Wounds / Glory stats and attack profiles. */
+function buildAttackProfileNode(attack, inspired) {
+  const row = document.createElement('div');
+  row.className = 'attack-profile' + (inspired ? ' inspired-profile' : '');
+  const nm = document.createElement('div');
+  nm.className = 'attack-profile-name';
+  nm.textContent = attack.name || (inspired ? 'Inspired attack' : 'Attack');
+  if (inspired) {
+    const star = document.createElement('span');
+    star.className = 'star';
+    star.textContent = '★';
+    nm.appendChild(star);
+  }
+  row.appendChild(nm);
+  const stats = document.createElement('div');
+  stats.className = 'attack-profile-stats';
+  const bits = [];
+  if (attack.range != null) bits.push('<span class="ap-stat">Rng <strong>' + attack.range + '</strong></span>');
+  if (attack.dice  != null) {
+    let dicePart = 'Dice <strong>' + attack.dice + '</strong>';
+    if (attack.type === 'sword' || attack.type === 'hammer') {
+      dicePart += ' <span class="ap-suffix ' + attack.type + '">' + attack.type + '</span>';
+    }
+    bits.push('<span class="ap-stat">' + dicePart + '</span>');
+  }
+  if (attack.damage != null) bits.push('<span class="ap-stat">Dmg <strong>' + attack.damage + '</strong></span>');
+  if (attack.cleave) bits.push('<span class="ap-stat"><strong>Cleave</strong></span>');
+  if (attack.note) bits.push('<span class="ap-stat">' + attack.note + '</span>');
+  stats.innerHTML = bits.join(' ');
+  row.appendChild(stats);
+  return row;
+}
+
+function buildFighterCard(id, info) {
+  const card = document.createElement('div');
+  const isMe = info.side === 'me';
+  card.className = 'fighter-card ' + (isMe ? 'me' : 'opp') + (info.isLeader ? ' leader' : '');
+  card.id = 'fc-' + id;
+  card.dataset.fid = id;
+
+  const header = document.createElement('div');
+  header.className = 'fighter-card-header';
+
+  const badge = document.createElement('span');
+  badge.className = 'fighter-card-badge';
+  badge.textContent = info.label;
+  badge.title = info.name || info.label;
+  header.appendChild(badge);
+
+  const wounds = document.createElement('span');
+  wounds.className = 'fighter-card-wounds';
+  wounds.id = 'fc-w-' + id;
+  wounds.hidden = true;
+  wounds.textContent = '0';
+  header.appendChild(wounds);
+
+  card.appendChild(header);
+
+  const upgrades = document.createElement('div');
+  upgrades.className = 'fighter-card-upgrades';
+  upgrades.id = 'fc-u-' + id;
+  card.appendChild(upgrades);
+
+  // Tooltip (built once per fighter, content is static — derived from fighter info)
+  const tip = document.createElement('div');
+  tip.className = 'fighter-tooltip';
+
+  const tn = document.createElement('div');
+  tn.className = 'fighter-tooltip-name';
+  const tnText = document.createElement('span');
+  tnText.textContent = info.name || info.label;
+  tn.appendChild(tnText);
+  if (info.isLeader) {
+    const tag = document.createElement('span');
+    tag.className = 'leader-tag';
+    tag.textContent = 'Leader';
+    tn.appendChild(tag);
+  }
+  const inspiredTag = document.createElement('span');
+  inspiredTag.className = 'inspired-tag';
+  inspiredTag.textContent = 'Inspired';
+  inspiredTag.style.display = 'none';
+  inspiredTag.id = 'fc-i-' + id;
+  tn.appendChild(inspiredTag);
+  tip.appendChild(tn);
+
+  const ts = document.createElement('div');
+  ts.className = 'fighter-tooltip-stats';
+  function statBit(label, value) {
+    const s = document.createElement('span');
+    s.className = 'stat';
+    s.innerHTML = '<span class="stat-label">' + label + '</span><span class="stat-value">' + value + '</span>';
+    return s;
+  }
+  if (info.move    != null) ts.appendChild(statBit('Move',   info.move));
+  if (info.save && info.save.dice != null) {
+    const s = document.createElement('span');
+    s.className = 'stat';
+    const lbl = '<span class="stat-label">Def</span>';
+    const val = '<span class="stat-value">' + info.save.dice + '</span>';
+    const sfx = info.save.type ? '<span class="stat-suffix">' + info.save.type + '</span>' : '';
+    s.innerHTML = lbl + val + sfx;
+    ts.appendChild(s);
+  }
+  if (info.wounds  != null) ts.appendChild(statBit('Wounds', info.wounds));
+  if (info.glory   != null) ts.appendChild(statBit('Glory',  info.glory));
+  if (!ts.children.length) {
+    const note = document.createElement('span');
+    note.className = 'attack-profile-empty';
+    note.textContent = 'No stats provided';
+    ts.appendChild(note);
+  }
+  tip.appendChild(ts);
+
+  const attacks = (info.attacks || []).slice();
+  const attacksInspired = (info.attacksInspired || []).slice();
+  if (attacks.length || attacksInspired.length) {
+    const lbl = document.createElement('div');
+    lbl.className = 'fighter-tooltip-section-label';
+    lbl.textContent = 'Attack profiles';
+    tip.appendChild(lbl);
+    attacks.forEach(function(a) { tip.appendChild(buildAttackProfileNode(a, false)); });
+    attacksInspired.forEach(function(a) { tip.appendChild(buildAttackProfileNode(a, true)); });
+  }
+
+  card.appendChild(tip);
+  return card;
+}
+
+function renderFighterCards(game) {
+  const oppRow = document.getElementById('fighter-cards-opp');
+  const meRow  = document.getElementById('fighter-cards-me');
+  if (!oppRow || !meRow) return;
+  oppRow.innerHTML = '';
+  meRow.innerHTML = '';
+  for (const id in game.fighters) {
+    const info = game.fighters[id];
+    const card = buildFighterCard(id, info);
+    (info.side === 'me' ? meRow : oppRow).appendChild(card);
+  }
+  // Smart tooltip positioning: on hover, flip to right-align if it would overflow.
+  document.querySelectorAll('.fighter-card').forEach(function(card) {
+    card.addEventListener('mouseenter', function() {
+      const tip = card.querySelector('.fighter-tooltip');
+      if (!tip) return;
+      // Reset any previous override before measuring
+      tip.style.left = '';
+      tip.style.right = '';
+      // Defer to next frame so the tooltip has its natural width
+      requestAnimationFrame(function() {
+        const rect = tip.getBoundingClientRect();
+        if (rect.right > window.innerWidth - 8) {
+          tip.style.left = 'auto';
+          tip.style.right = '0';
+        }
+      });
+    });
+  });
+}
+
+function updateFighterCards(state, game) {
+  const wounds = state.wounds || {};
+  const slain = state.slain || [];
+  const inspired = state.inspired || [];
+  const upgrades = state.upgrades || {};
+  for (const id in game.fighters) {
+    const card = document.getElementById('fc-' + id);
+    if (!card) continue;
+    const isSlain = slain.indexOf(id) >= 0;
+    const isInspired = inspired.indexOf(id) >= 0;
+    card.classList.toggle('slain', isSlain);
+    card.classList.toggle('inspired', isInspired);
+
+    // Inspired tag in tooltip
+    const itag = document.getElementById('fc-i-' + id);
+    if (itag) itag.style.display = isInspired ? 'inline-block' : 'none';
+
+    // Wounds badge
+    const wb = document.getElementById('fc-w-' + id);
+    const wc = wounds[id] || 0;
+    if (wb) {
+      if (wc > 0 && !isSlain) {
+        wb.hidden = false;
+        wb.textContent = wc;
+        const maxW = game.fighters[id].wounds;
+        wb.title = maxW ? (wc + ' / ' + maxW + ' wounds') : (wc + ' wound' + (wc === 1 ? '' : 's'));
+      } else {
+        wb.hidden = true;
+      }
+    }
+
+    // Upgrades
+    const ug = document.getElementById('fc-u-' + id);
+    if (ug) {
+      ug.innerHTML = '';
+      const list = upgrades[id] || [];
+      list.forEach(function(name) {
+        const chip = document.createElement('span');
+        chip.className = 'upgrade-chip';
+        chip.textContent = name;
+        chip.title = name;
+        ug.appendChild(chip);
+      });
+    }
+  }
+}
+
+/* ==================== RENDER WARSCROLL ABILITIES ==================== */
+/* Per-side static list of warscroll abilities (game.abilities.me / .opp).
+ * Each renders as a chip with a small round token. When the ability's name
+ * appears in state.abilitiesUsed[side], the token is removed (visually
+ * outlined-only) and the name is struck through. */
+function renderAbilities(game, state) {
+  const abilities = game.abilities || {};
+  const used = (state && state.abilitiesUsed) || {};
+  ['me', 'opp'].forEach(function(side) {
+    const list = abilities[side] || [];
+    const usedList = used[side] || [];
+    const group = document.getElementById('abilities-group-' + side);
+    const container = document.getElementById('abilities-' + side);
+    if (!group || !container) return;
+    if (!list.length) {
+      group.hidden = true;
+      container.innerHTML = '';
+      return;
+    }
+    group.hidden = false;
+    container.innerHTML = '';
+    list.forEach(function(name) {
+      const chip = document.createElement('span');
+      chip.className = 'ability-chip';
+      const isUsed = usedList.indexOf(name) >= 0;
+      if (isUsed) chip.classList.add('used');
+      const tok = document.createElement('span');
+      tok.className = 'ability-token';
+      chip.appendChild(tok);
+      const txt = document.createElement('span');
+      txt.className = 'ability-chip-name';
+      txt.textContent = name;
+      chip.appendChild(txt);
+      chip.title = (isUsed ? 'Used — ' : '') + name;
+      container.appendChild(chip);
+    });
+  });
+}
+
+/* ==================== RENDER ACTIVATIONS ==================== */
+/* Each side has up to 4 activation tokens per round (defaults to 4). As
+ * fighters activate, the count in state.activationsUsed[side] increases and
+ * the right-most tokens go hollow. Use `activationsUsed: null` in a diff to
+ * reset (e.g. at end of round). */
+const ACTIVATIONS_PER_ROUND = 4;
+function renderActivations(state) {
+  const used = state.activationsUsed || {};
+  ['me', 'opp'].forEach(function(side) {
+    const prefix = side === 'me' ? 'my' : 'opp';
+    const container = document.getElementById(prefix + '-activations');
+    if (!container) return;
+    container.innerHTML = '';
+    const total = ACTIVATIONS_PER_ROUND;
+    const usedCount = Math.max(0, Math.min(total, used[side] || 0));
+    for (let i = 0; i < total; i++) {
+      const tok = document.createElement('span');
+      tok.className = 'activation-token' + (i >= total - usedCount ? ' used' : '');
+      container.appendChild(tok);
+    }
+    container.title = (total - usedCount) + ' of ' + total + ' activations remaining';
+  });
+}
+
+/* ==================== POLL ==================== */
+const POLLS_KEY = 'underworlds-polls-v1';
+function loadAllPolls() {
+  try { return JSON.parse(localStorage.getItem(POLLS_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveAllPolls(all) {
+  try { localStorage.setItem(POLLS_KEY, JSON.stringify(all)); return true; }
+  catch (e) { return false; }
+}
+function pollKey(gameId, stepIdx) { return gameId + ':' + stepIdx; }
+function getStepVotes(gameId, stepIdx, optionCount) {
+  const all = loadAllPolls();
+  const key = pollKey(gameId, stepIdx);
+  const votes = (all[key] || []).slice();
+  while (votes.length < optionCount) votes.push(0);
+  return votes;
+}
+function addPollVote(gameId, stepIdx, optIdx, optionCount) {
+  const all = loadAllPolls();
+  const key = pollKey(gameId, stepIdx);
+  if (!Array.isArray(all[key])) all[key] = [];
+  while (all[key].length < optionCount) all[key].push(0);
+  all[key][optIdx] = (all[key][optIdx] || 0) + 1;
+  saveAllPolls(all);
+  return all[key];
+}
+function resetStepVotes(gameId, stepIdx) {
+  const all = loadAllPolls();
+  const key = pollKey(gameId, stepIdx);
+  if (all[key]) { delete all[key]; saveAllPolls(all); }
+}
+function renderPoll(game, stepIdx) {
+  const panel = document.getElementById('poll-panel');
+  if (!panel || !game) return;
+  const step = game.steps[stepIdx];
+  const poll = step && step.poll;
+  if (!poll || !Array.isArray(poll.options) || !poll.options.length) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  document.getElementById('poll-question').textContent = poll.question || 'What would you do?';
+  const optsEl = document.getElementById('poll-options');
+  const metaEl = document.getElementById('poll-meta');
+  optsEl.innerHTML = '';
+  const votes = getStepVotes(game.id, stepIdx, poll.options.length);
+  const total = votes.reduce(function(a, b) { return a + b; }, 0);
+  metaEl.textContent = total === 0 ? 'No votes yet' : (total + (total === 1 ? ' vote' : ' votes'));
+  const actualIdx = (typeof poll.actual === 'number') ? poll.actual : -1;
+  poll.options.forEach(function(opt, i) {
+    const count = votes[i] || 0;
+    const pct = total > 0 ? (count / total * 100) : 0;
+    const btn = document.createElement('button');
+    btn.className = 'poll-option' + (i === actualIdx && total > 0 ? ' is-actual' : '');
+    btn.type = 'button';
+    const bar = document.createElement('span'); bar.className = 'poll-option-bar';
+    bar.style.width = pct.toFixed(1) + '%';
+    btn.appendChild(bar);
+    const wrap = document.createElement('span'); wrap.className = 'poll-option-content';
+    const txt = document.createElement('span'); txt.className = 'poll-option-text';
+    txt.textContent = opt;
+    wrap.appendChild(txt);
+    const cnt = document.createElement('span'); cnt.className = 'poll-option-count';
+    cnt.textContent = total > 0 ? (count + ' · ' + Math.round(pct) + '%') : '0';
+    wrap.appendChild(cnt);
+    btn.appendChild(wrap);
+    btn.addEventListener('click', function() {
+      addPollVote(game.id, stepIdx, i, poll.options.length);
+      renderPoll(game, stepIdx);
+    });
+    optsEl.appendChild(btn);
+  });
+}
+
+/* ==================== RENDER FEATURE TOKENS ==================== */
+/* Tokens are placed inside the hex (flat-top hex, R = 13).
+ * Vertical extents: hex spans y in [-11.25, +11.25]; horizontal half-width at y is
+ *   halfWidth(y) = 13 - 0.5774 * |y|
+ * Token radius FEATURE_R is small enough to fit fully inside even when offset to the
+ * lower half of the hex and when multiple tokens are stacked horizontally. When a
+ * non-slain fighter occupies the hex, tokens push to y = +7 so both stay visible;
+ * otherwise tokens center in the hex. */
+const FEATURE_R = 3.2;
+function renderFeatures(state) {
+  const layer = document.getElementById('features-layer');
+  if (!layer) return;
+  layer.innerHTML = '';
+
+  // Clear any previous feature-hex tints
+  const allPolys = document.querySelectorAll('.hex-poly.has-feature');
+  allPolys.forEach(function(p) { p.classList.remove('has-feature'); });
+
+  const features = (state && state.features) || [];
+  if (!features.length || !currentBoard) return;
+
+  // Hexes occupied by alive fighters
+  const occupied = new Set();
+  const positions = state.positions || {};
+  const slain = state.slain || [];
+  for (const fid in positions) {
+    if (positions[fid] && slain.indexOf(fid) < 0) occupied.add(positions[fid]);
+  }
+
+  // Group features by hex (for stacking)
+  const byHex = {};
+  features.forEach(function(f) {
+    if (!f || !f.hex) return;  // null hex = off-board
+    if (!byHex[f.hex]) byHex[f.hex] = [];
+    byHex[f.hex].push(f);
+  });
+
+  for (const hex in byHex) {
+    // Tint the hex so it's visually distinguishable
+    const poly = document.querySelector('.hex-poly[data-hex="' + hex + '"]');
+    if (poly) poly.classList.add('has-feature');
+
+    const center = hexCenter(hex, currentBoard.rows);
+    const group = byHex[hex];
+    const hasFighter = occupied.has(hex);
+    const yOff = hasFighter ? 7.0 : 0;
+    const xs = stackXOffsets(group.length, yOff);
+    group.forEach(function(f, i) {
+      drawFeatureToken(layer, f, center.x + xs[i], center.y + yOff);
+    });
+  }
+}
+function stackXOffsets(n, yOff) {
+  if (n === 1) return [0];
+  const r = FEATURE_R;
+  // A regular flat-top hex has inradius 11.258. For a circle at (cx, cy) the
+  // binding constraint near the diagonal edges is:
+  //   0.866 * |cx| + 0.5 * |cy| <= 11.258 - r
+  // Solving for |cx|:
+  const usable = ((11.258 - r - 0.5 * Math.abs(yOff)) / 0.866) - 0.2;  // small inset
+  if (usable <= 0) {
+    const z = []; for (let i = 0; i < n; i++) z.push(0); return z;
+  }
+  const desiredStep = r * 2 + 0.4;  // touching with a small gap
+  const maxStep = (usable * 2) / (n - 1);
+  const step = Math.min(desiredStep, maxStep);
+  const half = step * (n - 1) / 2;
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(-half + i * step);
+  return out;
+}
+function drawFeatureToken(layer, feature, cx, cy) {
+  const r = FEATURE_R;
+  const isTreasure = feature.type === 'treasure';
+  const cls = isTreasure ? 'treasure' : 'aqua';
+  const g = svgEl('g', { class: 'feature-token', transform: 'translate(' + cx.toFixed(2) + ',' + cy.toFixed(2) + ')' });
+  // Delved → red outline on the token itself (mirrors how inspired colours the fighter's stroke).
+  const circleCls = 'feature-circle ' + cls + (feature.delved ? ' delved' : '');
+  const c = svgEl('circle', { cx: 0, cy: 0, r: r, class: circleCls });
+  const tip = svgEl('title');
+  let tipText = isTreasure
+    ? 'Treasure token ' + (feature.label || '?')
+    : 'Aqua Ghyranis';
+  if (feature.delved) tipText += ' (delved)';
+  tip.textContent = tipText;
+  c.appendChild(tip);
+  g.appendChild(c);
+  const lbl = svgEl('text', {
+    x: 0, y: 0.25,
+    'text-anchor': 'middle', 'dominant-baseline': 'central',
+    class: 'feature-label ' + cls,
+  });
+  lbl.textContent = isTreasure ? String(feature.label || '?') : 'A';
+  g.appendChild(lbl);
+  layer.appendChild(g);
+}
+
+/* ==================== APPLY STEP ==================== */
+function applyStep(idx) {
+  const game = currentGame;
+  const board = currentBoard;
+  const step = game.steps[idx];
+  const state = step._state || step.state;
+
+  for (const id in game.fighters) {
+    const pos = state.positions[id];
+    const el = document.getElementById('f-' + id);
+    if (!el) continue;
+    const slain = (state.slain || []).indexOf(id) >= 0;
+    const inspired = (state.inspired || []).indexOf(id) >= 0;
+    if (pos) {
+      const { x, y } = hexCenter(pos, board.rows);
+      el.style.transform = 'translate(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px)';
+    }
+    el.classList.toggle('slain', slain);
+    el.classList.toggle('inspired', inspired);
+    const wounds = (state.wounds || {})[id] || 0;
+    const wb = document.getElementById('w-' + id);
+    if (wounds > 0 && !slain) {
+      wb.setAttribute('opacity', '1');
+      wb.querySelector('text').textContent = wounds;
+    } else {
+      wb.setAttribute('opacity', '0');
+    }
+    renderFighterTokens(id, (state.tokens || {})[id], slain);
+  }
+
+  if (step.anim && step.anim.attack) {
+    const af = step.anim.attack;
+    const prev = idx > 0 ? (game.steps[idx-1]._state || game.steps[idx-1].state) : null;
+    const tpos = (prev && prev.positions[af.target]) || state.positions[af.target];
+    if (tpos) {
+      const { x, y } = hexCenter(tpos, board.rows);
+      const layer = document.getElementById('dmg-layer');
+      const wrap = svgEl('g', { transform: 'translate(' + x.toFixed(1) + ',' + (y - 18).toFixed(1) + ')' });
+      const inner = svgEl('g', { class: 'dmg-flash' });
+      const tx = svgEl('text', { 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: 'var(--danger)' });
+      tx.textContent = '−' + af.dmg;
+      inner.appendChild(tx);
+      wrap.appendChild(inner);
+      layer.appendChild(wrap);
+      setTimeout(function() { if (wrap.parentNode) wrap.remove(); }, 1500);
+    }
+  }
+
+  const gl = state.glory || [0, 0];
+  document.getElementById('glory-me').textContent = gl[0];
+  document.getElementById('glory-opp').textContent = gl[1];
+  document.getElementById('curr-notation').textContent = step.notation || '';
+  document.getElementById('curr-title').textContent = step.title || '';
+  document.getElementById('curr-explanation').textContent = step.explanation || '';
+  document.getElementById('step-indicator').textContent = (idx + 1) + ' / ' + game.steps.length;
+  document.getElementById('current-round').textContent = game.round || 1;
+
+  renderDice(step.dice);
+  renderPowerStep(state.powerStep);
+  renderHands(state);
+  renderFeatures(state);
+  updateFighterCards(state, game);
+  renderAbilities(game, state);
+  renderActivations(state);
+  renderPoll(game, idx);
+
+  const lines = document.querySelectorAll('.notation-line');
+  for (let i = 0; i < lines.length; i++) {
+    lines[i].classList.toggle('current', i === idx);
+    if (i === idx) lines[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  document.getElementById('btn-prev').disabled = (idx === 0);
+  document.getElementById('btn-next').disabled = (idx === game.steps.length - 1);
+}
+
+function goStep(delta) {
+  if (playing) togglePlay();
+  const ni = currentStep + delta;
+  if (ni < 0 || ni >= currentGame.steps.length) return;
+  currentStep = ni;
+  applyStep(currentStep);
+}
+
+function togglePlay() {
+  const btn = document.getElementById('btn-play');
+  if (playing) {
+    clearTimeout(playTimer);
+    playing = false;
+    btn.textContent = '▶ Play';
+  } else {
+    playing = true;
+    btn.textContent = '⏸ Pause';
+    const advance = function() {
+      if (!playing) return;
+      if (currentStep < currentGame.steps.length - 1) {
+        currentStep++;
+        applyStep(currentStep);
+        playTimer = setTimeout(advance, 2500);
+      } else {
+        playing = false;
+        btn.textContent = '▶ Play';
+      }
+    };
+    playTimer = setTimeout(advance, 600);
+  }
+}
+
+function rotateBoard() {
+  if (!currentGame) return;
+  currentGame.boardRotation = ((currentGame.boardRotation || 0) === 180) ? 0 : 180;
+  renderBoard(currentGame);
+  renderLegend(currentGame);
+  setTimeout(function() { applyStep(currentStep); }, 50);
+}
+
+function buildLog(game) {
+  const log = document.getElementById('notation-log');
+  log.innerHTML = '';
+  game.steps.forEach(function(s, i) {
+    const div = document.createElement('div');
+    div.className = 'notation-line';
+    div.textContent = (i + 1) + '.  ' + (s.notation || s.title || '(step ' + (i+1) + ')');
+    div.onclick = function() { if (playing) togglePlay(); currentStep = i; applyStep(i); };
+    log.appendChild(div);
+  });
+}
+
+/* ==================== RENDER DECKS (deck pair + plot cards) ==================== */
+/* Each game can declare `decks: { me: { pair, plots }, opp: { pair, plots } }`
+ * where `pair` is a string like "Hunters of Huanchi / Shadeborn" and `plots`
+ * is an array of up to 2 plot-card names. Rendered in the warband panel
+ * header below the side label. */
+function renderDecks(game) {
+  const decks = game.decks || {};
+  ['me', 'opp'].forEach(function(side) {
+    const container = document.getElementById((side === 'me' ? 'me' : 'opp') + '-warband-meta');
+    if (!container) return;
+    container.innerHTML = '';
+    const d = decks[side];
+    if (!d) return;
+    if (d.pair) {
+      const pair = document.createElement('span');
+      pair.className = 'deck-pair';
+      pair.textContent = d.pair;
+      container.appendChild(pair);
+    }
+    if (d.plots && d.plots.length) {
+      const plots = document.createElement('span');
+      plots.className = 'plot-chips';
+      d.plots.slice(0, 2).forEach(function(name) {
+        const chip = document.createElement('span');
+        chip.className = 'plot-chip';
+        chip.textContent = name;
+        chip.title = name;
+        plots.appendChild(chip);
+      });
+      container.appendChild(plots);
+    }
+  });
+}
+
+function loadGame(gameId) {
+  const game = GAMES.find(function(g) { return g.id === gameId; });
+  if (!game) return;
+  resolveWarbands(game);
+  expandSteps(game);
+  currentGame = game;
+  currentStep = 0;
+  if (playing) togglePlay();
+  renderBoard(game);
+  renderLegend(game);
+  renderFighterCards(game);
+  renderDecks(game);
+  buildLog(game);
+  setTimeout(function() { applyStep(0); }, 50);
+}
+
+/* ==================== CUSTOM GAMES ==================== */
+const STORAGE_KEY = 'underworlds-replay-customs-v1';
+
+function loadCustomsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+
+function saveCustomsToStorage(customs) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(customs));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function validateGame(g) {
+  const errors = [];
+  if (!g || typeof g !== 'object' || Array.isArray(g)) {
+    errors.push('Game must be a JSON object.');
+    return errors;
+  }
+  if (!g.title || typeof g.title !== 'string') {
+    errors.push('Missing "title" (string).');
+  }
+  if (!g.board || !BOARDS[g.board]) {
+    errors.push('Missing or unknown "board". Valid boards: ' + Object.keys(BOARDS).join(', ') + '.');
+  }
+  if (!g.fighters || typeof g.fighters !== 'object' || !Object.keys(g.fighters).length) {
+    errors.push('Missing "fighters" (object with at least one fighter).');
+  } else {
+    for (const id in g.fighters) {
+      const f = g.fighters[id];
+      if (!f || (f.side !== 'me' && f.side !== 'opp')) {
+        errors.push('Fighter "' + id + '" needs side: "me" or "opp".');
+      }
+      if (!f || !f.label) {
+        errors.push('Fighter "' + id + '" needs a label.');
+      }
+    }
+  }
+  if (!Array.isArray(g.steps) || !g.steps.length) {
+    errors.push('Missing "steps" (non-empty array).');
+  } else {
+    g.steps.forEach(function(s, i) {
+      if (!s || typeof s !== 'object') {
+        errors.push('Step ' + (i+1) + ' must be an object.');
+        return;
+      }
+      if (!s.state || typeof s.state !== 'object') {
+        errors.push('Step ' + (i+1) + ' missing "state" object.');
+      } else if (!s.state.positions || typeof s.state.positions !== 'object') {
+        errors.push('Step ' + (i+1) + ' state needs "positions" object.');
+      }
+    });
+  }
+  return errors;
+}
+
+function normalizeGame(g) {
+  g = Object.assign({}, g);
+  if (!g.id || typeof g.id !== 'string') {
+    g.id = 'custom-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+  } else if (g.id.indexOf('custom-') !== 0) {
+    g.id = 'custom-' + g.id;
+  }
+  if (typeof g.round !== 'number') g.round = 1;
+  if (typeof g.boardRotation !== 'number') g.boardRotation = 0;
+  if (typeof g.description !== 'string') g.description = '';
+  g.steps = g.steps.map(function(s) {
+    s = Object.assign({}, s);
+    s.state = Object.assign({
+      positions: {}, wounds: {}, slain: [],
+      inspired: [], glory: [0, 0], tokens: {}, upgrades: {}, abilitiesUsed: {}, activationsUsed: {}, features: [], hand: { me: 0, opp: 0 }, powerStep: [],
+    }, s.state || {});
+    if (!s.notation) s.notation = s.title || '(step)';
+    if (typeof s.title !== 'string') s.title = '';
+    if (typeof s.explanation !== 'string') s.explanation = '';
+    return s;
+  });
+  return g;
+}
+
+function showStatus(msg, kind) {
+  const el = document.getElementById('custom-status');
+  el.textContent = msg;
+  el.className = 'custom-status' + (kind ? ' ' + kind : '');
+}
+
+function rebuildSelect() {
+  const select = document.getElementById('game-select');
+  const prev = select.value;
+  select.innerHTML = '';
+  GAMES.forEach(function(g) {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
+    select.appendChild(opt);
+  });
+  if (prev && GAMES.find(function(g) { return g.id === prev; })) {
+    select.value = prev;
+  }
+}
+
+function loadCustomFromInput() {
+  const input = document.getElementById('custom-input').value.trim();
+  if (!input) {
+    showStatus('Paste game JSON in the box above first.', 'error');
+    return;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(input);
+  } catch (e) {
+    showStatus('JSON parse error — ' + e.message + '. Tip: no trailing commas, double-quote keys and strings.', 'error');
+    return;
+  }
+  const games = Array.isArray(parsed) ? parsed : [parsed];
+  if (!games.length) {
+    showStatus('No games found in input.', 'error');
+    return;
+  }
+  const allErrors = [];
+  const validated = [];
+  games.forEach(function(g, i) {
+    const errs = validateGame(g);
+    if (errs.length) {
+      allErrors.push('Game ' + (i+1) + ':\n  • ' + errs.join('\n  • '));
+    } else {
+      validated.push(normalizeGame(g));
+    }
+  });
+  if (allErrors.length) {
+    showStatus(allErrors.join('\n\n'), 'error');
+    return;
+  }
+  validated.forEach(function(g) {
+    const idx = GAMES.findIndex(function(x) { return x.id === g.id; });
+    if (idx >= 0) GAMES[idx] = g;
+    else GAMES.push(g);
+  });
+  const customs = GAMES.filter(function(g) { return g.id.indexOf('custom-') === 0; });
+  const saved = saveCustomsToStorage(customs);
+  rebuildSelect();
+  const firstNew = validated[0];
+  document.getElementById('game-select').value = firstNew.id;
+  loadGame(firstNew.id);
+  const word = validated.length === 1 ? 'game' : 'games';
+  showStatus('Loaded ' + validated.length + ' ' + word + '.' + (saved ? '' : ' (Note: couldn\'t save to localStorage — game will be lost on reload.)'), 'success');
+}
+
+function fillTemplate() {
+  if (!currentGame) return;
+  const clone = JSON.parse(JSON.stringify(currentGame));
+  delete clone.id;
+  clone.title = currentGame.title + ' (copy)';
+  document.getElementById('custom-input').value = JSON.stringify(clone, null, 2);
+  showStatus('Template loaded into the box. Edit, then click "Load game".', '');
+}
+
+function downloadCurrent() {
+  if (!currentGame) return;
+  const clone = JSON.parse(JSON.stringify(currentGame));
+  const blob = new Blob([JSON.stringify(clone, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (currentGame.id || 'game') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showStatus('Downloaded ' + a.download, 'success');
+}
+
+function clearCustoms() {
+  const customCount = GAMES.filter(function(g) { return g.id.indexOf('custom-') === 0; }).length;
+  if (!customCount) {
+    showStatus('No custom games to clear.', '');
+    return;
+  }
+  if (!confirm('Clear all ' + customCount + ' custom game' + (customCount === 1 ? '' : 's') + ' from this browser?')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  for (let i = GAMES.length - 1; i >= 0; i--) {
+    if (GAMES[i].id.indexOf('custom-') === 0) GAMES.splice(i, 1);
+  }
+  rebuildSelect();
+  if (GAMES.length) loadGame(GAMES[0].id);
+  showStatus('Custom games cleared.', 'success');
+}
+
+// Load saved customs before init
+(function loadSavedCustoms() {
+  const saved = loadCustomsFromStorage();
+  saved.forEach(function(g) {
+    try {
+      const errs = validateGame(g);
+      if (!errs.length) GAMES.push(normalizeGame(g));
+    } catch (e) {}
+  });
+})();
+
+/* ==================== INIT ==================== */
+rebuildSelect();
+const select = document.getElementById('game-select');
+select.addEventListener('change', function(e) { loadGame(e.target.value); });
+
+document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
+document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });
+document.getElementById('btn-play').addEventListener('click', togglePlay);
+document.getElementById('btn-rotate').addEventListener('click', rotateBoard);
+
+document.getElementById('btn-load-custom').addEventListener('click', loadCustomFromInput);
+document.getElementById('btn-template').addEventListener('click', fillTemplate);
+document.getElementById('btn-download').addEventListener('click', downloadCurrent);
+document.getElementById('btn-clear-custom').addEventListener('click', clearCustoms);
+
+document.getElementById('poll-reset').addEventListener('click', function() {
+  if (!currentGame) return;
+  if (!confirm('Reset votes for this step?')) return;
+  resetStepVotes(currentGame.id, currentStep);
+  renderPoll(currentGame, currentStep);
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === 'ArrowLeft')  { goStep(-1); e.preventDefault(); }
+  if (e.key === 'ArrowRight') { goStep(1); e.preventDefault(); }
+  if (e.key === ' ')          { togglePlay(); e.preventDefault(); }
+  if (e.key === 'r' || e.key === 'R') { rotateBoard(); }
+});
+
+loadGame(GAMES[0].id);
+
+})();
+</script>
+
+</body>
+</html>

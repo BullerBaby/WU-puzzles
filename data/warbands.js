@@ -14,7 +14,7 @@
 export const WARBANDS = {
   'headsmens-curse': {
     name: "Headsmen's Curse",
-    abilities: ['Trial and Execution', 'Discorporate', 'Whet the Blade'],
+    abilities: ['Eternal Duty','Whet the Blade','Discorporate','Cackling Court'],
     fighters: {
       W: { label: 'W', name: 'Wielder of the Blade', isLeader: true,
            move: 3, wounds: 4, glory: 2,
@@ -34,7 +34,7 @@ export const WARBANDS = {
            attacksInspired: [
              { name: 'Heavy Block', range: 1, dice: 3, damage: 2, type: 'hammer' },
            ] },
-      S: { label: 'S', name: 'Scriptor — range 3',
+      S: { label: 'S', name: 'Scriptor of the Sentence',
            move: 4, wounds: 3, glory: 1,
            save: { dice: 1, type: 'dodge' },
            attacks: [
@@ -51,6 +51,45 @@ export const WARBANDS = {
            ],
            attacksInspired: [
              { name: 'Whetted Knife', range: 1, dice: 3, damage: 3, type: 'sword' },
+           ] },
+    },
+  },
+  'emberwatch': {
+    name: 'The Emberwatch',
+    abilities: ['Alone We Stand','Vanguard Dash','Deadly Sentries','The Raptors of Sigmar'],
+    fighters: {
+      A: { label: 'A', name: 'Ardorn', isLeader: true,
+           move: 3, wounds: 5, glory: 3,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: 'Meelee',  range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { name: 'Ranged', range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: 'Meelee',  range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { name: 'Ranged', range: 3, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      F: { label: 'F', name: 'Farasa',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: 'Meelee',  range: 1, dice: 3, damage: 2, type: 'sword' },
+             { name: 'Ranged', range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: 'Meelee',  range: 1, dice: 4, damage: 2, type: 'sword' },
+             { name: 'Ranged', range: 3, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      Y: { label: 'Y', name: 'Yurik',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: 'Meelee',     range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { name: 'Ranged', range: 4, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: 'Meelee',     range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { name: 'Ranged', range: 4, dice: 3, damage: 1, type: 'sword', note: 'Save unchanged when inspired' },
            ] },
     },
   },

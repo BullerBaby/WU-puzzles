@@ -164,10 +164,43 @@ export const GAMES = [
       },
     ],
   },
+
+  {
+    id: 'three-vs-five-stub',
+    title: 'Stub: 3-fighter warband on Spitewood 2',
+    description: "Placeholder showing variable fighter counts and a different board. Replace with a real game when notated.",
+    round: 1,
+    board: 'spitewood-2',
+    boardRotation: 0,
+    fighters: {
+      L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
+      A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
+      Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
+      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
+      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
+      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
+      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
+      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
+    },
+    steps: [
+      {
+        notation: '(R1 setup — deployment)',
+        title: 'Round 1 — opening deployment',
+        explanation: "3 vs 5 on Spitewood 2. Four waystones around corners, central stagger.",
+        state: {
+          positions: { L:'e1', A:'c1', Z:'g1', e1:'e9', e2:'c9', e3:'g9', e4:'i9', e5:'d8' },
+          wounds: {}, slain: [], inspired: [],
+          glory: [0, 0],
+          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
+          powerStep: [],
+        },
+      },
+    ],
+  },
   
   {
     id: 'Test 13may2026',
-    title: "Headsmen's Curse vs Kurnoths Heralds",
+    title: "'Headsmen's Curse vs Kurnoths Heralds'",
     description: "description",
     round: 1,
     board: 'spitewood-2',
@@ -273,6 +306,73 @@ export const GAMES = [
           },
           glory: [0, 0],
           hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'headsmen-vs-emberwatch-r3-finale',
+    title: "R3 finale — Wielder vs. Ardorn (Embergard 1)",
+    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
+    round: 3,
+    board: 'embergard-1',
+    boardRotation: 0,
+    warbands: { me: 'headsmens-curse', opp: 'emberwatch' },
+    decks: {
+      me:  { pair: 'Verdict of Blood / Headsman Rites',     plots: ['Trial in Absentia', 'Mark for Execution'] },
+      opp: { pair: 'Blazing Assault / Emberstone Sentinels', plots: ['Sigmar Watches Over Us'] },
+    },
+    steps: [
+      {
+        notation: '(R3 — last activation, glory 5-5)',
+        title: 'Last stand — your final activation',
+        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands alone, inspired and two hexes north. Opp has spent all four activations (charge token on Ardorn, can't reactivate); you have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — wins outright. Anything less and the round ends 5-5 → tiebreaker.",
+        poll: {
+          question: 'It is your last activation. What does the Wielder do?',
+          options: [
+            'Charge Ardorn — 4 hammers / 3 dmg / cleave (inspired)',
+            'Move + attack — same dice, no charge-out (irrelevant on last activation)',
+            'Guard up — bet on tying out the round',
+            'Focus — discard a power card, draw two',
+          ],
+          actual: 0,
+        },
+        state: {
+          positions: {
+            // Alive
+            W: 'f5',
+            A: 'f7',
+            // Slain — last positions before they fell
+            B: 'd4', S: 'd6', H: 'h5',
+            F: 'e6', Y: 'g7',
+          },
+          wounds: { W: 1, A: 2 },
+          slain: ['B', 'S', 'H', 'F', 'Y'],
+          inspired: ['W', 'A'],
+          glory: [5, 5],
+          tokens: { W: ['move'], A: ['charge'] },
+          upgrades: {
+            W: ['Great Fortitude', 'Sharpened Blade'],
+            A: ['Tested by Fire'],
+          },
+          abilitiesUsed: {
+            me:  ['Trial and Execution', 'Discorporate', 'Whet the Blade'],
+            opp: ['Alone We Stand'],
+          },
+          activationsUsed: { me: 3, opp: 4 },
+          features: [
+            // Treasures 1-2, 4-5 already delved over the previous rounds
+            { type: 'treasure', label: '1', hex: null, delved: true },
+            { type: 'treasure', label: '2', hex: null, delved: true },
+            { type: 'treasure', label: '3', hex: 'h3' },
+            { type: 'treasure', label: '4', hex: null, delved: true },
+            { type: 'treasure', label: '5', hex: null, delved: true },
+          ],
+          hand: {
+            me:  { objectives: 1, power: 2 },
+            opp: { objectives: 0, power: 1 },
+          },
         },
       },
     ],

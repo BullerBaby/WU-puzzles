@@ -18,6 +18,7 @@
   --opp-stroke: #712B13;
   --opp-text: #4A1B0C;
   --inspired: #BA7517;
+  --inspired-bg: #E5D4BA;
   --stagger: #F6DBA8;
   --stagger-border: #BA7517;
   --waystone: #C0DD97;
@@ -75,6 +76,7 @@
     --opp-stroke: #F5C4B3;
     --stagger: #6E5520;
     --stagger-border: #FAC775;
+    --inspired-bg: #4A3B20;
     --waystone: #2D4A12;
     --waystone-border: #97C459;
     --blocked: #444441;
@@ -126,14 +128,39 @@ header { margin-bottom: 1.5rem; }
 h1 { font-size: 26px; font-weight: 500; margin: 0; }
 section { margin-bottom: 1.5rem; }
 
-.game-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0.75rem; flex-wrap: wrap; }
-.game-row label { font-size: 13px; color: var(--text-2); }
-select {
-  padding: 7px 12px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  color: var(--text); font-size: 14px; font-family: inherit; cursor: pointer;
+.game-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
 }
-select:hover { border-color: var(--border-strong); }
+.game-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.game-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.game-counter {
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.game-nav-btn {
+  padding: 6px 12px;
+  flex-shrink: 0;
+}
 
 .board-card {
   background: var(--surface);
@@ -339,12 +366,9 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   height: 9px;
   border-radius: 50%;
   display: inline-block;
+  background: var(--accent);
   box-shadow: inset -1px -1px 0 rgba(0,0,0,0.18), inset 1px 1px 0 rgba(255,255,255,0.28);
 }
-.stats-strip.me  .activation-token,
-.side-panel.me   .activation-token { background: var(--me-stroke); }
-.stats-strip.opp .activation-token,
-.side-panel.opp  .activation-token { background: var(--opp-stroke); }
 .activation-token.used {
   background: transparent !important;
   box-shadow: inset 0 0 0 1px var(--border-strong);
@@ -523,7 +547,7 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .fighter.slain { display: none; }
 .fighter.inspired circle.bg { stroke: var(--inspired) !important; stroke-width: 3 !important; }
 .tok-circle { stroke: var(--surface); stroke-width: 0.6; }
-.tok-label { font-size: 5.5px; fill: #FFFFFF; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
+.tok-label { font-size: 4.5px; fill: #FFFFFF; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
 
 .legend-tok { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: #FFF; font-size: 8px; font-weight: 700; font-family: ui-monospace, monospace; border: 0.5px solid rgba(0,0,0,0.15); }
 .legend-tok.move { background: var(--tok-move); }
@@ -579,7 +603,10 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .fighter-card:hover { border-color: var(--border-strong); z-index: 20; }
 .fighter-card.me { border-left: 3px solid var(--me-stroke); }
 .fighter-card.opp { border-left: 3px solid var(--opp-stroke); }
-.fighter-card.inspired { box-shadow: inset 0 0 0 1px var(--inspired); }
+.fighter-card.inspired {
+  background: var(--inspired-bg);
+  border-color: var(--inspired);
+}
 .fighter-card.slain {
   opacity: 0.42;
   filter: grayscale(0.9);

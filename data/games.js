@@ -325,53 +325,52 @@ export const GAMES = [
     },
     steps: [
       {
-        notation: '(R3 — last activation, glory 5-5)',
+        notation: '(R3 — last activation, glory 15-15)',
         title: 'Last stand — your final activation',
-        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands alone, inspired and two hexes north. Opp has spent all four activations (charge token on Ardorn, can't reactivate); you have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — wins outright. Anything less and the round ends 5-5 → tiebreaker.",
+        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
         poll: {
-          question: 'It is your last activation. What does the Wielder do?',
+          question: 'You have one activation left. What does the Wielder do?',
           options: [
-            'Charge Ardorn — 4 hammers / 3 dmg / cleave (inspired)',
-            'Move + attack — same dice, no charge-out (irrelevant on last activation)',
-            'Guard up — bet on tying out the round',
-            'Focus — discard a power card, draw two',
+            'Attack Ardorn — 4 hammers / 3 dmg / cleave for the win',
+            'Move to f4 and claim the nearest treasure for a safe +1',
+            'Guard — accept the 15-15 tie and go to tiebreaker',
+            'Play an objective from hand to bank glory without risk',
           ],
           actual: 0,
         },
         state: {
           positions: {
-            // Alive
+            // Alive — directly adjacent (same column, ranks 5 and 6)
             W: 'f5',
-            A: 'f7',
-            // Slain — last positions before they fell
+            A: 'f6',
+            // Slain — last positions before they fell (hidden on the board)
             B: 'd4', S: 'd6', H: 'h5',
             F: 'e6', Y: 'g7',
           },
           wounds: { W: 1, A: 2 },
           slain: ['B', 'S', 'H', 'F', 'Y'],
           inspired: ['W', 'A'],
-          glory: [5, 5],
+          glory: [15, 15],
           tokens: { W: ['move'], A: ['charge'] },
           upgrades: {
             W: ['Great Fortitude', 'Sharpened Blade'],
             A: ['Tested by Fire'],
           },
           abilitiesUsed: {
-            me:  ['Trial and Execution', 'Discorporate', 'Whet the Blade'],
-            opp: ['Alone We Stand'],
+            me:  ['Eternal Duty', 'Whet the Blade', 'Discorporate', 'Cackling Court'],
+            opp: ['Alone We Stand', 'Vanguard Dash', 'Deadly Sentries', 'The Raptors of Sigmar'],
           },
           activationsUsed: { me: 3, opp: 4 },
           features: [
-            // Treasures 1-2, 4-5 already delved over the previous rounds
-            { type: 'treasure', label: '1', hex: null, delved: true },
-            { type: 'treasure', label: '2', hex: null, delved: true },
-            { type: 'treasure', label: '3', hex: 'h3' },
-            { type: 'treasure', label: '4', hex: null, delved: true },
-            { type: 'treasure', label: '5', hex: null, delved: true },
+            { type: 'treasure', label: '1', hex: 'd3' },
+            { type: 'treasure', label: '2', hex: 'h3' },
+            { type: 'treasure', label: '3', hex: 'c5' },
+            { type: 'treasure', label: '4', hex: 'i5' },
+            { type: 'treasure', label: '5', hex: 'f4' },
           ],
           hand: {
-            me:  { objectives: 1, power: 2 },
-            opp: { objectives: 0, power: 1 },
+            me:  { objectives: 3, power: 0 },
+            opp: { objectives: 3, power: 0 },
           },
         },
       },

@@ -20,12 +20,12 @@ import { resolveWarbands, expandSteps } from './state.js';
 import { renderBoard, renderLegend, renderFeatures, hexCenter, svgEl } from './board.js';
 import {
   renderFighterCards, updateFighterCards, renderFighterTokens,
-  renderAbilities, renderActivations, renderDecks,
+  renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
   renderHands, renderDice, renderPowerStep,
 } from './warband-panel.js';
 import { renderPoll, resetStepVotes } from './poll.js';
 import {
-  rebuildSelect, loadCustomFromInput, fillTemplate,
+  rebuildGameNav, loadCustomFromInput, fillTemplate,
   downloadCurrent, clearCustoms, loadSavedCustoms,
 } from './custom-games.js';
 
@@ -172,21 +172,31 @@ function loadGame(gameId) {
   currentBoard = BOARDS[game.board] || BOARDS['embergard-1'];
   currentStep = 0;
   if (playing) togglePlay();
+  rebuildGameNav(game.id);
   renderBoard(game);
   renderLegend(game);
   renderFighterCards(game);
+  renderWarbandLabels(game);
   renderDecks(game);
   buildLog(game);
   setTimeout(function() { applyStep(0); }, 50);
 }
 
-/* ==================== INIT ==================== */
-// Merge persisted custom games into GAMES before building the dropdown.
-loadSavedCustoms();
-rebuildSelect();
+function navGame(delta) {
+  if (!currentGame) return;
+  const idx = GAMES.findIndex(function(g) { return g.id === currentGame.id; });
+  const next = idx + delta;
+  if (next < 0 || next >= GAMES.length) return;
+  loadGame(GAMES[next].id);
+}
 
-const select = document.getElementById('game-select');
-select.addEventListener('change', function(e) { loadGame(e.target.value); });
+/* ==================== INIT ==================== */
+// Merge persisted custom games into GAMES before building the nav.
+loadSavedCustoms();
+rebuildGameNav();
+
+document.getElementById('game-prev').addEventListener('click', function() { navGame(-1); });
+document.getElementById('game-next').addEventListener('click', function() { navGame(1); });
 
 document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
 document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });

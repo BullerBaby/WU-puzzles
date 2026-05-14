@@ -13,6 +13,7 @@
  */
 
 import { svgEl } from './board.js';
+import { WARBANDS } from '../data/warbands.js';
 
 /* ==================== RENDER DICE ==================== */
 function makeDie(face) {
@@ -165,15 +166,20 @@ export function renderFighterTokens(fighterId, tokens, slain) {
   g.innerHTML = '';
   if (slain) return;
   if (!tokens || !tokens.length) return;
-  // Position a row of small circles below the fighter (fighter circle r=10, so y=14)
-  const r = 3.5;
-  const spacing = 7.2;
+  // Position tokens INSIDE the fighter's hex (apothem ~11.26), along the bottom
+  // edge where they overlap the fighter circle (r=10) but stay within the hex.
+  // For multiple tokens, contract spacing to fit the hex's narrowing width.
+  const r = 3.2;
+  const cy = 6.5;
   const n = tokens.length;
-  const startX = -((n - 1) * spacing) / 2;
+  // Solve hex constraint 0.866*|cx| + 0.5*|cy| <= 11.258 - r  for usable half-width.
+  const usable = Math.max(0, ((11.258 - r - 0.5 * Math.abs(cy)) / 0.866) - 0.2);
+  const desiredStep = r * 2 + 0.6;
+  const step = n > 1 ? Math.min(desiredStep, (usable * 2) / (n - 1)) : 0;
+  const startX = -((n - 1) * step) / 2;
   tokens.forEach(function(t, i) {
     const spec = tokenSpec(t);
-    const cx = startX + i * spacing;
-    const cy = 14;
+    const cx = startX + i * step;
     const c = svgEl('circle', { cx: cx.toFixed(2), cy: cy, r: r, fill: spec.color, class: 'tok-circle' });
     const tooltip = svgEl('title');
     tooltip.textContent = spec.label;
@@ -437,10 +443,11 @@ export function renderAbilities(game, state) {
 }
 
 /* ==================== RENDER ACTIVATIONS ====================
- * Each side has up to 4 activation tokens per round (defaults to 4). As
- * fighters activate, the count in state.activationsUsed[side] increases and
- * the right-most tokens go hollow. Use `activationsUsed: null` in a diff to
- * reset (e.g. at end of round).
+ * Each side has up to 4 activation tokens per round (defaults to 4). All
+ * tokens start blue (filled). As fighters activate, the count in
+ * state.activationsUsed[side] increases and the LEFT-most tokens go hollow
+ * (used left-to-right). Use `activationsUsed: null` in a diff to reset
+ * (e.g. at end of round).
  */
 const ACTIVATIONS_PER_ROUND = 4;
 
@@ -455,10 +462,28 @@ export function renderActivations(state) {
     const usedCount = Math.max(0, Math.min(total, used[side] || 0));
     for (let i = 0; i < total; i++) {
       const tok = document.createElement('span');
-      tok.className = 'activation-token' + (i >= total - usedCount ? ' used' : '');
+      tok.className = 'activation-token' + (i < usedCount ? ' used' : '');
       container.appendChild(tok);
     }
     container.title = (total - usedCount) + ' of ' + total + ' activations remaining';
+  });
+}
+
+/* ==================== RENDER WARBAND LABELS ====================
+ * Replace the static "Your warband" / "Opponent's warband" labels with the
+ * actual warband name when the game references a WARBANDS registry entry
+ * via `warbands: { me, opp }`. Falls back to the default labels for games
+ * that inline their fighters without using the registry.
+ */
+export function renderWarbandLabels(game) {
+  const ids = game.warbands || {};
+  const fallbacks = { me: 'Your warband', opp: "Opponent's warband" };
+  ['me', 'opp'].forEach(function(side) {
+    const el = document.getElementById(side + '-warband-name');
+    if (!el) return;
+    const wbId = ids[side];
+    const wb = wbId ? WARBANDS[wbId] : null;
+    el.textContent = (wb && wb.name) ? wb.name : fallbacks[side];
   });
 }
 

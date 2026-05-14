@@ -3,7 +3,7 @@
  * under STORAGE_KEY in localStorage and merged into GAMES on startup.
  *
  * Public API (called from main.js):
- *   rebuildSelect()                — refresh the game-select dropdown
+ *   rebuildGameNav(currentGameId?) — refresh the game title / counter UI
  *   loadCustomFromInput(onLoaded)  — read textarea, validate, push, save
  *   fillTemplate(currentGame)      — dump current game to textarea
  *   downloadCurrent(currentGame)   — download current game as .json
@@ -107,19 +107,27 @@ function showStatus(msg, kind) {
   el.className = 'custom-status' + (kind ? ' ' + kind : '');
 }
 
-export function rebuildSelect() {
-  const select = document.getElementById('game-select');
-  const prev = select.value;
-  select.innerHTML = '';
-  GAMES.forEach(function(g) {
-    const opt = document.createElement('option');
-    opt.value = g.id;
-    opt.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
-    select.appendChild(opt);
-  });
-  if (prev && GAMES.find(function(g) { return g.id === prev; })) {
-    select.value = prev;
+export function rebuildGameNav(currentGameId) {
+  const titleEl   = document.getElementById('game-title');
+  const counterEl = document.getElementById('game-counter');
+  const prevBtn   = document.getElementById('game-prev');
+  const nextBtn   = document.getElementById('game-next');
+  if (!titleEl || !counterEl || !prevBtn || !nextBtn) return;
+  let idx = -1;
+  if (currentGameId) idx = GAMES.findIndex(function(g) { return g.id === currentGameId; });
+  if (idx < 0) idx = 0;
+  const g = GAMES[idx];
+  if (!g) {
+    titleEl.textContent = '(no games)';
+    counterEl.textContent = '';
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
   }
+  titleEl.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
+  counterEl.textContent = (idx + 1) + ' of ' + GAMES.length;
+  prevBtn.disabled = (idx === 0);
+  nextBtn.disabled = (idx === GAMES.length - 1);
 }
 
 export function loadCustomFromInput(onLoaded) {
@@ -161,9 +169,8 @@ export function loadCustomFromInput(onLoaded) {
   });
   const customs = GAMES.filter(function(g) { return g.id.indexOf('custom-') === 0; });
   const saved = saveCustomsToStorage(customs);
-  rebuildSelect();
   const firstNew = validated[0];
-  document.getElementById('game-select').value = firstNew.id;
+  rebuildGameNav(firstNew.id);
   if (typeof onLoaded === 'function') onLoaded(firstNew.id);
   const word = validated.length === 1 ? 'game' : 'games';
   showStatus('Loaded ' + validated.length + ' ' + word + '.' + (saved ? '' : ' (Note: couldn\'t save to localStorage — game will be lost on reload.)'), 'success');
@@ -204,7 +211,7 @@ export function clearCustoms(onCleared) {
   for (let i = GAMES.length - 1; i >= 0; i--) {
     if (GAMES[i].id.indexOf('custom-') === 0) GAMES.splice(i, 1);
   }
-  rebuildSelect();
+  rebuildGameNav(GAMES.length ? GAMES[0].id : null);
   if (GAMES.length && typeof onCleared === 'function') onCleared(GAMES[0].id);
   showStatus('Custom games cleared.', 'success');
 }

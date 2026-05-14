@@ -100,6 +100,16 @@ export function renderBoard(game) {
       title.textContent = hexId;
       poly.appendChild(title);
       hexesG.appendChild(poly);
+      // Tiny per-hex coord label, placed near the top of the hex. Naturally
+      // hidden behind a fighter when one's there (fighters-layer is on top).
+      const coord = svgEl('text', {
+        x: x.toFixed(1),
+        y: (y - 8.2).toFixed(1),
+        'text-anchor': 'middle',
+        class: 'hex-coord',
+      });
+      coord.textContent = hexId;
+      hexesG.appendChild(coord);
       if (startingSet.has(hexId)) {
         hexesG.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
       }

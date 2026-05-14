@@ -366,7 +366,9 @@ export const GAMES = [
             { type: 'treasure', label: '2', hex: 'h3' },
             { type: 'treasure', label: '3', hex: 'c5' },
             { type: 'treasure', label: '4', hex: 'i5' },
-            { type: 'treasure', label: '5', hex: 'f4' },
+            { type: 'treasure', label: '5', hex: 'h8' },
+            { type: 'aqua', hex: 'f2' },
+            { type: 'aqua', hex: 'f8' },
           ],
           hand: {
             me:  { objectives: 3, power: 0 },

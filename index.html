@@ -1,234 +1,169 @@
-/* ==================== MAIN ====================
- * Entry point. Holds the small mutable app state (current game / step / etc.),
- * orchestrates the per-step render pipeline, and wires DOM event listeners.
- *
- * Module browses:
- *   data/boards.js, data/warbands.js, data/games.js — pure data
- *   js/state.js          — game resolution + step expansion
- *   js/board.js          — board SVG, hex math, features, legend
- *   js/warband-panel.js  — side panels (fighters, hands, dice, etc.)
- *   js/poll.js           — per-step opinion polls
- *   js/custom-games.js   — load/save/validate user games
- *
- * Loaded with <script type="module">, so DOM is ready when the module runs.
- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underworlds replay</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
 
-import { BOARDS } from '../data/boards.js';
-import { GAMES }  from '../data/games.js';
+<div class="container">
 
-import { resolveWarbands, expandSteps } from './state.js';
-import { renderBoard, renderLegend, renderFeatures, hexCenter, svgEl } from './board.js';
-import {
-  renderFighterCards, updateFighterCards, renderFighterTokens,
-  renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
-  renderHands, renderDice, renderPowerStep,
-} from './warband-panel.js';
-import { renderPoll, resetStepVotes } from './poll.js';
-import {
-  rebuildGameNav, loadCustomFromInput, fillTemplate,
-  downloadCurrent, clearCustoms, loadSavedCustoms,
-} from './custom-games.js';
+<header>
+  <h1>Warhammer Underworlds Puzzles</h1>
+</header>
 
-/* ==================== STATE ==================== */
-let currentGame  = null;
-let currentBoard = null;
-let currentStep  = 0;
-let playing      = false;
-let playTimer    = null;
+<section class="game-row">
+  <button id="game-prev" type="button" class="game-nav-btn" title="Previous game">← Prev</button>
+  <div class="game-info">
+    <span class="game-title" id="game-title"></span>
+    <span class="game-counter" id="game-counter"></span>
+  </div>
+  <button id="game-next" type="button" class="game-nav-btn" title="Next game">Next →</button>
+</section>
 
-/* ==================== APPLY STEP ==================== */
-function applyStep(idx) {
-  const game = currentGame;
-  const board = currentBoard;
-  const step = game.steps[idx];
-  const state = step._state || step.state;
+<section class="board-card">
 
-  for (const id in game.fighters) {
-    const pos = state.positions[id];
-    const el = document.getElementById('f-' + id);
-    if (!el) continue;
-    const slain = (state.slain || []).indexOf(id) >= 0;
-    const inspired = (state.inspired || []).indexOf(id) >= 0;
-    if (pos) {
-      const { x, y } = hexCenter(pos, board.rows);
-      el.style.transform = 'translate(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px)';
-    }
-    el.classList.toggle('slain', slain);
-    el.classList.toggle('inspired', inspired);
-    const wounds = (state.wounds || {})[id] || 0;
-    const wb = document.getElementById('w-' + id);
-    if (wounds > 0 && !slain) {
-      wb.setAttribute('opacity', '1');
-      wb.querySelector('text').textContent = wounds;
-    } else {
-      wb.setAttribute('opacity', '0');
-    }
-    renderFighterTokens(id, (state.tokens || {})[id], slain);
-  }
+  <div class="side-panel opp">
+    <div class="hand-header">
+      <div class="hand-header-left">
+        <span class="hand-label" id="opp-warband-name">Opponent's warband</span>
+        <div class="warband-meta" id="opp-warband-meta"></div>
+      </div>
+      <span class="hand-counts">
+        <span class="hand-pill obj"><strong id="opp-obj-count">0</strong> obj</span>
+        <span class="hand-pill pow"><strong id="opp-pow-count">0</strong> pow</span>
+      </span>
+    </div>
+    <div id="fighter-cards-opp" class="fighter-cards-row opp"></div>
+    <div class="hand-group" id="abilities-group-opp" hidden>
+      <div class="hand-group-label">Abilities</div>
+      <div class="abilities-list" id="abilities-opp"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Objectives</div>
+      <div class="hand-cards" id="opp-obj-cards"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Power</div>
+      <div class="hand-cards" id="opp-pow-cards"></div>
+    </div>
+  </div>
 
-  if (step.anim && step.anim.attack) {
-    const af = step.anim.attack;
-    const prev = idx > 0 ? (game.steps[idx-1]._state || game.steps[idx-1].state) : null;
-    const tpos = (prev && prev.positions[af.target]) || state.positions[af.target];
-    if (tpos) {
-      const { x, y } = hexCenter(tpos, board.rows);
-      const layer = document.getElementById('dmg-layer');
-      const wrap = svgEl('g', { transform: 'translate(' + x.toFixed(1) + ',' + (y - 18).toFixed(1) + ')' });
-      const inner = svgEl('g', { class: 'dmg-flash' });
-      const tx = svgEl('text', { 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: 'var(--danger)' });
-      tx.textContent = '−' + af.dmg;
-      inner.appendChild(tx);
-      wrap.appendChild(inner);
-      layer.appendChild(wrap);
-      setTimeout(function() { if (wrap.parentNode) wrap.remove(); }, 1500);
-    }
-  }
+  <div class="stats-strip opp">
+    <span class="stats-strip-label">Opponent</span>
+    <span class="activations" id="opp-activations"></span>
+    <span class="glory-badge" id="glory-opp" title="Opponent glory">0</span>
+  </div>
 
-  const gl = state.glory || [0, 0];
-  document.getElementById('glory-me').textContent = gl[0];
-  document.getElementById('glory-opp').textContent = gl[1];
-  document.getElementById('curr-notation').textContent = step.notation || '';
-  document.getElementById('curr-title').textContent = step.title || '';
-  document.getElementById('curr-explanation').textContent = step.explanation || '';
-  document.getElementById('step-indicator').textContent = (idx + 1) + ' / ' + game.steps.length;
-  document.getElementById('current-round').textContent = game.round || 1;
+  <div class="board-area">
+    <div class="board-with-stats">
+      <div class="stats-side">
+        <div class="round-banner">
+          <span class="round-label">Round</span>
+          <span class="round-number" id="current-round">1</span>
+        </div>
+      </div>
+      <div class="board-side">
+        <svg id="board-svg" width="100%" viewBox="0 0 320 280" role="img" aria-label="Underworlds replay board"></svg>
+      </div>
+    </div>
+    <aside class="legend-side" id="legend-side"></aside>
+  </div>
 
-  renderDice(step.dice);
-  renderPowerStep(state.powerStep);
-  renderHands(state);
-  renderFeatures(state, board);
-  updateFighterCards(state, game);
-  renderAbilities(game, state);
-  renderActivations(state);
-  renderPoll(game, idx);
+  <div class="stats-strip me">
+    <span class="stats-strip-label">You</span>
+    <span class="activations" id="my-activations"></span>
+    <span class="glory-badge" id="glory-me" title="Your glory">0</span>
+  </div>
 
-  const lines = document.querySelectorAll('.notation-line');
-  for (let i = 0; i < lines.length; i++) {
-    lines[i].classList.toggle('current', i === idx);
-    if (i === idx) lines[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-  document.getElementById('btn-prev').disabled = (idx === 0);
-  document.getElementById('btn-next').disabled = (idx === game.steps.length - 1);
-}
+  <div class="side-panel me">
+    <div class="hand-header">
+      <div class="hand-header-left">
+        <span class="hand-label" id="me-warband-name">Your warband</span>
+        <div class="warband-meta" id="me-warband-meta"></div>
+      </div>
+      <span class="hand-counts">
+        <span class="hand-pill obj"><strong id="my-obj-count">0</strong> obj</span>
+        <span class="hand-pill pow"><strong id="my-pow-count">0</strong> pow</span>
+      </span>
+    </div>
+    <div id="fighter-cards-me" class="fighter-cards-row me"></div>
+    <div class="hand-group" id="abilities-group-me" hidden>
+      <div class="hand-group-label">Abilities</div>
+      <div class="abilities-list" id="abilities-me"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Objectives</div>
+      <div class="hand-cards" id="my-obj-cards"></div>
+    </div>
+    <div class="hand-group">
+      <div class="hand-group-label">Power</div>
+      <div class="hand-cards" id="my-pow-cards"></div>
+    </div>
+  </div>
 
-function goStep(delta) {
-  if (playing) togglePlay();
-  const ni = currentStep + delta;
-  if (ni < 0 || ni >= currentGame.steps.length) return;
-  currentStep = ni;
-  applyStep(currentStep);
-}
+  <div class="controls-row">
+    <div class="buttons">
+      <button id="btn-prev" type="button">← Prev</button>
+      <span id="step-indicator">1 / 1</span>
+      <button id="btn-next" type="button">Next →</button>
+      <button id="btn-play" type="button">▶ Play</button>
+      <button id="btn-rotate" class="icon" type="button" title="Rotate board 180°">↻</button>
+    </div>
+  </div>
 
-function togglePlay() {
-  const btn = document.getElementById('btn-play');
-  if (playing) {
-    clearTimeout(playTimer);
-    playing = false;
-    btn.textContent = '▶ Play';
-  } else {
-    playing = true;
-    btn.textContent = '⏸ Pause';
-    const advance = function() {
-      if (!playing) return;
-      if (currentStep < currentGame.steps.length - 1) {
-        currentStep++;
-        applyStep(currentStep);
-        playTimer = setTimeout(advance, 2500);
-      } else {
-        playing = false;
-        btn.textContent = '▶ Play';
-      }
-    };
-    playTimer = setTimeout(advance, 600);
-  }
-}
+  <div class="step-panel">
+    <div class="step-notation" id="curr-notation"></div>
+    <div class="step-title" id="curr-title"></div>
+    <div class="step-dice" id="curr-dice"></div>
+    <div class="power-step" id="power-step">
+      <div class="power-step-label">Power step</div>
+      <div class="power-events" id="power-events"></div>
+    </div>
+    <p class="step-explanation" id="curr-explanation"></p>
+  </div>
 
-function rotateBoard() {
-  if (!currentGame) return;
-  currentGame.boardRotation = ((currentGame.boardRotation || 0) === 180) ? 0 : 180;
-  renderBoard(currentGame);
-  renderLegend(currentGame);
-  setTimeout(function() { applyStep(currentStep); }, 50);
-}
+  <div class="poll-panel" id="poll-panel" hidden>
+    <div class="poll-header">
+      <span class="poll-question" id="poll-question"></span>
+      <span class="poll-meta" id="poll-meta"></span>
+    </div>
+    <div class="poll-options" id="poll-options"></div>
+    <div class="poll-actions">
+      <span class="poll-hint">Click an option to vote — totals stay on this device.</span>
+      <button class="poll-reset" id="poll-reset" type="button">Reset votes</button>
+    </div>
+  </div>
 
-function buildLog(game) {
-  const log = document.getElementById('notation-log');
-  log.innerHTML = '';
-  game.steps.forEach(function(s, i) {
-    const div = document.createElement('div');
-    div.className = 'notation-line';
-    div.textContent = (i + 1) + '.  ' + (s.notation || s.title || '(step ' + (i+1) + ')');
-    div.onclick = function() { if (playing) togglePlay(); currentStep = i; applyStep(i); };
-    log.appendChild(div);
-  });
-}
+  <div class="log-section">
+    <div class="log-label">Notation log — click to jump (←/→/space also work)</div>
+    <div id="notation-log"></div>
+  </div>
+</section>
 
-function loadGame(gameId) {
-  const game = GAMES.find(function(g) { return g.id === gameId; });
-  if (!game) return;
-  resolveWarbands(game);
-  expandSteps(game);
-  currentGame = game;
-  currentBoard = BOARDS[game.board] || BOARDS['embergard-1'];
-  currentStep = 0;
-  if (playing) togglePlay();
-  rebuildGameNav(game.id);
-  renderBoard(game);
-  renderLegend(game);
-  renderFighterCards(game);
-  renderWarbandLabels(game);
-  renderDecks(game);
-  buildLog(game);
-  setTimeout(function() { applyStep(0); }, 50);
-}
+<section class="custom-section">
+  <details class="custom-details" id="custom-details">
+    <summary>Load your own game (paste JSON)</summary>
+    <div class="custom-body">
+      <p class="custom-help">
+        Paste a game as JSON below, then click <strong>Load game</strong>. The easiest start is <strong>Use current as template</strong>: it dumps the game you're viewing into the box so you can edit it. Custom games are saved in your browser (<code>localStorage</code>) and added to the dropdown. Single game or a JSON array of games both work. Required fields: <code>title</code>, <code>board</code>, <code>fighters</code>, <code>steps</code>. See the docs below for the full data shape.
+      </p>
+      <textarea id="custom-input" rows="14" spellcheck="false" placeholder='{ "title": "My game", "board": "embergard-1", "round": 1, "fighters": { ... }, "steps": [ ... ] }'></textarea>
+      <div class="custom-buttons">
+        <button id="btn-load-custom" class="primary" type="button">Load game</button>
+        <button id="btn-template" type="button">Use current as template</button>
+        <button id="btn-download" type="button">Download current as JSON</button>
+        <button id="btn-clear-custom" type="button">Clear saved customs</button>
+      </div>
+      <div id="custom-status" class="custom-status"></div>
+    </div>
+  </details>
+</section>
 
-function navGame(delta) {
-  if (!currentGame) return;
-  const idx = GAMES.findIndex(function(g) { return g.id === currentGame.id; });
-  const next = idx + delta;
-  if (next < 0 || next >= GAMES.length) return;
-  loadGame(GAMES[next].id);
-}
+</div>
 
-/* ==================== INIT ==================== */
-// Merge persisted custom games into GAMES before building the nav.
-loadSavedCustoms();
-rebuildGameNav();
-
-document.getElementById('game-prev').addEventListener('click', function() { navGame(-1); });
-document.getElementById('game-next').addEventListener('click', function() { navGame(1); });
-
-document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
-document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });
-document.getElementById('btn-play').addEventListener('click', togglePlay);
-document.getElementById('btn-rotate').addEventListener('click', rotateBoard);
-
-document.getElementById('btn-load-custom').addEventListener('click', function() {
-  loadCustomFromInput(loadGame);
-});
-document.getElementById('btn-template').addEventListener('click', function() {
-  fillTemplate(currentGame);
-});
-document.getElementById('btn-download').addEventListener('click', function() {
-  downloadCurrent(currentGame);
-});
-document.getElementById('btn-clear-custom').addEventListener('click', function() {
-  clearCustoms(loadGame);
-});
-
-document.getElementById('poll-reset').addEventListener('click', function() {
-  if (!currentGame) return;
-  if (!confirm('Reset votes for this step?')) return;
-  resetStepVotes(currentGame.id, currentStep);
-  renderPoll(currentGame, currentStep);
-});
-
-document.addEventListener('keydown', function(e) {
-  if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-  if (e.key === 'ArrowLeft')  { goStep(-1); e.preventDefault(); }
-  if (e.key === 'ArrowRight') { goStep(1); e.preventDefault(); }
-  if (e.key === ' ')          { togglePlay(); e.preventDefault(); }
-  if (e.key === 'r' || e.key === 'R') { rotateBoard(); }
-});
-
-loadGame(GAMES[0].id);
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

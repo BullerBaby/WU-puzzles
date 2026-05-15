@@ -116,25 +116,44 @@ export function renderBoard(game) {
     }
   }
 
+  // Find the visually leftmost x and visually lowest y across all playable hexes,
+  // so edge labels can be aligned in a single column / row instead of zig-zagging
+  // along the hex grid's serrated edges.
+  let minXAll = Infinity, maxYAll = -Infinity;
   for (let i = 0; i < FILES.length; i++) {
-    let lowestRank = null;
     for (let rk = 1; rk <= board.rows; rk++) {
-      if (!excludedSet.has(FILES[i] + rk)) { lowestRank = rk; break; }
+      if (excludedSet.has(FILES[i] + rk)) continue;
+      const c = hexCenter(FILES[i] + rk, board.rows);
+      if (c.x < minXAll) minXAll = c.x;
+      if (c.y > maxYAll) maxYAll = c.y;
     }
-    if (lowestRank == null) continue;
-    const { x, y } = hexCenter(FILES[i] + lowestRank, board.rows);
-    const t = svgEl('text', { x, y: y + R + 11, 'text-anchor': 'middle', class: 'coord-label' });
+  }
+  const rowLabelX = minXAll - R - 3;
+  const colLabelY = maxYAll + R + 11;
+
+  for (let i = 0; i < FILES.length; i++) {
+    // Skip files that are entirely excluded
+    let anyPlayable = false;
+    for (let rk = 1; rk <= board.rows; rk++) {
+      if (!excludedSet.has(FILES[i] + rk)) { anyPlayable = true; break; }
+    }
+    if (!anyPlayable) continue;
+    const x = BASE_X + i * COL_STEP;
+    const t = svgEl('text', { x: x.toFixed(1), y: colLabelY.toFixed(1), 'text-anchor': 'middle', class: 'coord-label' });
     t.textContent = FILES[i];
     svg.appendChild(t);
   }
   for (let rk = 1; rk <= board.rows; rk++) {
-    let leftCol = null;
+    // Skip ranks that are entirely excluded
+    let anyPlayable = false;
     for (let i = 0; i < FILES.length; i++) {
-      if (!excludedSet.has(FILES[i] + rk)) { leftCol = FILES[i]; break; }
+      if (!excludedSet.has(FILES[i] + rk)) { anyPlayable = true; break; }
     }
-    if (!leftCol) continue;
-    const { x, y } = hexCenter(leftCol + rk, board.rows);
-    const t = svgEl('text', { x: x - R - 3, y: y + 3, 'text-anchor': 'end', class: 'coord-label' });
+    if (!anyPlayable) continue;
+    // Use the row's natural y as if it were column 'a' (col 0, no offset) —
+    // ensures evenly-spaced ladder regardless of which columns are playable.
+    const y = BASE_Y + (board.rows - rk) * ROW_STEP;
+    const t = svgEl('text', { x: rowLabelX.toFixed(1), y: (y + 3).toFixed(1), 'text-anchor': 'end', class: 'coord-label' });
     t.textContent = rk;
     svg.appendChild(t);
   }

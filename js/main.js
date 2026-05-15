@@ -105,7 +105,22 @@ function applyStep(idx) {
   const lines = document.querySelectorAll('.notation-line');
   for (let i = 0; i < lines.length; i++) {
     lines[i].classList.toggle('current', i === idx);
-    if (i === idx) lines[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  // Scroll the active line into view, but ONLY within the notation-log container.
+  // Using element.scrollIntoView() would scroll the whole document when the log
+  // doesn't have its own scroll context — making the page jump when changing
+  // puzzles or stepping through. This manual version is contained.
+  const active = lines[idx];
+  if (active) {
+    const container = active.parentElement;
+    if (container) {
+      const cTop = container.scrollTop;
+      const cBot = cTop + container.clientHeight;
+      const aTop = active.offsetTop;
+      const aBot = aTop + active.offsetHeight;
+      if (aTop < cTop)      container.scrollTop = aTop;
+      else if (aBot > cBot) container.scrollTop = aBot - container.clientHeight;
+    }
   }
   document.getElementById('btn-prev').disabled = (idx === 0);
   document.getElementById('btn-next').disabled = (idx === game.steps.length - 1);

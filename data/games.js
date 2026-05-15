@@ -61,7 +61,7 @@ export const GAMES = [
         title: 'Start of round — Trial and Execution',
         explanation: "Scriptor's Trial and Execution marks o3 as Condemned. Closest enemy in range, a clean target for the Wielder.",
         poll: {
-          question: 'Who should the Scriptor mark Condemned this round?',
+          question: 'How would you play this?',
           options: [
             'o3 at f6 — closest, clean charge target',
             'o1 at e6 — opp leader, biggest bounty',
@@ -131,7 +131,7 @@ export const GAMES = [
         title: 'R2.4 — Discorporate (warscroll ability)',
         explanation: "Teleport Sharpener from g4 to h6, flanking o2 and o4 for R3. No card spent.",
         poll: {
-          question: 'Where should we Discorporate the Sharpener?',
+          question: "What's the right call here?",
           options: [
             'h6 — flank o2 and o4 for R3',
             'd6 — engage opp leader from behind',
@@ -329,7 +329,7 @@ export const GAMES = [
         title: 'Last stand — your final activation',
         explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
         poll: {
-          question: 'You have one activation left. What does the Wielder do?',
+          question: "What's your move?",
           options: [
             'Attack Ardorn — 4 hammers / 3 dmg / cleave for the win',
             'Move to f4 and claim the nearest treasure for a safe +1',

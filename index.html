@@ -14,13 +14,15 @@
   <h1>Warhammer Underworlds Puzzles</h1>
 </header>
 
-<section class="game-row">
-  <button id="game-prev" type="button" class="game-nav-btn" title="Previous game">← Prev</button>
-  <div class="game-info">
-    <span class="game-title" id="game-title"></span>
-    <span class="game-counter" id="game-counter"></span>
+<section class="step-panel">
+  <div class="step-notation" id="curr-notation"></div>
+  <div class="step-title" id="curr-title"></div>
+  <div class="step-dice" id="curr-dice"></div>
+  <div class="power-step" id="power-step">
+    <div class="power-step-label">Power step</div>
+    <div class="power-events" id="power-events"></div>
   </div>
-  <button id="game-next" type="button" class="game-nav-btn" title="Next game">Next →</button>
+  <p class="step-explanation" id="curr-explanation"></p>
 </section>
 
 <section class="board-card">
@@ -114,17 +116,6 @@
     </div>
   </div>
 
-  <div class="step-panel">
-    <div class="step-notation" id="curr-notation"></div>
-    <div class="step-title" id="curr-title"></div>
-    <div class="step-dice" id="curr-dice"></div>
-    <div class="power-step" id="power-step">
-      <div class="power-step-label">Power step</div>
-      <div class="power-events" id="power-events"></div>
-    </div>
-    <p class="step-explanation" id="curr-explanation"></p>
-  </div>
-
   <div class="poll-panel" id="poll-panel" hidden>
     <div class="poll-header">
       <span class="poll-question" id="poll-question"></span>
@@ -141,6 +132,15 @@
     <div class="log-label">Notation log — click to jump (←/→/space also work)</div>
     <div id="notation-log"></div>
   </div>
+</section>
+
+<section class="game-row">
+  <button id="game-prev" type="button" class="game-nav-btn" title="Previous game">← Prev puzzle</button>
+  <div class="game-info">
+    <span class="game-title" id="game-title"></span>
+    <span class="game-counter" id="game-counter"></span>
+  </div>
+  <button id="game-next" type="button" class="game-nav-btn" title="Next game">Next puzzle →</button>
 </section>
 
 <section class="custom-section">

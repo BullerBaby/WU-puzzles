@@ -19,8 +19,8 @@
   --opp-text: #4A1B0C;
   --inspired: #BA7517;
   --inspired-bg: #E5D4BA;
-  --stagger: #F6DBA8;
-  --stagger-border: #BA7517;
+  --stagger: #F2C8C8;
+  --stagger-border: #A32D2D;
   --waystone: #C0DD97;
   --waystone-border: #3B6D11;
   --blocked: #888780;
@@ -51,8 +51,8 @@
   --treasure-bg: #E4B23E;
   --treasure-border: #8C6D1F;
   --treasure-text: #2C2C2A;
-  --aqua-bg: #4DB8A0;
-  --aqua-border: #1F6D5E;
+  --aqua-bg: #4FAF52;
+  --aqua-border: #1A6520;
   --aqua-text: #FFFFFF;
   --hex-feature-bg: #F0E5C5;
   --hex-feature-border: rgba(140, 109, 31, 0.55);
@@ -74,8 +74,8 @@
     --success: #6ECEAA;
     --me-stroke: #B5D4F4;
     --opp-stroke: #F5C4B3;
-    --stagger: #6E5520;
-    --stagger-border: #FAC775;
+    --stagger: #5E2020;
+    --stagger-border: #E89090;
     --inspired-bg: #4A3B20;
     --waystone: #2D4A12;
     --waystone-border: #97C459;
@@ -105,8 +105,8 @@
     --treasure-bg: #D9A536;
     --treasure-border: #FAC775;
     --treasure-text: #161614;
-    --aqua-bg: #3D9B85;
-    --aqua-border: #6FCEB8;
+    --aqua-bg: #3D8D40;
+    --aqua-border: #7BCE6F;
     --aqua-text: #161614;
     --hex-feature-bg: #383224;
     --hex-feature-border: rgba(212, 178, 88, 0.5);

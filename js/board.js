@@ -144,15 +144,16 @@ export function renderBoard(game) {
     svg.appendChild(t);
   }
   for (let rk = 1; rk <= board.rows; rk++) {
-    // Skip ranks that are entirely excluded
-    let anyPlayable = false;
+    // Use the y of the leftmost actually-playable hex for this rank, so the
+    // label sits visually next to a real hex (not 11.25px above when that
+    // hex is in an odd column). The x stays pinned to rowLabelX, so all
+    // labels still form a clean vertical column.
+    let leftCol = -1;
     for (let i = 0; i < FILES.length; i++) {
-      if (!excludedSet.has(FILES[i] + rk)) { anyPlayable = true; break; }
+      if (!excludedSet.has(FILES[i] + rk)) { leftCol = i; break; }
     }
-    if (!anyPlayable) continue;
-    // Use the row's natural y as if it were column 'a' (col 0, no offset) —
-    // ensures evenly-spaced ladder regardless of which columns are playable.
-    const y = BASE_Y + (board.rows - rk) * ROW_STEP;
+    if (leftCol < 0) continue;
+    const y = BASE_Y + (board.rows - rk) * ROW_STEP + (leftCol % 2) * COL_OFFSET;
     const t = svgEl('text', { x: rowLabelX.toFixed(1), y: (y + 3).toFixed(1), 'text-anchor': 'end', class: 'coord-label' });
     t.textContent = rk;
     svg.appendChild(t);

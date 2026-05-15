@@ -399,6 +399,17 @@ export function updateFighterCards(state, game) {
         ug.appendChild(chip);
       });
     }
+
+    // Attack profiles: show only the inspired variant when inspired (and it
+    // exists), otherwise only the uninspired variant. Fighters that lack an
+    // inspired profile fall back to their regular profile in both states.
+    const fInfo = game.fighters[id];
+    const hasInspiredProfile = Array.isArray(fInfo.attacksInspired) && fInfo.attacksInspired.length > 0;
+    const showInspired = isInspired && hasInspiredProfile;
+    card.querySelectorAll('.attack-profile').forEach(function(p) {
+      const isInspiredProfile = p.classList.contains('inspired-profile');
+      p.style.display = (isInspiredProfile === showInspired) ? '' : 'none';
+    });
   }
 }
 

@@ -123,10 +123,33 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-.container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.container { max-width: 1240px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 header { margin-bottom: 1.5rem; }
 h1 { font-size: 26px; font-weight: 500; margin: 0; }
 section { margin-bottom: 1.5rem; }
+
+/* ==================== TWO-COLUMN MAIN LAYOUT ====================
+ * Below the header, content splits into:
+ *   left  (340px) — step-panel, poll, game-nav, custom-section
+ *   right (1fr)   — board card with everything inside it
+ * On viewports < 980px the columns stack vertically (board first, then the
+ * left-column items below it — so the board stays the first thing visible).
+ */
+.main-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.left-column,
+.right-column { min-width: 0; }
+.left-column > section,
+.left-column > .poll-panel { margin-bottom: 1rem; }
+.left-column > section:last-child { margin-bottom: 0; }
+@media (max-width: 980px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .right-column { order: -1; }   /* board first on narrow viewports */
+}
 
 .game-row {
   display: flex;

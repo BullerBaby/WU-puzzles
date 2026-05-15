@@ -29,7 +29,7 @@ export const GAMES = [
     warbands: { me: 'headsmens-curse', opp: 'emberwatch' },
     decks: {
       me:  { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
-      opp: { pair: 'Blazing Assault / Emberstone Sentinels',   plots: ['Sigmar Watches Over Us'] },
+      opp: { pair: 'Blazing Assault / Emberstone Sentinels',   plots: [] },
     },
     steps: [
       {

@@ -88,6 +88,74 @@ export const GAMES = [
   },
 
   {
+    id: 'yurik-attack-choice',
+    title: "Demo - Yurik's choice",
+    description: "Round 2. Yurik Velzaine has two attack profiles — axe at range 1, crossbow at range 4. Two enemies are reachable. Which attack scores more?",
+    round: 2,
+    board: 'embergard-1',
+    boardRotation: 0,
+    warbands: { me: 'emberwatch', opp: 'headsmens-curse' },
+    decks: {
+      me:  { pair: 'Blazing Assault / Emberstone Sentinels',   plots: [] },
+      opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
+    },
+    steps: [
+      {
+        notation: '(R2 — Yurik to attack)',
+        title: 'Two attacks, one activation',
+        explanation: "Yurik is up. Two enemies sit in range: the Sharpener (H) is adjacent at f6 (axe reach), and the Wielder (W) is three hexes away at g8 (crossbow reach). The Sharpener has 2 wounds left and a Dodge save — Dodge doesn't stop hammer attacks, so the axe lands cleanly. The Wielder has 1 wound left, but his Block save contests hammer attacks. Easy kill on a 1-glory fighter, or a riskier shot at the 3-glory leader?",
+        poll: {
+          question: "Yurik's activation — which attack?",
+          options: [
+            'Crossbow at W — 1 dmg finishes the leader (+3 glory, contested by Block)',
+            'Axe at H — clean 2 dmg kill on the Sharpener (+1 glory)',
+            'Crossbow at B — chip 1 wound off the Bearer (no kill, +0 glory)',
+            'Guard — pass the activation, save Yurik for next round',
+          ],
+          correct: 0,
+        },
+        state: {
+          positions: {
+            // Me (Emberwatch)
+            Y: 'f5',
+            A: 'e5',
+            F: 'g5',
+            // Opp (Headsmens-Curse)
+            W: 'g8',
+            H: 'f6',
+            B: 'd8',
+            S: 'h8',
+          },
+          wounds: { W: 3, H: 1 },
+          slain: [],
+          inspired: [],
+          glory: [3, 4],
+          tokens: {},
+          upgrades: {},
+          abilitiesUsed: {
+            me:  ['Vanguard Dash'],
+            opp: ['Whet the Blade'],
+          },
+          activationsUsed: { me: 1, opp: 1 },
+          features: [
+            { type: 'treasure', label: '1', hex: 'd3' },
+            { type: 'treasure', label: '2', hex: 'h3' },
+            { type: 'treasure', label: '3', hex: 'c5' },
+            { type: 'treasure', label: '4', hex: 'i5' },
+            { type: 'treasure', label: '5', hex: 'h8' },
+            { type: 'aqua', hex: 'f2' },
+            { type: 'aqua', hex: 'f8' },
+          ],
+          hand: {
+            me:  { objectives: 3, power: 3 },
+            opp: { objectives: 3, power: 3 },
+          },
+        },
+      },
+    ],
+  },
+
+  {
     id: 'headsmen-r2-demo',
     title: "Headsmen's Curse — Round 2 demo (Embergard 1)",
     description: "Showcases the WARBANDS registry + state-inheritance (diff) features. Round 2 of a hypothetical match between Headsmen's Curse and a generic 4-fighter opponent.",

@@ -20,6 +20,74 @@
 
 export const GAMES = [
   {
+    id: 'headsmen-vs-emberwatch-r3-finale',
+    title: "R3 finale — Wielder vs. Ardorn (Embergard 1)",
+    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
+    round: 3,
+    board: 'embergard-1',
+    boardRotation: 0,
+    warbands: { me: 'headsmens-curse', opp: 'emberwatch' },
+    decks: {
+      me:  { pair: 'Verdict of Blood / Headsman Rites',     plots: ['Trial in Absentia', 'Mark for Execution'] },
+      opp: { pair: 'Blazing Assault / Emberstone Sentinels', plots: ['Sigmar Watches Over Us'] },
+    },
+    steps: [
+      {
+        notation: '(R3 — last activation, glory 15-15)',
+        title: 'Last stand — your final activation',
+        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
+        poll: {
+          question: "What's your move?",
+          options: [
+            'Attack Ardorn — 4 hammers / 3 dmg / cleave for the win',
+            'Move to f4 and claim the nearest treasure for a safe +1',
+            'Guard — accept the 15-15 tie and go to tiebreaker',
+            'Play an objective from hand to bank glory without risk',
+          ],
+          correct: 0,
+        },
+        state: {
+          positions: {
+            // Alive — directly adjacent (same column, ranks 5 and 6)
+            W: 'f5',
+            A: 'f6',
+            // Slain — last positions before they fell (hidden on the board)
+            B: 'd4', S: 'd6', H: 'h5',
+            F: 'e6', Y: 'g7',
+          },
+          wounds: { W: 1, A: 2 },
+          slain: ['B', 'S', 'H', 'F', 'Y'],
+          inspired: ['W', 'A'],
+          glory: [15, 15],
+          tokens: { W: ['move'], A: ['charge'] },
+          upgrades: {
+            W: ['Great Fortitude', 'Sharpened Blade'],
+            A: ['Tested by Fire'],
+          },
+          abilitiesUsed: {
+            me:  ['Eternal Duty', 'Whet the Blade', 'Discorporate', 'Cackling Court'],
+            opp: ['Alone We Stand', 'Vanguard Dash', 'Deadly Sentries', 'The Raptors of Sigmar'],
+          },
+          activationsUsed: { me: 3, opp: 4 },
+          features: [
+            { type: 'treasure', label: '1', hex: 'd3' },
+            { type: 'treasure', label: '2', hex: 'h3' },
+            { type: 'treasure', label: '3', hex: 'c5' },
+            { type: 'treasure', label: '4', hex: 'i5' },
+            { type: 'treasure', label: '5', hex: 'h8' },
+            { type: 'aqua', hex: 'f2' },
+            { type: 'aqua', hex: 'f8' },
+          ],
+          hand: {
+            me:  { objectives: 3, power: 0 },
+            opp: { objectives: 3, power: 0 },
+          },
+        },
+      },
+    ],
+  },
+
+  {
     id: 'headsmen-r2-demo',
     title: "Headsmen's Curse — Round 2 demo (Embergard 1)",
     description: "Showcases the WARBANDS registry + state-inheritance (diff) features. Round 2 of a hypothetical match between Headsmen's Curse and a generic 4-fighter opponent.",
@@ -68,7 +136,7 @@ export const GAMES = [
             'o4 at g6 — flank threat to the Sharpener',
             "o2 at h7 — out of range now (don't condemn)",
           ],
-          actual: 0,
+          correct: 0,
         },
         diff: {
           abilitiesUsed: { me: ['Trial and Execution'] },
@@ -138,7 +206,7 @@ export const GAMES = [
             'f4 — stack next to W for Whet the Blade',
             "Hold — save Discorporate for next round",
           ],
-          actual: 0,
+          correct: 0,
         },
         diff: {
           positions: { H: 'h6' },
@@ -306,74 +374,6 @@ export const GAMES = [
           },
           glory: [0, 0],
           hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
-        },
-      },
-    ],
-  },
-
-  {
-    id: 'Demo1 - which attack',
-    title: "Wielder vs. Ardorn (Embergard 1)",
-    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Last activation. Which attack do you choose?",
-    round: 3,
-    board: 'embergard-1',
-    boardRotation: 0,
-    warbands: { me: 'headsmens-curse', opp: 'emberwatch' },
-    decks: {
-      me:  { pair: 'Verdict of Blood / Headsman Rites',     plots: ['Trial in Absentia', 'Mark for Execution'] },
-      opp: { pair: 'Blazing Assault / Emberstone Sentinels', plots: ['Sigmar Watches Over Us'] },
-    },
-    steps: [
-      {
-        notation: '(R3 — last activation, glory 15-15)',
-        title: 'Last stand — your final activation',
-        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
-        poll: {
-          question: "What's your move?",
-          options: [
-            'Attack Ardorn — 4 hammers / 3 dmg / cleave for the win',
-            'Move to f4 and claim the nearest treasure for a safe +1',
-            'Guard — accept the 15-15 tie and go to tiebreaker',
-            'Play an objective from hand to bank glory without risk',
-          ],
-          actual: 0,
-        },
-        state: {
-          positions: {
-            // Alive — directly adjacent (same column, ranks 5 and 6)
-            W: 'f5',
-            A: 'f6',
-            // Slain — last positions before they fell (hidden on the board)
-            B: 'd4', S: 'd6', H: 'h5',
-            F: 'e6', Y: 'g7',
-          },
-          wounds: { W: 1, A: 2 },
-          slain: ['B', 'S', 'H', 'F', 'Y'],
-          inspired: ['W', 'A'],
-          glory: [15, 15],
-          tokens: { W: ['move'], A: ['charge'] },
-          upgrades: {
-            W: ['Great Fortitude', 'Sharpened Blade'],
-            A: ['Tested by Fire'],
-          },
-          abilitiesUsed: {
-            me:  ['Eternal Duty', 'Whet the Blade', 'Discorporate', 'Cackling Court'],
-            opp: ['Alone We Stand', 'Vanguard Dash', 'Deadly Sentries', 'The Raptors of Sigmar'],
-          },
-          activationsUsed: { me: 3, opp: 4 },
-          features: [
-            { type: 'treasure', label: '1', hex: 'd3' },
-            { type: 'treasure', label: '2', hex: 'h3' },
-            { type: 'treasure', label: '3', hex: 'c5' },
-            { type: 'treasure', label: '4', hex: 'i5' },
-            { type: 'treasure', label: '5', hex: 'h8' },
-            { type: 'aqua', hex: 'f2' },
-            { type: 'aqua', hex: 'f8' },
-          ],
-          hand: {
-            me:  { objectives: 3, power: 0 },
-            opp: { objectives: 3, power: 0 },
-          },
         },
       },
     ],

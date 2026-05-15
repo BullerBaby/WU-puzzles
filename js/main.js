@@ -23,7 +23,7 @@ import {
   renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
   renderHands, renderDice, renderPowerStep,
 } from './warband-panel.js';
-import { renderPoll, resetStepVotes } from './poll.js';
+import { renderPoll, resetStepAnswers } from './poll.js';
 import {
   rebuildGameNav, loadCustomFromInput, fillTemplate,
   downloadCurrent, clearCustoms, loadSavedCustoms,
@@ -233,8 +233,8 @@ document.getElementById('btn-clear-custom').addEventListener('click', function()
 
 document.getElementById('poll-reset').addEventListener('click', function() {
   if (!currentGame) return;
-  if (!confirm('Reset votes for this step?')) return;
-  resetStepVotes(currentGame.id, currentStep);
+  if (!confirm('Clear your answer for this step?')) return;
+  resetStepAnswers(currentGame.id, currentStep);
   renderPoll(currentGame, currentStep);
 });
 

@@ -1,49 +1,51 @@
 /* ==================== POLL ====================
- * Per-step opinion poll. A step can declare:
- *   poll: { question?, options: [string, ...], actual? }
+ * Per-step quiz prompt. A step can declare:
+ *   poll: { question?, options: [string, ...], correct: <index> }
  *
- * Votes are stored in localStorage under POLLS_KEY, keyed by `gameId:stepIdx`,
- * so they persist across reloads but stay local to the browser (no server,
- * no cross-device sync). Optional `actual` (index) marks which option was
- * played; gets a green ✓ once any votes are cast.
+ * Clicking an option reveals whether it's the right call:
+ *   - clicked option matches `correct`  → that option turns green
+ *   - clicked option is something else   → that option turns red
+ *
+ * The user's clicked indices are persisted in localStorage under
+ * POLLS_KEY, keyed by `gameId:stepIdx`, so the colouring stays after
+ * a reload. For back-compat with games that used the old `actual`
+ * field, `actual` is read as a fallback when `correct` is missing.
  */
 
-const POLLS_KEY = 'underworlds-polls-v1';
+const POLLS_KEY = 'underworlds-poll-answers-v1';
 
-function loadAllPolls() {
+function loadAll() {
   try { return JSON.parse(localStorage.getItem(POLLS_KEY) || '{}'); }
   catch (e) { return {}; }
 }
 
-function saveAllPolls(all) {
+function saveAll(all) {
   try { localStorage.setItem(POLLS_KEY, JSON.stringify(all)); return true; }
   catch (e) { return false; }
 }
 
 function pollKey(gameId, stepIdx) { return gameId + ':' + stepIdx; }
 
-function getStepVotes(gameId, stepIdx, optionCount) {
-  const all = loadAllPolls();
-  const key = pollKey(gameId, stepIdx);
-  const votes = (all[key] || []).slice();
-  while (votes.length < optionCount) votes.push(0);
-  return votes;
+function getClicked(gameId, stepIdx) {
+  const all = loadAll();
+  const arr = all[pollKey(gameId, stepIdx)];
+  return Array.isArray(arr) ? arr.slice() : [];
 }
 
-function addPollVote(gameId, stepIdx, optIdx, optionCount) {
-  const all = loadAllPolls();
-  const key = pollKey(gameId, stepIdx);
-  if (!Array.isArray(all[key])) all[key] = [];
-  while (all[key].length < optionCount) all[key].push(0);
-  all[key][optIdx] = (all[key][optIdx] || 0) + 1;
-  saveAllPolls(all);
-  return all[key];
+function addClicked(gameId, stepIdx, optIdx) {
+  const all = loadAll();
+  const k = pollKey(gameId, stepIdx);
+  const arr = Array.isArray(all[k]) ? all[k] : [];
+  if (arr.indexOf(optIdx) < 0) arr.push(optIdx);
+  all[k] = arr;
+  saveAll(all);
+  return arr;
 }
 
-export function resetStepVotes(gameId, stepIdx) {
-  const all = loadAllPolls();
-  const key = pollKey(gameId, stepIdx);
-  if (all[key]) { delete all[key]; saveAllPolls(all); }
+export function resetStepAnswers(gameId, stepIdx) {
+  const all = loadAll();
+  const k = pollKey(gameId, stepIdx);
+  if (all[k]) { delete all[k]; saveAll(all); }
 }
 
 export function renderPoll(game, stepIdx) {
@@ -57,32 +59,61 @@ export function renderPoll(game, stepIdx) {
   }
   panel.hidden = false;
   document.getElementById('poll-question').textContent = poll.question || 'What would you do?';
+
+  // The right answer can be declared as `correct` (new name) or `actual`
+  // (legacy name from when this was a "what was actually played" indicator).
+  const correctIdx =
+    (typeof poll.correct === 'number') ? poll.correct :
+    (typeof poll.actual  === 'number') ? poll.actual  : -1;
+
+  const clicked = getClicked(game.id, stepIdx);
+  const clickedSet = new Set(clicked);
+  const hasFoundCorrect = correctIdx >= 0 && clickedSet.has(correctIdx);
+
   const optsEl = document.getElementById('poll-options');
-  const metaEl = document.getElementById('poll-meta');
   optsEl.innerHTML = '';
-  const votes = getStepVotes(game.id, stepIdx, poll.options.length);
-  const total = votes.reduce(function(a, b) { return a + b; }, 0);
-  metaEl.textContent = total === 0 ? 'No votes yet' : (total + (total === 1 ? ' vote' : ' votes'));
-  const actualIdx = (typeof poll.actual === 'number') ? poll.actual : -1;
+
+  const metaEl = document.getElementById('poll-meta');
+  if (metaEl) {
+    metaEl.className = 'poll-meta';
+    if (!clicked.length || correctIdx < 0) {
+      metaEl.textContent = '';
+    } else if (hasFoundCorrect) {
+      metaEl.textContent = 'Correct';
+      metaEl.classList.add('correct');
+    } else {
+      metaEl.textContent = 'Try again';
+      metaEl.classList.add('incorrect');
+    }
+  }
+
   poll.options.forEach(function(opt, i) {
-    const count = votes[i] || 0;
-    const pct = total > 0 ? (count / total * 100) : 0;
     const btn = document.createElement('button');
-    btn.className = 'poll-option' + (i === actualIdx && total > 0 ? ' is-actual' : '');
+    let cls = 'poll-option';
+    if (clickedSet.has(i)) {
+      cls += (i === correctIdx) ? ' correct' : ' incorrect';
+    }
+    btn.className = cls;
     btn.type = 'button';
-    const bar = document.createElement('span'); bar.className = 'poll-option-bar';
-    bar.style.width = pct.toFixed(1) + '%';
-    btn.appendChild(bar);
-    const wrap = document.createElement('span'); wrap.className = 'poll-option-content';
-    const txt = document.createElement('span'); txt.className = 'poll-option-text';
+
+    const wrap = document.createElement('span');
+    wrap.className = 'poll-option-content';
+    const txt = document.createElement('span');
+    txt.className = 'poll-option-text';
     txt.textContent = opt;
     wrap.appendChild(txt);
-    const cnt = document.createElement('span'); cnt.className = 'poll-option-count';
-    cnt.textContent = total > 0 ? (count + ' · ' + Math.round(pct) + '%') : '0';
-    wrap.appendChild(cnt);
+
+    if (clickedSet.has(i)) {
+      const mark = document.createElement('span');
+      mark.className = 'poll-option-mark';
+      mark.textContent = (i === correctIdx) ? '✓' : '✗';
+      wrap.appendChild(mark);
+    }
+
     btn.appendChild(wrap);
+
     btn.addEventListener('click', function() {
-      addPollVote(game.id, stepIdx, i, poll.options.length);
+      addClicked(game.id, stepIdx, i);
       renderPoll(game, stepIdx);
     });
     optsEl.appendChild(btn);

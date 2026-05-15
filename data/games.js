@@ -312,9 +312,9 @@ export const GAMES = [
   },
 
   {
-    id: 'headsmen-vs-emberwatch-r3-finale',
-    title: "R3 finale — Wielder vs. Ardorn (Embergard 1)",
-    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
+    id: 'Demo1 - which attack',
+    title: "Wielder vs. Ardorn (Embergard 1)",
+    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Last activation. Which attack do you choose?",
     round: 3,
     board: 'embergard-1',
     boardRotation: 0,

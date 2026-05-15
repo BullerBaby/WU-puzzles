@@ -21,15 +21,15 @@
 export const GAMES = [
   {
     id: 'headsmen-vs-emberwatch-r3-finale',
-    title: "R3 finale — Wielder vs. Ardorn (Embergard 1)",
+    title: "Demo - Wielder vs. Ardorn",
     description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
     round: 3,
     board: 'embergard-1',
     boardRotation: 0,
     warbands: { me: 'headsmens-curse', opp: 'emberwatch' },
     decks: {
-      me:  { pair: 'Verdict of Blood / Headsman Rites',     plots: ['Trial in Absentia', 'Mark for Execution'] },
-      opp: { pair: 'Blazing Assault / Emberstone Sentinels', plots: ['Sigmar Watches Over Us'] },
+      me:  { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
+      opp: { pair: 'Blazing Assault / Emberstone Sentinels',   plots: ['Sigmar Watches Over Us'] },
     },
     steps: [
       {
@@ -39,18 +39,18 @@ export const GAMES = [
         poll: {
           question: "What's your move?",
           options: [
-            'Attack Ardorn — 4 hammers / 3 dmg / cleave for the win',
-            'Move to f4 and claim the nearest treasure for a safe +1',
+            'Move to the aqua ghyranis token',
+            'Attack Ardorn for the kill',
             'Guard — accept the 15-15 tie and go to tiebreaker',
-            'Play an objective from hand to bank glory without risk',
+            'Move to treasure token 4 on i5',
           ],
           correct: 0,
         },
         state: {
           positions: {
-            // Alive — directly adjacent (same column, ranks 5 and 6)
-            W: 'f5',
-            A: 'f6',
+            // Alive — directly adjacent (same column, ranks 4 and 5)
+            W: 'f4',
+            A: 'f5',
             // Slain — last positions before they fell (hidden on the board)
             B: 'd4', S: 'd6', H: 'h5',
             F: 'e6', Y: 'g7',
@@ -61,7 +61,7 @@ export const GAMES = [
           glory: [15, 15],
           tokens: { W: ['move'], A: ['charge'] },
           upgrades: {
-            W: ['Great Fortitude', 'Sharpened Blade'],
+            W: ['Great Fortitude'],
             A: ['Tested by Fire'],
           },
           abilitiesUsed: {

@@ -132,8 +132,9 @@ section { margin-bottom: 1.5rem; }
  * Below the header, content splits into:
  *   left  (340px) — step-panel, poll, game-nav, custom-section
  *   right (1fr)   — board card with everything inside it
- * On viewports < 980px the columns stack vertically (board first, then the
- * left-column items below it — so the board stays the first thing visible).
+ * On viewports < 980px the columns stack vertically in natural DOM order:
+ * left column first (commentary, poll, prev/next, load own game), then the
+ * board below it.
  */
 .main-layout {
   display: grid;
@@ -148,7 +149,6 @@ section { margin-bottom: 1.5rem; }
 .left-column > section:last-child { margin-bottom: 0; }
 @media (max-width: 980px) {
   .main-layout { grid-template-columns: 1fr; }
-  .right-column { order: -1; }   /* board first on narrow viewports */
 }
 
 .game-row {

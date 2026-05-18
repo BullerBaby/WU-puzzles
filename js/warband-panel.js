@@ -505,9 +505,11 @@ export function renderActivations(state) {
     for (let i = 0; i < total; i++) {
       const aTok = document.createElement('span');
       aTok.className = 'activation-token' + (i < aCount ? ' used' : '');
+      aTok.textContent = 'A';
       container.appendChild(aTok);
       const pTok = document.createElement('span');
       pTok.className = 'power-step-token' + (i < pCount ? ' used' : '');
+      pTok.textContent = 'P';
       container.appendChild(pTok);
     }
     container.title =

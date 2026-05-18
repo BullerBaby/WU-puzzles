@@ -318,6 +318,29 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   color: var(--danger);
 }
 .poll-option.incorrect:hover { border-color: var(--danger); }
+.poll-reveal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: var(--surface-alt, rgba(0,0,0,0.03));
+  border: 1px solid var(--border, rgba(0,0,0,0.10));
+  border-radius: 6px;
+  animation: poll-reveal-fade 0.35s ease-out;
+}
+.poll-reveal-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-3);
+}
+.poll-reveal .card-chip { font-size: 12px; padding: 3px 10px; }
+@keyframes poll-reveal-fade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .poll-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .poll-hint { font-size: 11px; color: var(--text-3); }
 .poll-reset { font-size: 11px; padding: 2px 8px; color: var(--text-3); background: transparent; border: none; cursor: pointer; }
@@ -388,42 +411,66 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 
 /* Activation + power-step tokens.
  *
- * Each activation circle is paired with a smaller power-step circle that
- * sits immediately to its right (the "after this activation" power step).
- * Within a pair: tight 3px gap. Between pairs: wider 8px gap so the four
- * round-cycles read as four pairs, not eight unrelated circles. */
+ * Each activation circle (A) is paired with a power-step circle (P) that
+ * sits immediately to its right. Both circles are sized to match the
+ * glory badge (22px) so the stats strip reads as a row of equal coins.
+ * Activation = blue. Power step = blue-grey. Used = hollow with faded
+ * letter.
+ *
+ * Spacing: 4px within a pair (A→P), 10px between pairs, so the four
+ * round-cycles read as four groups rather than eight loose coins. */
 .activations {
   display: inline-flex;
   align-items: center;
   gap: 0;
 }
-.activation-token {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  display: inline-block;
-  background: var(--accent);
-  box-shadow: inset -1px -1px 0 rgba(0,0,0,0.18), inset 1px 1px 0 rgba(255,255,255,0.28);
-  flex-shrink: 0;
-}
-.activation-token + .power-step-token { margin-left: 3px; }
-.power-step-token + .activation-token { margin-left: 8px; }
+.activation-token,
 .power-step-token {
-  width: 7px;
-  height: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  display: inline-block;
-  background: var(--pow-border);
-  box-shadow: inset -1px -1px 0 rgba(0,0,0,0.15), inset 1px 1px 0 rgba(255,255,255,0.25);
+  font-weight: 700;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  line-height: 1;
+  color: #fff;
   flex-shrink: 0;
+  box-shadow:
+    inset -1.5px -1.5px 0 rgba(0,0,0,0.18),
+    inset 1.5px 1.5px 0 rgba(255,255,255,0.28),
+    0 1px 2px rgba(0,0,0,0.1);
 }
-.activation-token.used {
-  background: transparent !important;
-  box-shadow: inset 0 0 0 1px var(--border-strong);
+.activation-token {
+  background: radial-gradient(circle at 30% 30%, #6EA8E0 0%, #185FA5 55%, #0B3A6B 100%);
+  border: 1px solid #0B3A6B;
 }
+.power-step-token {
+  background: radial-gradient(circle at 30% 30%, #A8B8C9 0%, #6D829E 55%, #3F5269 100%);
+  border: 1px solid #3F5269;
+}
+.activation-token + .power-step-token { margin-left: 4px; }
+.power-step-token + .activation-token { margin-left: 10px; }
+
+.activation-token.used,
 .power-step-token.used {
   background: transparent !important;
+  color: var(--text-3);
   box-shadow: inset 0 0 0 1px var(--border-strong);
+  border-color: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  .activation-token {
+    background: radial-gradient(circle at 30% 30%, #4A86C2 0%, #2B5A8C 55%, #143055 100%);
+    border-color: #143055;
+  }
+  .power-step-token {
+    background: radial-gradient(circle at 30% 30%, #7D8FA3 0%, #4F6478 55%, #2A3947 100%);
+    border-color: #2A3947;
+  }
 }
 
 /* Glory badge (golden coin) */

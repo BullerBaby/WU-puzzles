@@ -1,10 +1,20 @@
 /* ==================== POLL ====================
  * Per-step quiz prompt. A step can declare:
- *   poll: { question?, options: [string, ...], correct: <index> }
+ *   poll: {
+ *     question?,
+ *     options: [string, ...],
+ *     correct: <index>,
+ *     reveal?: { type: 'power'|'objective', card: 'Name' }
+ *       // optional: revealed only after user clicks the correct option
+ *   }
  *
  * Clicking an option reveals whether it's the right call:
  *   - clicked option matches `correct`  → that option turns green
  *   - clicked option is something else   → that option turns red
+ *
+ * If a `reveal` is defined and the user finds the correct answer, the
+ * reveal block shows beneath the options (e.g. "Power card played:
+ * Violent Blast").
  *
  * The user's clicked indices are persisted in localStorage under
  * POLLS_KEY, keyed by `gameId:stepIdx`, so the colouring stays after
@@ -118,4 +128,30 @@ export function renderPoll(game, stepIdx) {
     });
     optsEl.appendChild(btn);
   });
+
+  // Reveal block: visible only after the user has clicked the correct
+  // option. Currently supports power/objective card reveals.
+  const revealEl = document.getElementById('poll-reveal');
+  if (revealEl) {
+    revealEl.innerHTML = '';
+    if (hasFoundCorrect && poll.reveal && poll.reveal.card) {
+      const type = (poll.reveal.type === 'objective' || poll.reveal.type === 'obj')
+        ? 'obj' : 'power';
+      const labelText = (type === 'obj')
+        ? 'Objective card revealed:'
+        : 'Power card revealed:';
+      const label = document.createElement('span');
+      label.className = 'poll-reveal-label';
+      label.textContent = labelText;
+      const chip = document.createElement('span');
+      chip.className = 'card-chip ' + type;
+      chip.textContent = poll.reveal.card;
+      chip.title = poll.reveal.card;
+      revealEl.appendChild(label);
+      revealEl.appendChild(chip);
+      revealEl.hidden = false;
+    } else {
+      revealEl.hidden = true;
+    }
+  }
 }

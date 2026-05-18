@@ -141,7 +141,8 @@ Each step:
   "poll": {
     "question": "What's your move?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correct": <0-indexed integer of the best option>
+    "correct": <0-indexed integer of the best option>,
+    "reveal": { "type": "power", "card": "Violent Blast" }   // optional — shown only after correct answer; type is "power" or "objective"
   },
   "state": { <state object — see below — required for the FIRST step> }
 }

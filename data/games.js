@@ -180,6 +180,7 @@ export const GAMES = [
             'Guard in place and accept the 20-20 tie',
           ],
           correct: 1,
+          reveal: { type: 'power', card: 'Violent Blast' },
         },
         state: {
           positions: { Y: 'j3', A: '-c1' },

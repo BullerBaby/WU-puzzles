@@ -64,7 +64,10 @@ export function defaultState() {
   return {
     positions: {}, wounds: {}, slain: [],
     inspired: [], glory: [0, 0], tokens: {}, upgrades: {},
-    abilitiesUsed: {}, activationsUsed: {}, features: [], hand: { me: 0, opp: 0 },
+    abilitiesUsed: {}, activationsUsed: {}, powerStepsUsed: {}, features: [],
+    hand:    { me: 0, opp: 0 },
+    deck:    { me: 0, opp: 0 },
+    discard: { me: 0, opp: 0 },
     powerStep: [],
   };
 }
@@ -83,9 +86,9 @@ function mergeShallow(prev, patch) {
   return out;
 }
 
-/* Merge hand object: top level (me/opp) shallow merge, but each side itself
- * is also merged (so `hand: { me: { power: [...] } }` keeps me.objectives). */
-function mergeHand(prev, patch) {
+/* Merge a sided counts object (hand / deck / discard): top-level me/opp keys
+ * each get deep-merged so `hand: { me: { power: 2 } }` keeps me.objectives. */
+function mergeSidedCounts(prev, patch) {
   const out = Object.assign({}, prev || {});
   ['me', 'opp'].forEach(function(side) {
     if (!(side in patch)) return;
@@ -110,10 +113,11 @@ function applyDiff(prev, diff) {
       continue;
     }
     if (k === 'positions' || k === 'wounds' || k === 'tokens' ||
-        k === 'upgrades'  || k === 'abilitiesUsed' || k === 'activationsUsed') {
+        k === 'upgrades'  || k === 'abilitiesUsed' ||
+        k === 'activationsUsed' || k === 'powerStepsUsed') {
       out[k] = mergeShallow(prev[k] || {}, v);
-    } else if (k === 'hand') {
-      out[k] = mergeHand(prev[k], v);
+    } else if (k === 'hand' || k === 'deck' || k === 'discard') {
+      out[k] = mergeSidedCounts(prev[k], v);
     } else {
       // Arrays (slain, inspired, features), scalars (glory), powerStep: replace
       out[k] = v;

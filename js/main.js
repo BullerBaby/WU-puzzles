@@ -36,6 +36,46 @@ let currentStep  = 0;
 let playing      = false;
 let playTimer    = null;
 
+/* ==================== SEEN-PUZZLE TRACKER ====================
+ * Remembers which puzzles the user has loaded, so the "Next puzzle"
+ * button can pick a random unseen one rather than just stepping by
+ * index. Persisted in localStorage; if storage fails (private mode,
+ * quota), tracking degrades silently to "nothing seen yet". */
+const SEEN_KEY = 'underworlds-seen-puzzles-v1';
+
+function loadSeen() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]');
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (e) { return new Set(); }
+}
+function saveSeen(seen) {
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(seen))); }
+  catch (e) {}
+}
+function markSeen(gameId) {
+  const seen = loadSeen();
+  if (seen.has(gameId)) return;
+  seen.add(gameId);
+  saveSeen(seen);
+}
+/* Pick a random game the user hasn't seen yet, excluding the current one.
+ * If everything is seen, reset the seen list (keeping just the current
+ * puzzle so we don't immediately re-pick it) and return a random other
+ * game. Returns null if there's only one puzzle in total. */
+function pickRandomUnseen(currentId) {
+  let seen = loadSeen();
+  let pool = GAMES.filter(function(g) { return g.id !== currentId && !seen.has(g.id); });
+  if (pool.length === 0) {
+    // All seen — reset, retaining only the current id so we don't loop.
+    seen = new Set(currentId ? [currentId] : []);
+    saveSeen(seen);
+    pool = GAMES.filter(function(g) { return g.id !== currentId; });
+  }
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 /* ==================== APPLY STEP ==================== */
 function applyStep(idx) {
   const game = currentGame;
@@ -187,6 +227,7 @@ function loadGame(gameId) {
   currentBoard = BOARDS[game.board] || BOARDS['embergard-1'];
   currentStep = 0;
   if (playing) togglePlay();
+  markSeen(game.id);
   rebuildGameNav(game.id);
   renderBoard(game);
   renderLegend(game);
@@ -199,6 +240,14 @@ function loadGame(gameId) {
 
 function navGame(delta) {
   if (!currentGame) return;
+  if (delta > 0) {
+    // "Next puzzle": pick a random puzzle the user hasn't seen yet.
+    // Falls back to any other puzzle if everything is seen (with auto-reset).
+    const pick = pickRandomUnseen(currentGame.id);
+    if (pick) loadGame(pick.id);
+    return;
+  }
+  // "Prev puzzle": sequential by GAMES index (unchanged).
   const idx = GAMES.findIndex(function(g) { return g.id === currentGame.id; });
   const next = idx + delta;
   if (next < 0 || next >= GAMES.length) return;

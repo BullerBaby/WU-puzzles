@@ -94,6 +94,21 @@ export function renderHands(state) {
   fillCards('my-pow-cards',  me.pow,  me.powCount,  'power');
   fillCards('opp-obj-cards', opp.obj, opp.objCount, 'obj');
   fillCards('opp-pow-cards', opp.pow, opp.powCount, 'power');
+
+  // Deck and discard pile counts (display as small badges next to hand).
+  // Empty by default; populated only when the game state specifies them.
+  const meDeck  = normalizeHand(state.deck    && state.deck.me);
+  const oppDeck = normalizeHand(state.deck    && state.deck.opp);
+  const meDisc  = normalizeHand(state.discard && state.discard.me);
+  const oppDisc = normalizeHand(state.discard && state.discard.opp);
+  document.getElementById('my-obj-deck').textContent     = meDeck.objCount;
+  document.getElementById('my-pow-deck').textContent     = meDeck.powCount;
+  document.getElementById('opp-obj-deck').textContent    = oppDeck.objCount;
+  document.getElementById('opp-pow-deck').textContent    = oppDeck.powCount;
+  document.getElementById('my-obj-discard').textContent  = meDisc.objCount;
+  document.getElementById('my-pow-discard').textContent  = meDisc.powCount;
+  document.getElementById('opp-obj-discard').textContent = oppDisc.objCount;
+  document.getElementById('opp-pow-discard').textContent = oppDisc.powCount;
 }
 
 /* ==================== RENDER POWER STEP ==================== */
@@ -454,29 +469,50 @@ export function renderAbilities(game, state) {
 }
 
 /* ==================== RENDER ACTIVATIONS ====================
- * Each side has up to 4 activation tokens per round (defaults to 4). All
- * tokens start blue (filled). As fighters activate, the count in
- * state.activationsUsed[side] increases and the LEFT-most tokens go hollow
- * (used left-to-right). Use `activationsUsed: null` in a diff to reset
- * (e.g. at end of round).
+ * Each side has up to 4 activation tokens per round (defaults to 4). Each
+ * activation is followed by a power step (where players may play power
+ * cards), so the row alternates activation circles and smaller power-step
+ * circles.
+ *
+ * The two counters are independent:
+ *   - state.activationsUsed[side] controls the big blue activation circles
+ *   - state.powerStepsUsed[side]  controls the small gold power-step circles
+ *
+ * If powerStepsUsed[side] isn't specified, the power steps mirror the
+ * activations (the common case: activation completed -> its power step
+ * has been resolved too). Set powerStepsUsed explicitly when you want to
+ * show a mid-cycle state (e.g. "activation 3 happened, but its power step
+ * hasn't been resolved yet").
+ *
+ * Use `activationsUsed: null` (or `powerStepsUsed: null`) in a diff to
+ * reset that counter (e.g. at end of round).
  */
 const ACTIVATIONS_PER_ROUND = 4;
 
 export function renderActivations(state) {
-  const used = state.activationsUsed || {};
+  const aUsed = state.activationsUsed || {};
+  const pUsed = state.powerStepsUsed  || {};
   ['me', 'opp'].forEach(function(side) {
     const prefix = side === 'me' ? 'my' : 'opp';
     const container = document.getElementById(prefix + '-activations');
     if (!container) return;
     container.innerHTML = '';
     const total = ACTIVATIONS_PER_ROUND;
-    const usedCount = Math.max(0, Math.min(total, used[side] || 0));
+    const aCount = Math.max(0, Math.min(total, aUsed[side] || 0));
+    // Power steps default to mirroring activations when unspecified.
+    const pCount = Math.max(0, Math.min(total,
+      pUsed[side] != null ? pUsed[side] : aCount));
     for (let i = 0; i < total; i++) {
-      const tok = document.createElement('span');
-      tok.className = 'activation-token' + (i < usedCount ? ' used' : '');
-      container.appendChild(tok);
+      const aTok = document.createElement('span');
+      aTok.className = 'activation-token' + (i < aCount ? ' used' : '');
+      container.appendChild(aTok);
+      const pTok = document.createElement('span');
+      pTok.className = 'power-step-token' + (i < pCount ? ' used' : '');
+      container.appendChild(pTok);
     }
-    container.title = (total - usedCount) + ' of ' + total + ' activations remaining';
+    container.title =
+      (total - aCount) + ' of ' + total + ' activations remaining; ' +
+      (total - pCount) + ' of ' + total + ' power steps remaining';
   });
 }
 

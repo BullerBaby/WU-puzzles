@@ -164,7 +164,7 @@ export const GAMES = [
     warbands: { me: 'kurnoths-heralds', opp: 'emberwatch' },
     decks: {
       me:  { pair: 'Hunting Grounds / Pillage to Plunder', plots: [] },
-      opp: { pair: 'Blazing Assault / Reckless Fury',      plots: [] },
+      opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
     },
     steps: [
       {

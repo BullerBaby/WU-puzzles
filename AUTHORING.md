@@ -163,6 +163,7 @@ State object — all fields optional; omit what doesn't apply:
     "opp": ["<warscroll ability name>", ...]
   },
   "activationsUsed": { "me": <0-4>, "opp": <0-4> },
+  "powerStepsUsed":  { "me": <0-4>, "opp": <0-4> },  // optional; defaults to mirror activationsUsed
   "features": [
     { "type": "treasure", "label": "1"|"2"|"3"|"4"|"5", "hex": "<hex>" },
     { "type": "aqua",                                    "hex": "<hex>" }
@@ -170,6 +171,14 @@ State object — all fields optional; omit what doesn't apply:
   ],
   "hand": {
     "me":  { "objectives": <int>, "power": <int> },  // cards in hand
+    "opp": { "objectives": <int>, "power": <int> }
+  },
+  "deck": {
+    "me":  { "objectives": <int>, "power": <int> },  // cards remaining in deck
+    "opp": { "objectives": <int>, "power": <int> }
+  },
+  "discard": {
+    "me":  { "objectives": <int>, "power": <int> },  // cards in discard pile
     "opp": { "objectives": <int>, "power": <int> }
   }
 }
@@ -331,8 +340,11 @@ State fields summarised:
 | `upgrades` | `{fid: [card-name, ...]}` | Upgrade cards on fighter |
 | `abilitiesUsed` | `{me: [...], opp: [...]}` | Warscroll abilities marked used |
 | `activationsUsed` | `{me: 0-4, opp: 0-4}` | Activations spent this round |
+| `powerStepsUsed` | `{me: 0-4, opp: 0-4}` | Power steps resolved this round (optional, mirrors activationsUsed by default) |
 | `features` | `[{type, label?, hex, delved?}]` | Treasure / aqua tokens |
-| `hand` | `{me, opp}` each `{objectives, power}` | Card counts |
+| `hand` | `{me, opp}` each `{objectives, power}` | Card counts in hand |
+| `deck` | `{me, opp}` each `{objectives, power}` | Cards remaining in deck (optional, default 0) |
+| `discard` | `{me, opp}` each `{objectives, power}` | Cards in discard pile (optional, default 0) |
 
 ---
 

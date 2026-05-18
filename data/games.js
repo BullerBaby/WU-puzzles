@@ -154,7 +154,63 @@ export const GAMES = [
       },
     ],
   },
-{
+
+  {
+    id: 'ylarin-last-activation-tiebreaker',
+    title: "Kurnoth's Heralds vs. Emberwatch — Last Activation",
+    description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, and the game is on its final activation.",
+    round: 3,
+    board: 'embergard-1',
+    warbands: { me: 'kurnoths-heralds', opp: 'emberwatch' },
+    decks: {
+      me:  { pair: 'Hunting Grounds / Pillage to Plunder', plots: [] },
+      opp: { pair: 'Blazing Assault / Reckless Fury',      plots: [] },
+    },
+    steps: [
+      {
+        notation: '(R3 — last activation, glory 20-20)',
+        title: 'Last activation decision',
+        explanation: "Ylarin stands on j3 while Ardorn is still alive on -c1 with no wounds taken. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
+        poll: {
+          question: "What's your move?",
+          options: [
+            'Move to treasure token 5 on f2',
+            'Move to treasure token 4 on i1',
+            'Charge Ardorn on -c1',
+            'Guard in place and accept the 20-20 tie',
+          ],
+          correct: 0,
+        },
+        state: {
+          positions: { Y: 'j3', A: '-c1' },
+          wounds:    { A: 0 },
+          slain:     ['C', 'L', 'F', 'oY'],
+          inspired:  [],
+          glory:     [20, 20],
+          abilitiesUsed: {
+            me:  ['Swift Sentinels', 'The Endless Hunt', "Herald's Pride", 'Precision Volley'],
+            opp: ['Alone We Stand', 'Vanguard Dash', 'Deadly Sentries', 'The Raptors of Sigmar'],
+          },
+          activationsUsed: { me: 3, opp: 4 },
+          features: [
+            { type: 'treasure', label: '1', hex: '-d2' },
+            { type: 'treasure', label: '2', hex: '-h2' },
+            { type: 'treasure', label: '3', hex: 'c1'  },
+            { type: 'treasure', label: '4', hex: 'i1'  },
+            { type: 'treasure', label: '5', hex: 'f2'  },
+            { type: 'aqua', hex: '-f3' },
+            { type: 'aqua', hex: 'b2'  },
+          ],
+          hand: {
+            me:  { objectives: 0, power: 0 },
+            opp: { objectives: 0, power: 1 },
+          },
+        },
+      },
+    ],
+  },
+
+  {
     id: 'three-vs-five-stub',
     title: 'Stub: 3-fighter warband on Spitewood 2',
     description: "Placeholder showing variable fighter counts and a different board. Replace with a real game when notated.",

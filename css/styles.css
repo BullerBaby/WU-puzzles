@@ -318,29 +318,6 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   color: var(--danger);
 }
 .poll-option.incorrect:hover { border-color: var(--danger); }
-.poll-reveal {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  background: var(--surface-alt, rgba(0,0,0,0.03));
-  border: 1px solid var(--border, rgba(0,0,0,0.10));
-  border-radius: 6px;
-  animation: poll-reveal-fade 0.35s ease-out;
-}
-.poll-reveal-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-3);
-}
-.poll-reveal .card-chip { font-size: 12px; padding: 3px 10px; }
-@keyframes poll-reveal-fade {
-  from { opacity: 0; transform: translateY(-2px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
 .poll-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .poll-hint { font-size: 11px; color: var(--text-3); }
 .poll-reset { font-size: 11px; padding: 2px 8px; color: var(--text-3); background: transparent; border: none; cursor: pointer; }
@@ -429,11 +406,8 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
   border-radius: 50%;
   font-weight: 700;
-  font-size: 12px;
   font-family: ui-monospace, monospace;
   line-height: 1;
   color: #fff;
@@ -444,15 +418,25 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
     0 1px 2px rgba(0,0,0,0.1);
 }
 .activation-token {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
   background: radial-gradient(circle at 30% 30%, #6EA8E0 0%, #185FA5 55%, #0B3A6B 100%);
   border: 1px solid #0B3A6B;
 }
 .power-step-token {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  /* Smaller, sits slightly higher than the activation token. translateY
+   * doesn't affect layout flow, so the inline row's height is still set
+   * by the larger activation tokens. */
+  transform: translateY(-5px);
   background: radial-gradient(circle at 30% 30%, #A8B8C9 0%, #6D829E 55%, #3F5269 100%);
   border: 1px solid #3F5269;
 }
-.activation-token + .power-step-token { margin-left: 4px; }
-.power-step-token + .activation-token { margin-left: 10px; }
+.activation-token + .power-step-token { margin-left: 2px; }
+.power-step-token + .activation-token { margin-left: 6px; }
 
 .activation-token.used,
 .power-step-token.used {

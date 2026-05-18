@@ -180,7 +180,6 @@ export const GAMES = [
             'Guard in place and accept the 20-20 tie',
           ],
           correct: 1,
-          reveal: { type: 'power', card: 'Violent Blast' },
         },
         state: {
           positions: { Y: 'j3', A: '-c1' },
@@ -206,6 +205,14 @@ export const GAMES = [
             me:  { objectives: 0, power: 0 },
             opp: { objectives: 0, power: 1 },
           },
+        },
+      },
+      {
+        notation: '(R3 — Emberwatch reveals power card)',
+        title: 'Violent Blast in opponent\'s hand',
+        explanation: "Ardorn's last power card is revealed: Violent Blast. A gambit that could have struck Ylarin had he closed within range — pushing for treasure 5 on f2 would have put him in danger. Stepping onto i1 for treasure 4 keeps Ylarin clear of the threat while still claiming the tiebreaker.",
+        diff: {
+          hand: { opp: { power: ['Violent Blast'] } },
         },
       },
     ],

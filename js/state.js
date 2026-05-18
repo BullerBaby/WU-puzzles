@@ -4,6 +4,10 @@
  *   1. resolveWarbands(game): if game.warbands = { me, opp }, pulls fighters
  *      and abilities from the WARBANDS registry. Inline game.fighters keys
  *      override warband fighters (useful for renaming or tweaking one stat).
+ *      When the same fighter code appears in both warbands (e.g. 'Y' is
+ *      both Yurik in Emberwatch and Ylarin in Kurnoth's Heralds), the
+ *      opp-side fighter's key picks up an 'o' prefix ('oY') so both fit
+ *      in the same dict. The on-board label stays the original letter.
  *
  *   2. expandSteps(game): walks game.steps and computes each step's full
  *      _state. A step can declare its state two ways:
@@ -29,7 +33,16 @@ export function resolveWarbands(game) {
     if (!wb) { console.warn('Unknown warband:', wbId); return; }
     abilities[side] = (wb.abilities || []).slice();
     for (const code in wb.fighters) {
-      fighters[code] = Object.assign({}, wb.fighters[code], { side: side });
+      // When me and opp share a fighter code (e.g. both warbands have 'Y'),
+      // disambiguate by prefixing the later side's key with 'o'. me is
+      // processed first, so the opp fighter's key picks up the prefix.
+      // The fighter's `label` is preserved, so the board/panel still show
+      // the original letter on both circles — only the internal dict key
+      // changes. Authors reference the opp version as 'oY', 'oC', etc.
+      // in positions/wounds/slain/etc.
+      let key = code;
+      while (fighters[key]) key = 'o' + key;
+      fighters[key] = Object.assign({}, wb.fighters[code], { side: side });
     }
   });
   // Merge inline overrides (per-fighter tweaks)

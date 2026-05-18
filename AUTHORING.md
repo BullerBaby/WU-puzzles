@@ -67,9 +67,31 @@ Each warband has fixed fighter IDs (one-letter codes used in positions/wounds/et
     C = Cullon, Axe of Kurnoth,
     L = Lenwythe, Eye of the Forest.
 
-Note: the Y fighter id is shared between Emberwatch (Yurik) and Kurnoth's Heralds (Ylarin); only one of those warbands can be active per game, so there's no conflict in practice.
+# FIGHTER ID COLLISION RULE
 
-If a player's warband is none of these, fall back to inline fighters (advanced) and put the real warband name in the title or description.
+Fighter codes can repeat across warbands. The Y code is used by both Yurik (Emberwatch) and Ylarin (Kurnoth's Heralds), for example. When me and opp warbands share a fighter code:
+
+- The **me-side** fighter keeps the original code in your JSON (`Y` stays `Y`).
+- The **opp-side** fighter is referenced with an `o` prefix (`Y` becomes `oY`).
+- This applies everywhere a fighter id is used: `positions`, `wounds`, `slain`, `inspired`, `tokens`, `upgrades`.
+
+Example with me=Emberwatch, opp=Kurnoth's Heralds (both have Y):
+```
+"positions": {
+  "Y":  "-f1",   // me's Yurik on your side
+  "A":  "-e2",
+  "F":  "-g2",
+  "oY": "f1",    // opp's Ylarin on opp side
+  "C":  "c0",
+  "L":  "i1"
+}
+```
+
+If me=Kurnoth's Heralds, opp=Emberwatch, then `Y` is Ylarin and `oY` is Yurik. The `o` always means "the opp-side fighter with this code".
+
+Codes that appear in only one of the two warbands stay unprefixed regardless of which side they're on (e.g. `A` is always Ardorn; `W` is always the Wielder).
+
+If a player's warband is none of the registered ones, fall back to inline fighters (advanced) and put the real warband name in the title or description.
 
 # WHAT THE WARBAND PROVIDES (DON'T REDEFINE)
 

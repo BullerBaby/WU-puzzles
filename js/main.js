@@ -231,6 +231,24 @@ document.getElementById('btn-clear-custom').addEventListener('click', function()
   clearCustoms(loadGame);
 });
 
+document.getElementById('btn-copy-prompt').addEventListener('click', async function() {
+  const btn = this;
+  const original = btn.textContent;
+  try {
+    const res = await fetch('AUTHORING.md', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('fetch failed (' + res.status + ')');
+    const text = await res.text();
+    const m = text.match(/^=== BEGIN AI PROMPT ===\s*([\s\S]*?)^=== END AI PROMPT ===/m);
+    if (!m) throw new Error('prompt block not found in AUTHORING.md');
+    await navigator.clipboard.writeText(m[1].trim());
+    btn.textContent = '✓ Copied — paste into your AI';
+    setTimeout(function() { btn.textContent = original; }, 2400);
+  } catch (e) {
+    btn.textContent = '✗ ' + e.message;
+    setTimeout(function() { btn.textContent = original; }, 3000);
+  }
+});
+
 document.getElementById('poll-reset').addEventListener('click', function() {
   if (!currentGame) return;
   if (!confirm('Clear your answer for this step?')) return;

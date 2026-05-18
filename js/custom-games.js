@@ -11,8 +11,9 @@
  *   loadSavedCustoms()             — merge persisted customs into GAMES
  */
 
-import { GAMES }  from '../data/games.js';
-import { BOARDS } from '../data/boards.js';
+import { GAMES }    from '../data/games.js';
+import { BOARDS }   from '../data/boards.js';
+import { WARBANDS } from '../data/warbands.js';
 
 const STORAGE_KEY = 'underworlds-replay-customs-v1';
 
@@ -46,9 +47,33 @@ function validateGame(g) {
   if (!g.board || !BOARDS[g.board]) {
     errors.push('Missing or unknown "board". Valid boards: ' + Object.keys(BOARDS).join(', ') + '.');
   }
-  if (!g.fighters || typeof g.fighters !== 'object' || !Object.keys(g.fighters).length) {
-    errors.push('Missing "fighters" (object with at least one fighter).');
-  } else {
+  // Fighter source: warbands reference (preferred) or inline fighters.
+  // At least one must be present.
+  const hasWarbands = g.warbands && typeof g.warbands === 'object' &&
+                      (g.warbands.me || g.warbands.opp);
+  const hasFighters = g.fighters && typeof g.fighters === 'object' &&
+                      Object.keys(g.fighters).length > 0;
+  if (!hasWarbands && !hasFighters) {
+    errors.push('Missing "warbands" (preferred — e.g. {"me":"headsmens-curse","opp":"emberwatch"}) ' +
+                'or inline "fighters" object. Valid warband ids: ' + Object.keys(WARBANDS).join(', ') + '.');
+  } else if (hasWarbands) {
+    ['me', 'opp'].forEach(function(side) {
+      const id = g.warbands[side];
+      if (id && !WARBANDS[id]) {
+        errors.push('Unknown warband for ' + side + ': "' + id + '". Valid: ' + Object.keys(WARBANDS).join(', ') + '.');
+      }
+    });
+    // If inline fighters are also present, they must specify side+label (overrides only)
+    if (hasFighters) {
+      for (const id in g.fighters) {
+        const f = g.fighters[id];
+        if (f && f.side && f.side !== 'me' && f.side !== 'opp') {
+          errors.push('Override fighter "' + id + '": side must be "me" or "opp" if specified.');
+        }
+      }
+    }
+  } else if (hasFighters) {
+    // Fully inline — needs side + label per fighter
     for (const id in g.fighters) {
       const f = g.fighters[id];
       if (!f || (f.side !== 'me' && f.side !== 'opp')) {
@@ -67,10 +92,16 @@ function validateGame(g) {
         errors.push('Step ' + (i+1) + ' must be an object.');
         return;
       }
-      if (!s.state || typeof s.state !== 'object') {
-        errors.push('Step ' + (i+1) + ' missing "state" object.');
-      } else if (!s.state.positions || typeof s.state.positions !== 'object') {
-        errors.push('Step ' + (i+1) + ' state needs "positions" object.');
+      // A step needs state OR diff (first step usually has state; later may use diff).
+      const hasState = s.state && typeof s.state === 'object';
+      const hasDiff  = s.diff  && typeof s.diff  === 'object';
+      if (!hasState && !hasDiff) {
+        errors.push('Step ' + (i+1) + ' needs a "state" or "diff" object.');
+      } else if (i === 0 && !hasState) {
+        errors.push('Step 1 needs "state" (full snapshot); only later steps can use "diff".');
+      } else if (hasState && !s.state.positions) {
+        // Only require positions on the first/explicit state — diffs may omit
+        if (i === 0) errors.push('Step 1 state needs "positions" object.');
       }
     });
   }

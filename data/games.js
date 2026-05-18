@@ -312,11 +312,11 @@ export const GAMES = [
       L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
       A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
       Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
-      e1: { side: 'opp', label: '-e4', name: 'Enemy leader', isLeader: true },
-      e2: { side: 'opp', label: '-e3', name: 'Enemy 2' },
-      e3: { side: 'opp', label: '-e2', name: 'Enemy 3' },
-      e4: { side: 'opp', label: '-e1', name: 'Enemy 4' },
-      e5: { side: 'opp', label: 'e1', name: 'Enemy 5' },
+      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
+      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
+      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
+      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
+      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
     },
     steps: [
       {
@@ -345,11 +345,11 @@ export const GAMES = [
       L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
       A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
       Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
-      e1: { side: 'opp', label: '-e4', name: 'Enemy leader', isLeader: true },
-      e2: { side: 'opp', label: '-e3', name: 'Enemy 2' },
-      e3: { side: 'opp', label: '-e2', name: 'Enemy 3' },
-      e4: { side: 'opp', label: '-e1', name: 'Enemy 4' },
-      e5: { side: 'opp', label: 'e1', name: 'Enemy 5' },
+      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
+      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
+      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
+      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
+      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
     },
     steps: [
       {

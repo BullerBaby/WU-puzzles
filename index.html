@@ -55,13 +55,14 @@
     <summary>Load your own game (paste JSON)</summary>
     <div class="custom-body">
       <p class="custom-help">
-        Paste a game as JSON below, then click <strong>Load game</strong>. The easiest start is <strong>Use current as template</strong>: it dumps the game you're viewing into the box so you can edit it. Custom games are saved in your browser (<code>localStorage</code>) and added to the dropdown. Single game or a JSON array of games both work. Required fields: <code>title</code>, <code>board</code>, <code>fighters</code>, <code>steps</code>. See the docs below for the full data shape.
+        Paste a game as JSON below, then click <strong>Load game</strong>. The easiest start is <strong>Use current as template</strong>: it dumps the game you're viewing into the box so you can edit it. Custom games are saved in your browser (<code>localStorage</code>) and added to the dropdown. Single game or a JSON array of games both work. Required fields: <code>title</code>, <code>board</code>, <code>warbands</code> (one of the registered ids — fighter stats and abilities come from there), <code>steps</code>. To create one from a description or photo using an AI, see the <a href="AUTHORING.md" target="_blank" rel="noopener">authoring guide</a> — it has a ready-to-paste prompt that converts plain English (or a board photo) into valid JSON.
       </p>
       <textarea id="custom-input" rows="14" spellcheck="false" placeholder='{ "title": "My game", "board": "embergard-1", "round": 1, "fighters": { ... }, "steps": [ ... ] }'></textarea>
       <div class="custom-buttons">
         <button id="btn-load-custom" class="primary" type="button">Load game</button>
         <button id="btn-template" type="button">Use current as template</button>
         <button id="btn-download" type="button">Download current as JSON</button>
+        <button id="btn-copy-prompt" type="button">📋 Copy AI prompt</button>
         <button id="btn-clear-custom" type="button">Clear saved customs</button>
       </div>
       <div id="custom-status" class="custom-status"></div>

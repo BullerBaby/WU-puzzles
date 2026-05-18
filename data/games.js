@@ -167,6 +167,7 @@ export const GAMES = [
     description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, and the game is on its final activation.",
     round: 3,
     board: 'embergard-1',
+    boardRotation: 0,
     warbands: { me: 'kurnoths-heralds', opp: 'emberwatch' },
     decks: {
       me:  { pair: 'Hunting Grounds / Pillage to Plunder', plots: [] },

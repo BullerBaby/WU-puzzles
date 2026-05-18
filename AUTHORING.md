@@ -124,6 +124,7 @@ The top-level object:
   "description": "1-2 sentences setting the scene.",
   "round": 1 | 2 | 3,
   "board": "<one of the board ids above>",
+  "boardRotation": 0 | 180,
   "warbands": { "me": "<warband id>", "opp": "<warband id>" },
   "decks": {
     "me":  { "pair": "<deck pair name>", "plots": ["<plot 1>", "<plot 2>"] },
@@ -216,6 +217,7 @@ Output:
   "description": "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
   "round": 3,
   "board": "embergard-1",
+  "boardRotation": 0,
   "warbands": { "me": "headsmens-curse", "opp": "emberwatch" },
   "decks": {
     "me":  { "pair": "Blazing Assault / Countdown to Cataclysm", "plots": ["Countdown to Cataclysm"] },
@@ -312,6 +314,7 @@ Now wait for the user's puzzle description (or photo).
 | `description` | string | 1-2 sentences scene-setter |
 | `round` | 1, 2, or 3 | The game round |
 | `board` | string | `embergard-1` etc. |
+| `boardRotation` | `0` or `180` | Board setup orientation (default 0). Rotates baked-in features (stagger, blocked, waystone) only; fighter positions and treasures are written in the post-rotation view. |
 | `warbands` | `{me, opp}` | Both are warband IDs |
 | `decks` | `{me, opp}` | Each has `pair` and `plots` |
 | `steps` | array | One step per state shown |

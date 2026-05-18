@@ -33,8 +33,6 @@ import {
 let currentGame  = null;
 let currentBoard = null;
 let currentStep  = 0;
-let playing      = false;
-let playTimer    = null;
 
 /* ==================== SEEN-PUZZLE TRACKER ====================
  * Remembers which puzzles the user has loaded, so the "Next puzzle"
@@ -167,43 +165,10 @@ function applyStep(idx) {
 }
 
 function goStep(delta) {
-  if (playing) togglePlay();
   const ni = currentStep + delta;
   if (ni < 0 || ni >= currentGame.steps.length) return;
   currentStep = ni;
   applyStep(currentStep);
-}
-
-function togglePlay() {
-  const btn = document.getElementById('btn-play');
-  if (playing) {
-    clearTimeout(playTimer);
-    playing = false;
-    btn.textContent = '▶ Play';
-  } else {
-    playing = true;
-    btn.textContent = '⏸ Pause';
-    const advance = function() {
-      if (!playing) return;
-      if (currentStep < currentGame.steps.length - 1) {
-        currentStep++;
-        applyStep(currentStep);
-        playTimer = setTimeout(advance, 2500);
-      } else {
-        playing = false;
-        btn.textContent = '▶ Play';
-      }
-    };
-    playTimer = setTimeout(advance, 600);
-  }
-}
-
-function rotateBoard() {
-  if (!currentGame) return;
-  currentGame.boardRotation = ((currentGame.boardRotation || 0) === 180) ? 0 : 180;
-  renderBoard(currentGame);
-  renderLegend(currentGame);
-  setTimeout(function() { applyStep(currentStep); }, 50);
 }
 
 function buildLog(game) {
@@ -213,7 +178,7 @@ function buildLog(game) {
     const div = document.createElement('div');
     div.className = 'notation-line';
     div.textContent = (i + 1) + '.  ' + (s.notation || s.title || '(step ' + (i+1) + ')');
-    div.onclick = function() { if (playing) togglePlay(); currentStep = i; applyStep(i); };
+    div.onclick = function() { currentStep = i; applyStep(i); };
     log.appendChild(div);
   });
 }
@@ -226,7 +191,6 @@ function loadGame(gameId) {
   currentGame = game;
   currentBoard = BOARDS[game.board] || BOARDS['embergard-1'];
   currentStep = 0;
-  if (playing) togglePlay();
   markSeen(game.id);
   rebuildGameNav(game.id);
   renderBoard(game);
@@ -264,8 +228,6 @@ document.getElementById('game-next').addEventListener('click', function() { navG
 
 document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
 document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });
-document.getElementById('btn-play').addEventListener('click', togglePlay);
-document.getElementById('btn-rotate').addEventListener('click', rotateBoard);
 
 document.getElementById('btn-load-custom').addEventListener('click', function() {
   loadCustomFromInput(loadGame);
@@ -309,8 +271,6 @@ document.addEventListener('keydown', function(e) {
   if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   if (e.key === 'ArrowLeft')  { goStep(-1); e.preventDefault(); }
   if (e.key === 'ArrowRight') { goStep(1); e.preventDefault(); }
-  if (e.key === ' ')          { togglePlay(); e.preventDefault(); }
-  if (e.key === 'r' || e.key === 'R') { rotateBoard(); }
 });
 
 loadGame(GAMES[0].id);

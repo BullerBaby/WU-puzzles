@@ -103,21 +103,21 @@ export const GAMES = [
       {
         notation: '(R2 — Cullon to attack)',
         title: 'Two attacks, one activation',
-        explanation: "Cullon is up — the only fighter on the board who hasn't charged this round. The Sharpener of the Blade (H) is adjacent at f1 with 2 wounds left and a Dodge save. Cullon's two attacks both have range 1: Hooves rolls 4 sword dice for 1 damage each with Grapple on a crit, while Axe rolls 2 hammer dice for 2 damage. Either can kill on a single landed hit, but the math is different — Hooves casts a wider net, Axe concentrates the damage.",
+        explanation: "Cullon's last activation — he's the only me fighter who hasn't acted yet, and the Headsmen have spent all four of theirs. The Sharpener (H) at f1 is the only adjacent target, 2 wounds left, Dodge save. Either attack can kill on a single landed hit, but Hooves' 4 sword dice spread the risk — Axe whiffs on a double miss (~25% of the time), while Hooves only completely whiffs ~6%. Grapple on a crit also locks the Sharpener down for next round, so even a partial result has value.",
         poll: {
           question: "Cullon's activation — which attack?",
           options: [
             'Hooves — 4 sword dice for 1 damage (Grapple on crit)',
             'Axe — 2 hammer dice for 2 damage',
           ],
-          correct: 1,
+          correct: 0,
         },
         state: {
           positions: {
-            // Me (Kurnoth's Heralds) — kept the same hexes as the previous Emberwatch layout
-            Y: 'f0',
+            // Me (Kurnoth's Heralds) — Y and L pulled back; Cullon stays in melee at e1
+            Y: 'h2',
             C: 'e1',
-            L: 'g1',
+            L: 'i3',
             // Opp (Headsmens-Curse) — unchanged
             W: 'g4',
             H: 'f1',
@@ -142,7 +142,7 @@ export const GAMES = [
             me:  ['Swift Sentinels'],
             opp: ['Whet the Blade'],
           },
-          activationsUsed: { me: 1, opp: 1 },
+          activationsUsed: { me: 3, opp: 4 },
           features: [
             { type: 'treasure', label: '1', hex: '-d2' },
             { type: 'treasure', label: '2', hex: '-h2' },

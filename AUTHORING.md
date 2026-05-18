@@ -62,10 +62,14 @@ Each warband has fixed fighter IDs (one-letter codes used in positions/wounds/et
     S = Scriptor of Suffering,     H = Sharpener of Sins.
 - "emberwatch" — Ardorn's Emberwatch:
     A = Ardorn (leader),  F = Farasa,  Y = Yurik Velzaine.
-- "generic-4" — placeholder 4-fighter warband (use when the opponent's warband isn't one of the above):
-    o1 (leader), o2, o3, o4.
+- "kurnoths-heralds" — Kurnoth's Heralds (Order, Sylvaneth/Kurnothi):
+    Y = Ylarin, Master of the Paths (leader),
+    C = Cullon, Axe of Kurnoth,
+    L = Lenwythe, Eye of the Forest.
 
-If a player's warband is none of these, use "generic-4" for that side and put the real warband name in the title or description.
+Note: the Y fighter id is shared between Emberwatch (Yurik) and Kurnoth's Heralds (Ylarin); only one of those warbands can be active per game, so there's no conflict in practice.
+
+If a player's warband is none of these, fall back to inline fighters (advanced) and put the real warband name in the title or description.
 
 # WHAT THE WARBAND PROVIDES (DON'T REDEFINE)
 
@@ -341,8 +345,11 @@ Note: rank 0 (midline) has 5 hexes (b0, d0, f0, h0, j0) — only odd columns. Ra
 - **F** — Farasa. 5 wounds, Move 3, Block 1.
 - **Y** — Yurik Velzaine. 5 wounds, Move 3, Block 1. Two attack profiles (axe range 1 + crossbow range 4).
 
-### Generic 4-fighter (placeholder)
-- **o1** (leader), **o2**, **o3**, **o4**. Stats are configurable; the default profile is treated as opaque for puzzle purposes.
+### Kurnoth's Heralds
+- **Y** — Ylarin, Master of the Paths (leader). 5 wounds, Move 4, Block 1. Spear range 2, 2 hammers, 2 damage, Crit-Grievous (inspired: 3 hammers, flat Grievous). Plus shared Hooves attack (range 1, 4 swords, 1 damage, Grapple).
+- **C** — Cullon, Axe of Kurnoth. 5 wounds, Move 4, Dodge 1. Axe range 1, 2 hammers, 2 damage (inspired: 3 hammers, 3 damage, Cleave). Plus Hooves.
+- **L** — Lenwythe, Eye of the Forest. 5 wounds, Move 4, Dodge 1. Bow range 3, 2 hammers, 1 damage, Crit-Stagger (inspired: 3 hammers, flat Stagger). Plus Hooves.
+- Warband abilities: Swift Sentinels (Flying + can't be Flanked while in friendly territory), The Endless Hunt (push attacker 2 hexes after attacking, once per game), Herald's Pride (Ylarin: Cleave or Ensnare once per game), Precision Volley (Lenwythe: second ranged attack on a different target).
 
 ---
 

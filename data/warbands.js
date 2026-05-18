@@ -93,34 +93,43 @@ export const WARBANDS = {
            ] },
     },
   },
-  'generic-4': {
-    name: 'Generic 4-fighter warband',
-    abilities: ["Veteran's Resolve", 'Tactical Withdrawal'],
+  'kurnoths-heralds': {
+    name: "Kurnoth's Heralds",
+    abilities: ['Swift Sentinels', 'The Endless Hunt', "Herald's Pride", 'Precision Volley'],
     fighters: {
-      o1: { label: 'o1', name: 'Opp leader', isLeader: true,
-            move: 3, wounds: 5, glory: 2,
-            save: { dice: 2, type: 'block' },
-            attacks: [
-              { name: 'Two-handed Sword', range: 1, dice: 3, damage: 3, type: 'sword' },
-            ] },
-      o2: { label: 'o2', name: 'Opp 2',
-            move: 4, wounds: 3, glory: 1,
-            save: { dice: 1, type: 'dodge' },
-            attacks: [
-              { name: 'Short Blade', range: 1, dice: 2, damage: 2, type: 'sword' },
-            ] },
-      o3: { label: 'o3', name: 'Opp 3',
-            move: 4, wounds: 3, glory: 1,
-            save: { dice: 1, type: 'dodge' },
-            attacks: [
-              { name: 'Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
-            ] },
-      o4: { label: 'o4', name: 'Opp 4',
-            move: 3, wounds: 4, glory: 1,
-            save: { dice: 1, type: 'block' },
-            attacks: [
-              { name: 'Shield Bash', range: 1, dice: 2, damage: 2, type: 'hammer' },
-            ] },
+      Y: { label: 'Y', name: 'Ylarin, Master of the Paths', isLeader: true,
+           move: 4, wounds: 5, glory: 3,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: 'Hooves', range: 1, dice: 4, damage: 1, type: 'sword',  note: 'Grapple' },
+             { name: 'Spear',  range: 2, dice: 2, damage: 2, type: 'hammer', note: 'Crit-Grievous' },
+           ],
+           attacksInspired: [
+             { name: 'Hooves', range: 1, dice: 4, damage: 1, type: 'sword',  note: 'Grapple' },
+             { name: 'Spear',  range: 2, dice: 3, damage: 2, type: 'hammer', note: 'Grievous' },
+           ] },
+      C: { label: 'C', name: 'Cullon, Axe of Kurnoth',
+           move: 4, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Hooves', range: 1, dice: 4, damage: 1, type: 'sword',  note: 'Grapple' },
+             { name: 'Axe',    range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: 'Hooves', range: 1, dice: 4, damage: 1, type: 'sword',  note: 'Grapple' },
+             { name: 'Axe',    range: 1, dice: 3, damage: 3, type: 'hammer', cleave: true },
+           ] },
+      L: { label: 'L', name: 'Lenwythe, Eye of the Forest',
+           move: 4, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Hooves', range: 1, dice: 4, damage: 1, type: 'sword',  note: 'Grapple' },
+             { name: 'Bow',    range: 3, dice: 2, damage: 1, type: 'hammer', note: 'Crit-Stagger' },
+           ],
+           attacksInspired: [
+             { name: 'Hooves', range: 1, dice: 4, damage: 1, type: 'sword',  note: 'Grapple' },
+             { name: 'Bow',    range: 3, dice: 3, damage: 1, type: 'hammer', note: 'Stagger' },
+           ] },
     },
   },
 };

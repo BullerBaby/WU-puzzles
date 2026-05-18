@@ -62,7 +62,7 @@ export const GAMES = [
           tokens: { W: ['move'], A: ['charge'] },
           upgrades: {
             W: ['Great Fortitude'],
-            A: ['Tested by Fire'],
+            A: ['Great Strenght'],
           },
           abilitiesUsed: {
             me:  ['Eternal Duty', 'Whet the Blade', 'Discorporate', 'Cackling Court'],

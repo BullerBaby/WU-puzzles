@@ -31,6 +31,31 @@ export function hexCenter(hexStr, boardRows) {
   };
 }
 
+/* ---- centered rank conversion ----
+ * Convert an internal hex like 'f5' to a midline-relative display coord like
+ * 'f0', 'a+1', 'd-3'. The board's midline runs through odd-column hexes at
+ * the central rank. Even columns straddle the midline (no zero), skipping
+ * directly from -1 to +1. Internal data keeps the old 'f5' format; only the
+ * display labels and prose use the new format.
+ */
+function midRankOf(boardRows) { return Math.ceil(boardRows / 2); }
+
+function newRankOf(hexStr, boardRows) {
+  const file = hexStr[0];
+  const oldRank = parseInt(hexStr.slice(1));
+  const col = file.charCodeAt(0) - 97;
+  const mid = midRankOf(boardRows);
+  if (col % 2 === 1) return oldRank - mid;          // odd cols sit on midline
+  if (oldRank < mid) return oldRank - mid;          // even col, below midline
+  return oldRank - (mid - 1);                       // even col, above midline (skips 0)
+}
+
+export function toDisplayCoord(hexStr, boardRows) {
+  const file = hexStr[0];
+  const n = newRankOf(hexStr, boardRows);
+  return file + (n > 0 ? '+' : '') + n;
+}
+
 function hexPolyPoints(cx, cy) {
   const h = R * Math.sqrt(3) / 2;
   return [
@@ -75,8 +100,6 @@ export function renderBoard(game) {
   svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
 
   const excludedSet = new Set(board.excluded || []);
-  const yourZone = [1, 2];
-  const oppZone = [board.rows - 1, board.rows];
   const staggerSet  = new Set(rotateHexes(board.stagger,  rotation, board.cols, board.rows));
   const blockedSet  = new Set(rotateHexes(board.blocked,  rotation, board.cols, board.rows));
   const waystoneSet = new Set(rotateHexes(board.waystone, rotation, board.cols, board.rows));
@@ -89,15 +112,20 @@ export function renderBoard(game) {
       const hexId = FILES[i] + rk;
       if (excludedSet.has(hexId)) continue;
       const { x, y } = hexCenter(hexId, board.rows);
+      // Tint based on side relative to the midline. Negative new-rank = your
+      // side (blue tint), positive = opp side (coral), zero = midline (neutral).
+      const n = newRankOf(hexId, board.rows);
       let cls = 'hex-poly';
-      if (yourZone.indexOf(rk) >= 0) cls += ' your-zone';
-      else if (oppZone.indexOf(rk) >= 0) cls += ' opp-zone';
+      if (n < 0)      cls += ' your-side';
+      else if (n > 0) cls += ' opp-side';
+      else            cls += ' midline';
+      // Special hex types take over the fill regardless of side.
       if (staggerSet.has(hexId))  cls = 'hex-poly stagger';
       if (waystoneSet.has(hexId)) cls = 'hex-poly waystone';
       if (blockedSet.has(hexId))  cls = 'hex-poly blocked';
       const poly = svgEl('polygon', { points: hexPolyPoints(x, y), class: cls, 'data-hex': hexId });
       const title = svgEl('title', {});
-      title.textContent = hexId;
+      title.textContent = toDisplayCoord(hexId, board.rows);
       poly.appendChild(title);
       hexesG.appendChild(poly);
       // Tiny per-hex coord label, placed near the top of the hex. Naturally
@@ -108,7 +136,7 @@ export function renderBoard(game) {
         'text-anchor': 'middle',
         class: 'hex-coord',
       });
-      coord.textContent = hexId;
+      coord.textContent = toDisplayCoord(hexId, board.rows);
       hexesG.appendChild(coord);
       if (startingSet.has(hexId)) {
         hexesG.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
@@ -150,14 +178,15 @@ export function renderBoard(game) {
       if (!excludedSet.has(FILES[i] + rk)) { anyPlayable = true; break; }
     }
     if (!anyPlayable) continue;
-    // Use the row's natural y as if it were column 'a' (col 0, no offset) —
-    // ensures evenly-spaced ladder regardless of which columns are playable
-    // for that rank. Labels are aligned visually as a clean column on the
-    // left, even though they may float slightly above the leftmost actual
-    // hex when that hex is in an odd-offset column (ranks 8 and 9).
-    const y = BASE_Y + (board.rows - rk) * ROW_STEP;
-    const t = svgEl('text', { x: rowLabelX.toFixed(1), y: (y + 3).toFixed(1), 'text-anchor': 'end', class: 'coord-label' });
-    t.textContent = rk;
+    // Use the odd-column y reference (BASE_Y + ... + COL_OFFSET) so the
+    // labels align horizontally with the midline hexes (b, d, f, h, j at
+    // rank 5). The 0 label sits exactly next to b0/d0/f0/h0/j0.
+    const y = BASE_Y + (board.rows - rk) * ROW_STEP + COL_OFFSET;
+    const mid = Math.ceil(board.rows / 2);
+    const n = rk - mid;  // new-rank value at this y (odd-col reference)
+    const txt = n === 0 ? '0' : (n > 0 ? '+' + n : String(n));
+    const t = svgEl('text', { x: rowLabelX.toFixed(1), y: (y + 3).toFixed(1), 'text-anchor': 'end', class: 'coord-label' + (n === 0 ? ' midline' : '') });
+    t.textContent = txt;
     svg.appendChild(t);
   }
 

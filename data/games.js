@@ -42,7 +42,7 @@ export const GAMES = [
             'Move to the aqua ghyranis token',
             'Attack Ardorn for the kill',
             'Guard — accept the 15-15 tie and go to tiebreaker',
-            'Move to treasure token 4 on i5',
+            'Move to treasure token 4 on i+1',
           ],
           correct: 0,
         },
@@ -103,7 +103,7 @@ export const GAMES = [
       {
         notation: '(R2 — Yurik to attack)',
         title: 'Two attacks, one activation',
-        explanation: "Yurik is up. Two enemies sit in range: the Sharpener (H) is adjacent at f6 (axe reach), and the Wielder (W) is three hexes away at g8 (crossbow reach). The Sharpener has 2 wounds left and a Dodge save — Dodge doesn't stop hammer attacks, so the axe lands cleanly. The Wielder has 1 wound left, but his Block save contests hammer attacks. Easy kill on a 1-glory fighter, or a riskier shot at the 3-glory leader?",
+        explanation: "Yurik is up. Two enemies sit in range: the Sharpener (H) is adjacent at f+1 (axe reach), and the Wielder (W) is three hexes away at g+4 (crossbow reach). The Sharpener has 2 wounds left and a Dodge save — Dodge doesn't stop hammer attacks, so the axe lands cleanly. The Wielder has 1 wound left, but his Block save contests hammer attacks. Easy kill on a 1-glory fighter, or a riskier shot at the 3-glory leader?",
         poll: {
           question: "Yurik's activation — which attack?",
           options: [
@@ -212,9 +212,9 @@ export const GAMES = [
         },
       },
       {
-        notation: 'W>f6 @e5 ×4† o3  (HC / -)  [+P]  ↑W  (G:1-0)',
+        notation: 'W>f+1 @e+1 ×4† o3  (HC / -)  [+P]  ↑W  (G:1-0)',
         title: 'R2.1 — Wielder charges and executes',
-        explanation: "W charges e4 → e5, attacks o3 at f6. Hammer + crit vs blank: 2 hits, 3 base + 1 Condemned = 4. Twist the Knife played in the following power step adds glory on the kill. Trial and Execution gives +1 power card (Murderous Charge). W inspires.",
+        explanation: "W charges e-1 → e+1, attacks o3 at f+1. Hammer + crit vs blank: 2 hits, 3 base + 1 Condemned = 4. Twist the Knife played in the following power step adds glory on the kill. Trial and Execution gives +1 power card (Murderous Charge). W inspires.",
         dice: { attack: ['H', 'C'], defense: ['-'] },
         anim: { attack: { target: 'o3', dmg: 4 } },
         diff: {
@@ -238,9 +238,9 @@ export const GAMES = [
         },
       },
       {
-        notation: 'o1 xe5 ×2  W[w×2]  (SS / D-)',
+        notation: 'o1 xe+1 ×2  W[w×2]  (SS / D-)',
         title: 'R2.2 — Opponent leader retaliates',
-        explanation: "o1 attacks W from e6 (no move). Two swords vs two dodge: 2 hits − 1 save = 1 net, 2 damage. Opponent plays Sidestep in the power step to reposition after. Wielder on 3 HP.",
+        explanation: "o1 attacks W from e+2 (no move). Two swords vs two dodge: 2 hits − 1 save = 1 net, 2 damage. Opponent plays Sidestep in the power step to reposition after. Wielder on 3 HP.",
         dice: { attack: ['S', 'S'], defense: ['D', '-'] },
         anim: { attack: { target: 'W', dmg: 2 } },
         diff: {
@@ -251,9 +251,9 @@ export const GAMES = [
         },
       },
       {
-        notation: 'S xe6 ×1  o1[w×1]  (H- / -)',
+        notation: 'S xe+2 ×1  o1[w×1]  (H- / -)',
         title: 'R2.3 — Scriptor pings the leader',
-        explanation: "S range attack on o1 (3 hexes from d4). Hammer + blank, opponent rolls blank shield — 1 damage. Bearer (B) has gone on Guard this round for defensive coverage in our deployment zone.",
+        explanation: "S range attack on o1 (3 hexes from d-1). Hammer + blank, opponent rolls blank shield — 1 damage. Bearer (B) has gone on Guard this round for defensive coverage in our deployment zone.",
         dice: { attack: ['H', '-'], defense: ['-'] },
         anim: { attack: { target: 'o1', dmg: 1 } },
         diff: {
@@ -263,15 +263,15 @@ export const GAMES = [
         },
       },
       {
-        notation: '[Discorporate: H → h6]',
+        notation: '[Discorporate: H → h+1]',
         title: 'R2.4 — Discorporate (warscroll ability)',
-        explanation: "Teleport Sharpener from g4 to h6, flanking o2 and o4 for R3. No card spent.",
+        explanation: "Teleport Sharpener from g-1 to h+1, flanking o2 and o4 for R3. No card spent.",
         poll: {
           question: "What's the right call here?",
           options: [
-            'h6 — flank o2 and o4 for R3',
-            'd6 — engage opp leader from behind',
-            'f4 — stack next to W for Whet the Blade',
+            'h+1 — flank o2 and o4 for R3',
+            'd+1 — engage opp leader from behind',
+            'f-1 — stack next to W for Whet the Blade',
             "Hold — save Discorporate for next round",
           ],
           correct: 0,

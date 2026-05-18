@@ -2,8 +2,10 @@
  * Built-in board definitions. Each board has a `cols`/`rows` count, a list of
  * `excluded` hexes (cut corners), and arrays of special-hex coordinates.
  *
- * Coordinate system: files a–k left to right, ranks 1–9 from your edge
- * (rank 1) up to opponent's (rank 9).
+ * Coordinate system: files a–k left to right, ranks centred on the midline.
+ * Hexes on the midline (only odd cols b/d/f/h/j) are <file>0 (e.g. b0).
+ * Hexes on your side use -<file><n> (e.g. -f1, -d4 = your back row).
+ * Hexes on opp side use <file><n> (e.g. f1, d4 = opp back row).
  *
  * Special-hex arrays:
  *   - stagger:  staggered/feature hexes (warm tinted)
@@ -16,28 +18,28 @@
 
 export const BOARD_SHAPE = {
   cols: 11, rows: 9,
-  excluded: ['a1','b1','j1','k1','a8','a9','b9','c9','e9','g9','i9','k9','j9','k8'],
+  excluded: ['-a4','-b4','-j4','-k4','a4','a5','b4','c5','e5','g5','i5','k5','j4','k4'],
 };
 
 export const BOARDS = {
   'embergard-1': Object.assign({
     name: 'Embergard 1 — Spinning Scythes',
-    stagger:  ['g2', 'e7'], blocked: [], waystone: [],
-    starting: ['b3','b6','c2','c7','d4','d8','e6', 'g3','h2','h7','i2','i4','j7','k7'],
+    stagger:  ['-g3', 'e3'], blocked: [], waystone: [],
+    starting: ['-b2','b1','-c3','c3','-d1','d3','e2', '-g2','-h3','h2','-i3','-i1','j2','k3'],
   }, BOARD_SHAPE),
   'embergard-2': Object.assign({
     name: 'Embergard 2 — Chained Pillars',
-    stagger:  ['b3', 'j7'], blocked: ['e4', 'g6'], waystone: [],
-    starting: ['c1','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+    stagger:  ['-b2', 'j2'], blocked: ['-e1', 'g2'], waystone: [],
+    starting: ['-c4','-e4','-g4','-i4','-d3','-f3','-h3', 'c5','e5','g5','i5','d3','f3','h3'],
   }, BOARD_SHAPE),
   'spitewood-1': Object.assign({
     name: 'Spitewood 1 — brown',
-    stagger:  ['d3', 'h7'], blocked: [], waystone: ['c3', 'i7'],
-    starting: ['c1','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+    stagger:  ['-d2', 'h2'], blocked: [], waystone: ['-c2', 'i3'],
+    starting: ['-c4','-e4','-g4','-i4','-d3','-f3','-h3', 'c5','e5','g5','i5','d3','f3','h3'],
   }, BOARD_SHAPE),
   'spitewood-2': Object.assign({
     name: 'Spitewood 2 — green',
-    stagger:  ['f5'], blocked: [], waystone: ['c3', 'i3', 'c7', 'i7'],
-    starting: ['c1','e1','g1','i1','d2','f2','h2', 'c9','e9','g9','i9','d8','f8','h8'],
+    stagger:  ['f0'], blocked: [], waystone: ['-c2', '-i2', 'c3', 'i3'],
+    starting: ['-c4','-e4','-g4','-i4','-d3','-f3','-h3', 'c5','e5','g5','i5','d3','f3','h3'],
   }, BOARD_SHAPE),
 };

@@ -21,39 +21,56 @@ const COL_OFFSET = 11.25;
 const BASE_X = 32;
 const BASE_Y = 26;
 
-export function hexCenter(hexStr, boardRows) {
-  const file = hexStr[0];
-  const rank = parseInt(hexStr.slice(1));
+/* ---- centered rank notation ----
+ * All hex coordinates throughout the system use the centered notation:
+ *   - Positive (opp side): 'f1', 'a3', etc. — bare file + number
+ *   - Zero (midline, only odd cols b/d/f/h/j): 'f0', 'b0', 'd0', etc.
+ *   - Negative (your side): '-f1', '-a3', etc. — leading dash + file + number
+ *
+ * The midline of a 9-row board passes through the odd-column hexes at the
+ * central rank (b0, d0, f0, h0, j0). Even columns straddle the midline so
+ * they skip 0, going directly from -1 to +1.
+ */
+
+// Parse a centered-notation hex into its (col, "absolute rank") components,
+// where absoluteRank is 1..boardRows in the legacy 1-indexed scheme that the
+// geometry math expects. Internal use only — keeps hexCenter, rotateHex, and
+// other geometric code simple.
+function parseHex(hexStr, boardRows) {
+  let s = hexStr;
+  let negative = false;
+  if (s.charAt(0) === '-') { negative = true; s = s.slice(1); }
+  const file = s.charAt(0);
+  const n = parseInt(s.slice(1), 10);
   const col = file.charCodeAt(0) - 97;
+  const mid = Math.ceil(boardRows / 2);  // 5 for 9-row boards
+  let absoluteRank;
+  if (negative)            absoluteRank = mid - n;
+  else if (n === 0)        absoluteRank = mid;
+  else if (col % 2 === 1)  absoluteRank = mid + n;
+  else                     absoluteRank = (mid - 1) + n;
+  return { file, col, rank: absoluteRank };
+}
+
+// Format a (file, absoluteRank, rows) triple as a centered-notation hex.
+// Internal use only — emitted whenever the renderer iterates (col, rank).
+function formatHex(file, absoluteRank, boardRows) {
+  const col = file.charCodeAt(0) - 97;
+  const mid = Math.ceil(boardRows / 2);
+  let n;
+  if (col % 2 === 1)            n = absoluteRank - mid;
+  else if (absoluteRank < mid)  n = absoluteRank - mid;
+  else                          n = absoluteRank - (mid - 1);
+  if (n < 0) return '-' + file + Math.abs(n);
+  return file + n;
+}
+
+export function hexCenter(hexStr, boardRows) {
+  const { col, rank } = parseHex(hexStr, boardRows);
   return {
     x: BASE_X + col * COL_STEP,
     y: BASE_Y + (boardRows - rank) * ROW_STEP + (col % 2) * COL_OFFSET,
   };
-}
-
-/* ---- centered rank conversion ----
- * Convert an internal hex like 'f5' to a midline-relative display coord like
- * 'f0', 'a+1', 'd-3'. The board's midline runs through odd-column hexes at
- * the central rank. Even columns straddle the midline (no zero), skipping
- * directly from -1 to +1. Internal data keeps the old 'f5' format; only the
- * display labels and prose use the new format.
- */
-function midRankOf(boardRows) { return Math.ceil(boardRows / 2); }
-
-function newRankOf(hexStr, boardRows) {
-  const file = hexStr[0];
-  const oldRank = parseInt(hexStr.slice(1));
-  const col = file.charCodeAt(0) - 97;
-  const mid = midRankOf(boardRows);
-  if (col % 2 === 1) return oldRank - mid;          // odd cols sit on midline
-  if (oldRank < mid) return oldRank - mid;          // even col, below midline
-  return oldRank - (mid - 1);                       // even col, above midline (skips 0)
-}
-
-export function toDisplayCoord(hexStr, boardRows) {
-  const file = hexStr[0];
-  const n = newRankOf(hexStr, boardRows);
-  return file + (n > 0 ? '+' : '') + n;
 }
 
 function hexPolyPoints(cx, cy) {
@@ -66,9 +83,10 @@ function hexPolyPoints(cx, cy) {
 
 function rotateHex(hex, rotation, cols, rows) {
   if (rotation !== 180) return hex;
-  const col = hex.charCodeAt(0) - 97;
-  const rank = parseInt(hex.slice(1));
-  return String.fromCharCode(97 + (cols - 1 - col)) + (rows + 1 - rank);
+  const { col, rank } = parseHex(hex, rows);
+  const newCol = cols - 1 - col;
+  const newRank = rows + 1 - rank;
+  return formatHex(String.fromCharCode(97 + newCol), newRank, rows);
 }
 
 function rotateHexes(arr, rotation, cols, rows) {
@@ -109,23 +127,27 @@ export function renderBoard(game) {
   svg.appendChild(hexesG);
   for (let i = 0; i < FILES.length; i++) {
     for (let rk = 1; rk <= board.rows; rk++) {
-      const hexId = FILES[i] + rk;
+      // Iterate (col, rank) for the geometry, then emit the centered-notation
+      // id for storage, lookups, and display.
+      const hexId = formatHex(FILES[i], rk, board.rows);
       if (excludedSet.has(hexId)) continue;
-      const { x, y } = hexCenter(hexId, board.rows);
-      // Tint based on side relative to the midline. Negative new-rank = your
-      // side (blue tint), positive = opp side (coral), zero = midline (neutral).
-      const n = newRankOf(hexId, board.rows);
+      const x = BASE_X + i * COL_STEP;
+      const y = BASE_Y + (board.rows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+      // Tint based on side relative to the midline. Negative = your side
+      // (blue tint), positive = opp side (coral), zero = midline (neutral).
+      // Parse our own emitted id to decide — keeps the rule in one place.
+      const sign = hexId.charAt(0) === '-' ? -1 : (hexId.indexOf('0') > 0 ? 0 : 1);
       let cls = 'hex-poly';
-      if (n < 0)      cls += ' your-side';
-      else if (n > 0) cls += ' opp-side';
-      else            cls += ' midline';
+      if (sign < 0)      cls += ' your-side';
+      else if (sign > 0) cls += ' opp-side';
+      else               cls += ' midline';
       // Special hex types take over the fill regardless of side.
       if (staggerSet.has(hexId))  cls = 'hex-poly stagger';
       if (waystoneSet.has(hexId)) cls = 'hex-poly waystone';
       if (blockedSet.has(hexId))  cls = 'hex-poly blocked';
       const poly = svgEl('polygon', { points: hexPolyPoints(x, y), class: cls, 'data-hex': hexId });
       const title = svgEl('title', {});
-      title.textContent = toDisplayCoord(hexId, board.rows);
+      title.textContent = hexId;
       poly.appendChild(title);
       hexesG.appendChild(poly);
       // Tiny per-hex coord label, placed near the top of the hex. Naturally
@@ -136,7 +158,7 @@ export function renderBoard(game) {
         'text-anchor': 'middle',
         class: 'hex-coord',
       });
-      coord.textContent = toDisplayCoord(hexId, board.rows);
+      coord.textContent = hexId;
       hexesG.appendChild(coord);
       if (startingSet.has(hexId)) {
         hexesG.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
@@ -150,10 +172,12 @@ export function renderBoard(game) {
   let minXAll = Infinity, maxYAll = -Infinity;
   for (let i = 0; i < FILES.length; i++) {
     for (let rk = 1; rk <= board.rows; rk++) {
-      if (excludedSet.has(FILES[i] + rk)) continue;
-      const c = hexCenter(FILES[i] + rk, board.rows);
-      if (c.x < minXAll) minXAll = c.x;
-      if (c.y > maxYAll) maxYAll = c.y;
+      const hexId = formatHex(FILES[i], rk, board.rows);
+      if (excludedSet.has(hexId)) continue;
+      const x = BASE_X + i * COL_STEP;
+      const y = BASE_Y + (board.rows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+      if (x < minXAll) minXAll = x;
+      if (y > maxYAll) maxYAll = y;
     }
   }
   const rowLabelX = minXAll - R - 3;
@@ -163,7 +187,7 @@ export function renderBoard(game) {
     // Skip files that are entirely excluded
     let anyPlayable = false;
     for (let rk = 1; rk <= board.rows; rk++) {
-      if (!excludedSet.has(FILES[i] + rk)) { anyPlayable = true; break; }
+      if (!excludedSet.has(formatHex(FILES[i], rk, board.rows))) { anyPlayable = true; break; }
     }
     if (!anyPlayable) continue;
     const x = BASE_X + i * COL_STEP;
@@ -175,7 +199,7 @@ export function renderBoard(game) {
     // Skip ranks that are entirely excluded
     let anyPlayable = false;
     for (let i = 0; i < FILES.length; i++) {
-      if (!excludedSet.has(FILES[i] + rk)) { anyPlayable = true; break; }
+      if (!excludedSet.has(formatHex(FILES[i], rk, board.rows))) { anyPlayable = true; break; }
     }
     if (!anyPlayable) continue;
     // Use the odd-column y reference (BASE_Y + ... + COL_OFFSET) so the
@@ -184,7 +208,7 @@ export function renderBoard(game) {
     const y = BASE_Y + (board.rows - rk) * ROW_STEP + COL_OFFSET;
     const mid = Math.ceil(board.rows / 2);
     const n = rk - mid;  // new-rank value at this y (odd-col reference)
-    const txt = n === 0 ? '0' : (n > 0 ? '+' + n : String(n));
+    const txt = String(n);
     const t = svgEl('text', { x: rowLabelX.toFixed(1), y: (y + 3).toFixed(1), 'text-anchor': 'end', class: 'coord-label' + (n === 0 ? ' midline' : '') });
     t.textContent = txt;
     svg.appendChild(t);

@@ -179,7 +179,7 @@ export const GAMES = [
             'Charge Ardorn on -c1',
             'Guard in place and accept the 20-20 tie',
           ],
-          correct: 0,
+          correct: 1,
         },
         state: {
           positions: { Y: 'j3', A: '-c1' },

@@ -22,7 +22,7 @@ export const GAMES = [
   {
     id: 'headsmen-vs-emberwatch-r3-finale',
     title: "Demo - Wielder vs. Ardorn",
-    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
+    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. You're trailing 14-15 in glory. Opponent has burned all 4 activations; you have one left. What's the play?",
     round: 3,
     board: 'embergard-1',
     boardRotation: 0,
@@ -58,7 +58,7 @@ export const GAMES = [
           wounds: { W: 1, A: 2 },
           slain: ['B', 'S', 'H', 'F', 'Y'],
           inspired: ['W', 'A'],
-          glory: [15, 15],
+          glory: [14, 15],
           tokens: { W: ['move'], A: ['charge'] },
           upgrades: {
             W: ['Great Fortitude'],
@@ -89,38 +89,36 @@ export const GAMES = [
 
   {
     id: 'yurik-attack-choice',
-    title: "Demo - Yurik's choice",
-    description: "Round 2. Yurik Velzaine has two attack profiles — axe at range 1, crossbow at range 4. Two enemies are reachable. Which attack scores more?",
+    title: "Demo - Cullon's choice",
+    description: "Round 2. Cullon, Axe of Kurnoth, has two attacks — sweeping hooves (4 sword dice, 1 dmg, Grapple) or chopping axe (2 hammer dice, 2 dmg). The Sharpener of the Blade sits adjacent with 2 wounds left. Which attack should Cullon use?",
     round: 2,
     board: 'embergard-1',
     boardRotation: 0,
-    warbands: { me: 'emberwatch', opp: 'headsmens-curse' },
+    warbands: { me: 'kurnoths-heralds', opp: 'headsmens-curse' },
     decks: {
-      me:  { pair: 'Blazing Assault / Emberstone Sentinels',   plots: [] },
+      me:  { pair: 'Hunting Grounds / Pillage to Plunder',     plots: [] },
       opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
     },
     steps: [
       {
-        notation: '(R2 — Yurik to attack)',
+        notation: '(R2 — Cullon to attack)',
         title: 'Two attacks, one activation',
-        explanation: "Yurik is up. Two enemies sit in range: the Sharpener (H) is adjacent at f1 (axe reach), and the Wielder (W) is three hexes away at g4 (crossbow reach). The Sharpener has 2 wounds left and a Dodge save — Dodge doesn't stop hammer attacks, so the axe lands cleanly. The Wielder has 1 wound left, but his Block save contests hammer attacks. Easy kill on a 1-glory fighter, or a riskier shot at the 3-glory leader?",
+        explanation: "Cullon is up — the only fighter on the board who hasn't charged this round. The Sharpener of the Blade (H) is adjacent at f1 with 2 wounds left and a Dodge save. Cullon's two attacks both have range 1: Hooves rolls 4 sword dice for 1 damage each with Grapple on a crit, while Axe rolls 2 hammer dice for 2 damage. Either can kill on a single landed hit, but the math is different — Hooves casts a wider net, Axe concentrates the damage.",
         poll: {
-          question: "Yurik's activation — which attack?",
+          question: "Cullon's activation — which attack?",
           options: [
-            'Crossbow at W — 1 dmg finishes the leader (+3 glory, contested by Block)',
-            'Axe at H — clean 2 dmg kill on the Sharpener (+1 glory)',
-            'Crossbow at B — chip 1 wound off the Bearer (no kill, +0 glory)',
-            'Guard — pass the activation, save Yurik for next round',
+            'Hooves — 4 sword dice for 1 damage (Grapple on crit)',
+            'Axe — 2 hammer dice for 2 damage',
           ],
-          correct: 0,
+          correct: 1,
         },
         state: {
           positions: {
-            // Me (Emberwatch)
+            // Me (Kurnoth's Heralds) — kept the same hexes as the previous Emberwatch layout
             Y: 'f0',
-            A: 'e1',
-            F: 'g1',
-            // Opp (Headsmens-Curse)
+            C: 'e1',
+            L: 'g1',
+            // Opp (Headsmens-Curse) — unchanged
             W: 'g4',
             H: 'f1',
             B: 'd3',
@@ -130,10 +128,18 @@ export const GAMES = [
           slain: [],
           inspired: [],
           glory: [3, 4],
-          tokens: {},
+          tokens: {
+            // Everyone has charged this round — except Cullon, whose activation is up.
+            Y: ['charge'],
+            L: ['charge'],
+            W: ['charge'],
+            H: ['charge'],
+            B: ['charge'],
+            S: ['charge'],
+          },
           upgrades: {},
           abilitiesUsed: {
-            me:  ['Vanguard Dash'],
+            me:  ['Swift Sentinels'],
             opp: ['Whet the Blade'],
           },
           activationsUsed: { me: 1, opp: 1 },

@@ -170,7 +170,7 @@ export const GAMES = [
       {
         notation: '(R3 — last activation, glory 20-20)',
         title: 'Last activation decision',
-        explanation: "Ylarin stands on j3 while Ardorn is still alive on -c1 with no wounds taken. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
+        explanation: "Ylarin stands on j3 while Ardorn clings to 3 wounds remaining on -c1. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
         poll: {
           question: "What's your move?",
           options: [
@@ -183,7 +183,7 @@ export const GAMES = [
         },
         state: {
           positions: { Y: 'j3', A: '-c1' },
-          wounds:    { A: 0 },
+          wounds:    { A: 2 },
           slain:     ['C', 'L', 'F', 'oY'],
           inspired:  [],
           glory:     [20, 20],
@@ -205,152 +205,6 @@ export const GAMES = [
             me:  { objectives: 0, power: 0 },
             opp: { objectives: 0, power: 1 },
           },
-        },
-      },
-    ],
-  },
-
-  {
-    id: 'three-vs-five-stub',
-    title: 'Stub: 3-fighter warband on Spitewood 2',
-    description: "Placeholder showing variable fighter counts and a different board. Replace with a real game when notated.",
-    round: 1,
-    board: 'spitewood-2',
-    boardRotation: 0,
-    fighters: {
-      L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
-      A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
-      Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
-      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
-      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
-      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
-      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
-      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
-    },
-    steps: [
-      {
-        notation: '(R1 setup — deployment)',
-        title: 'Round 1 — opening deployment',
-        explanation: "3 vs 5 on Spitewood 2. Four waystones around corners, central stagger.",
-        state: {
-          positions: { L:'-e4', A:'-c4', Z:'-g4', e1:'e5', e2:'c5', e3:'g5', e4:'i5', e5:'d3' },
-          wounds: {}, slain: [], inspired: [],
-          glory: [0, 0],
-          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
-          powerStep: [],
-        },
-      },
-    ],
-  },
-  
-  {
-    id: 'Test 13may2026',
-    title: "'Headsmen's Curse vs Kurnoths Heralds'",
-    description: "description",
-    round: 1,
-    board: 'spitewood-2',
-    boardRotation: 0,
-    fighters: {
-      L:  { side: 'me',  label: 'L',  name: 'Leader', isLeader: true },
-      A:  { side: 'me',  label: 'A',  name: 'Fighter A' },
-      Z:  { side: 'me',  label: 'Z',  name: 'Fighter Z' },
-      e1: { side: 'opp', label: 'e1', name: 'Enemy leader', isLeader: true },
-      e2: { side: 'opp', label: 'e2', name: 'Enemy 2' },
-      e3: { side: 'opp', label: 'e3', name: 'Enemy 3' },
-      e4: { side: 'opp', label: 'e4', name: 'Enemy 4' },
-      e5: { side: 'opp', label: 'e5', name: 'Enemy 5' },
-    },
-    steps: [
-      {
-        notation: '(R1 setup — deployment)',
-        title: 'Round 1 — opening deployment',
-        explanation: "3 vs 5 on Spitewood 2. Four waystones around corners, central stagger.",
-        state: {
-          positions: { L:'-e4', A:'-c4', Z:'-g4', e1:'e5', e2:'c5', e3:'g5', e4:'i5', e5:'d3' },
-          wounds: {}, slain: [], inspired: [],
-          glory: [0, 0],
-          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
-          powerStep: [],
-        },
-      },
-    ],
-  },
-
-  {
-    id: 'frederik-vs-mathias-liga',
-    title: 'Frederik vs Mathias — Epic Liga battle',
-    description: "Recreated from a club-night photo. Round 2: both warbands have closed into a central melee on Spitewood.",
-    round: 2,
-    board: 'spitewood-2',
-    boardRotation: 0,
-    decks: {
-      me:  { pair: "Hunter's Cunning / Stalking Shadows",   plots: ['Sneak Attack', 'Final Lesson'] },
-      opp: { pair: "Power Unbound / Countdown to Cataclysm", plots: ['Ritual Sacrifice'] },
-    },
-    fighters: {
-      // Mathias's warband — visible on the warscroll cards in the photo
-      C: { side: 'me',  label: 'C', name: 'Cullon', isLeader: true,
-           move: 4, wounds: 4, glory: 2,
-           save: { dice: 1, type: 'block' },
-           attacks: [
-             { name: 'Lance', range: 1, dice: 3, damage: 3, type: 'hammer' },
-           ] },
-      Y: { side: 'me',  label: 'Y', name: 'Ylarin',
-           move: 4, wounds: 3, glory: 1,
-           save: { dice: 1, type: 'dodge' },
-           attacks: [
-             { name: 'Hunting Bow', range: 4, dice: 2, damage: 2, type: 'sword' },
-           ] },
-      L: { side: 'me',  label: 'L', name: 'Lerwythe',
-           move: 3, wounds: 4, glory: 1,
-           save: { dice: 2, type: 'block' },
-           attacks: [
-             { name: 'Hooked Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
-           ] },
-      S: { side: 'me',  label: 'S', name: 'Skaen',
-           move: 4, wounds: 3, glory: 1,
-           save: { dice: 1, type: 'dodge' },
-           attacks: [
-             { name: 'Twin Daggers', range: 1, dice: 3, damage: 1, type: 'sword' },
-           ] },
-      // Frederik's warband — three identical Sentinel-style fighters + a leader
-      f1: { side: 'opp', label: '-f4', name: "Frederik's leader", isLeader: true,
-            move: 3, wounds: 5, glory: 2,
-            save: { dice: 2, type: 'block' },
-            attacks: [
-              { name: 'Two-handed Blade', range: 1, dice: 3, damage: 3, type: 'sword' },
-            ] },
-      f2: { side: 'opp', label: '-f3', name: 'Sentinel',
-            move: 4, wounds: 3, glory: 1,
-            save: { dice: 1, type: 'dodge' },
-            attacks: [
-              { name: 'Sentinel Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
-            ] },
-      f3: { side: 'opp', label: '-f2', name: 'Sentinel',
-            move: 4, wounds: 3, glory: 1,
-            save: { dice: 1, type: 'dodge' },
-            attacks: [
-              { name: 'Sentinel Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
-            ] },
-      f4: { side: 'opp', label: '-f1', name: 'Sentinel',
-            move: 4, wounds: 3, glory: 1,
-            save: { dice: 1, type: 'dodge' },
-            attacks: [
-              { name: 'Sentinel Spear', range: 2, dice: 2, damage: 2, type: 'sword' },
-            ] },
-    },
-    steps: [
-      {
-        notation: 'R2 — central melee snapshot',
-        title: 'Board position (from photo)',
-        explanation: "Snapshot from a club night. Mathias's line (Cullon, Lerwythe, Ylarin, Skaen) presses up from ranks 4-5; Frederik's three Sentinels and their leader meet them at rank 6. Everyone's in striking distance of someone.",
-        state: {
-          positions: {
-            Y: 'c1', S: '-d1', C: 'e1', L: 'f0',
-            f1: 'e2', f2: 'f1', f3: 'g2', f4: 'd1',
-          },
-          glory: [0, 0],
-          hand: { me: { objectives: 3, power: 4 }, opp: { objectives: 3, power: 4 } },
         },
       },
     ],

@@ -42,12 +42,15 @@
 </div>
 
 <section class="game-row">
-  <button id="game-prev" type="button" class="game-nav-btn" title="Previous game">← Prev puzzle</button>
   <div class="game-info">
     <span class="game-title" id="game-title"></span>
     <span class="game-counter" id="game-counter"></span>
   </div>
-  <button id="game-next" type="button" class="game-nav-btn" title="Next game">Next puzzle →</button>
+  <div class="game-nav-buttons">
+    <button id="game-prev" type="button" class="game-nav-btn" title="Previous puzzle" aria-label="Previous puzzle">←</button>
+    <button id="game-next" type="button" class="game-nav-btn" title="Next puzzle" aria-label="Next puzzle">→</button>
+    <button id="game-random" type="button" class="game-nav-btn" title="Random puzzle" aria-label="Random puzzle">🎲</button>
+  </div>
 </section>
 
 <section class="custom-section">

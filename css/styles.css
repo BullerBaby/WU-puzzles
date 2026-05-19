@@ -155,18 +155,18 @@ section { margin-bottom: 1.5rem; }
 
 .game-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 0.75rem;
-  flex-wrap: wrap;
 }
 .game-info {
-  flex: 1 1 auto;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  min-width: 0;
+  max-width: 100%;
 }
 .game-title {
   font-size: 15px;
@@ -182,9 +182,17 @@ section { margin-bottom: 1.5rem; }
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
+.game-nav-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
 .game-nav-btn {
-  padding: 6px 12px;
+  padding: 6px 14px;
   flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  min-width: 40px;
 }
 
 .board-card {

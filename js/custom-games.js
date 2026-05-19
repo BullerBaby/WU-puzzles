@@ -143,6 +143,7 @@ export function rebuildGameNav(currentGameId) {
   const counterEl = document.getElementById('game-counter');
   const prevBtn   = document.getElementById('game-prev');
   const nextBtn   = document.getElementById('game-next');
+  const randomBtn = document.getElementById('game-random');
   if (!titleEl || !counterEl || !prevBtn || !nextBtn) return;
   let idx = -1;
   if (currentGameId) idx = GAMES.findIndex(function(g) { return g.id === currentGameId; });
@@ -153,12 +154,14 @@ export function rebuildGameNav(currentGameId) {
     counterEl.textContent = '';
     prevBtn.disabled = true;
     nextBtn.disabled = true;
+    if (randomBtn) randomBtn.disabled = true;
     return;
   }
   titleEl.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
   counterEl.textContent = (idx + 1) + ' of ' + GAMES.length;
   prevBtn.disabled = (idx === 0);
   nextBtn.disabled = (idx === GAMES.length - 1);
+  if (randomBtn) randomBtn.disabled = (GAMES.length <= 1);
 }
 
 export function loadCustomFromInput(onLoaded) {

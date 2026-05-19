@@ -204,18 +204,16 @@ function loadGame(gameId) {
 
 function navGame(delta) {
   if (!currentGame) return;
-  if (delta > 0) {
-    // "Next puzzle": pick a random puzzle the user hasn't seen yet.
-    // Falls back to any other puzzle if everything is seen (with auto-reset).
-    const pick = pickRandomUnseen(currentGame.id);
-    if (pick) loadGame(pick.id);
-    return;
-  }
-  // "Prev puzzle": sequential by GAMES index (unchanged).
   const idx = GAMES.findIndex(function(g) { return g.id === currentGame.id; });
   const next = idx + delta;
   if (next < 0 || next >= GAMES.length) return;
   loadGame(GAMES[next].id);
+}
+
+function navRandom() {
+  if (!currentGame) return;
+  const pick = pickRandomUnseen(currentGame.id);
+  if (pick) loadGame(pick.id);
 }
 
 /* ==================== INIT ==================== */
@@ -225,6 +223,7 @@ rebuildGameNav();
 
 document.getElementById('game-prev').addEventListener('click', function() { navGame(-1); });
 document.getElementById('game-next').addEventListener('click', function() { navGame(1); });
+document.getElementById('game-random').addEventListener('click', navRandom);
 
 document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
 document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });

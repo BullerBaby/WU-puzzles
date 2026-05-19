@@ -62,7 +62,6 @@ export const GAMES = [
           tokens: { W: ['move'], A: ['charge'] },
           upgrades: {
             W: ['Great Fortitude'],
-            A: ['Tested by Fire'],
           },
           abilitiesUsed: {
             me:  ['Eternal Duty', 'Whet the Blade', 'Discorporate', 'Cackling Court'],
@@ -141,8 +140,8 @@ export const GAMES = [
           },
           upgrades: {},
           abilitiesUsed: {
-            me:  ['Swift Sentinels'],
-            opp: ['Whet the Blade'],
+            me:  ['Swift Sentinels', 'The Endless Hunt', "Herald's Pride", 'Precision Volley'],
+            opp: ['Eternal Duty', 'Whet the Blade', 'Discorporate', 'Cackling Court'],
           },
           activationsUsed: { me: 3, opp: 4 },
           features: [

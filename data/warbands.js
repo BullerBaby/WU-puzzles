@@ -260,4 +260,410 @@ export const WARBANDS = {
            ] },
     },
   },
+
+  'farstriders': {
+    name: 'The Farstriders',
+    abilities: ['Ranger Elite','Forward the Vanguard!','Behind Enemy Lines','Vanguard'],
+    fighters: {
+      F: { label: 'F', name: 'Farstrider', isLeader: true,
+           move: 3, wounds: 5, glory: 3,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      E: { label: 'E', name: 'Eagle-Eye',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      S: { label: 'S', name: 'Swiftblade',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 4, damage: 2, type: 'sword' },
+             { range: 3, dice: 4, damage: 1, type: 'sword' },
+           ] },
+    },
+  },
+
+  'spiteclaws-swarm': {
+    name: "Spiteclaw's Swarm",
+    abilities: ['Skitter','Justified Paranoia',"'Out my way, fool-things!'",'Swarm','Scheming Pack','Untimely Promotion'],
+    fighters: {
+      S: { label: 'S', name: 'Spiteclaw', isLeader: true,
+           move: 5, wounds: 4, glory: 2,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 2, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { range: 2, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      K: { label: 'K', name: 'Krrk',
+           move: 5, wounds: 3, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 2, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { range: 2, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      L: { label: 'L', name: 'Lurking Skaven',
+           move: 5, wounds: 3, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+             { range: 3, dice: 2, damage: 1, type: 'sword' },
+           ] },
+      H: { label: 'H', name: 'Hungering Skaven',
+           move: 5, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 1, type: 'hammer' },
+           ] },
+      F: { label: 'F', name: 'Festering Skaven',
+           move: 5, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+    },
+  },
+
+  'ironsouls-condemnors': {
+    name: "Ironsoul's Condemnors",
+    abilities: ['Punishing Blow','Aetherically Charged Shield','Aetherically Charged Maul','Bulwark Against the Dark'],
+    fighters: {
+      I: { label: 'I', name: 'Ironsoul', isLeader: true,
+           move: 3, wounds: 5, glory: 3,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      B: { label: 'B', name: 'Brodus',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      T: { label: 'T', name: 'Tavian',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+    },
+  },
+
+  'sepulchral-guard': {
+    name: 'The Sepulchral Guard',
+    abilities: ['Grasping Hands','Startling Reformation','Bone Shrapnel','Forward!','Arise!'],
+    fighters: {
+      W: { label: 'W', name: 'The Sepulchral Warden', isLeader: true,
+           move: 2, wounds: 4, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 2, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 3, type: 'hammer' },
+             { range: 2, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      H: { label: 'H', name: 'The Harvester',
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 4, damage: 2, type: 'sword' },
+           ] },
+      P: { label: 'P', name: 'The Prince of Dust',
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      C: { label: 'C', name: 'The Champion',
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      I: { label: 'I', name: 'The Inevitable Petitioner',
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      Z: { label: 'Z', name: 'The Zealous Petitioner',
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      R: { label: 'R', name: 'The Rising Petitioner',
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+    },
+  },
+
+  'zondaras-gravebreakers': {
+    name: "Zondara's Gravebreakers",
+    abilities: ['Destined','Undying Love','Exhume','Unearth','Gravebreakers'],
+    fighters: {
+      Z: { label: 'Z', name: 'Zondara', isLeader: true,
+           move: 3, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      F: { label: 'F', name: 'Ferlain',
+           move: 4, wounds: 5, glory: 2,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      C: { label: 'C', name: 'Cracktomb',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      T: { label: 'T', name: 'Toyle',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      P: { label: 'P', name: 'Pikk',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ] },
+    },
+  },
+
+  'cyrenis-razors': {
+    name: "Cyreni's Razors",
+    abilities: ['Deadly Riposte','Phantasmal Ink','Soul Harvest','Hammertide'],
+    fighters: {
+      C: { label: 'C', name: 'Cyreni', isLeader: true,
+           move: 4, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 2, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { range: 2, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      E: { label: 'E', name: 'Cephanyr',
+           move: 3, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 4, damage: 2, type: 'sword' },
+           ] },
+      R: { label: 'R', name: 'Renglaith',
+           move: 4, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 2, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 4, damage: 2, type: 'sword' },
+             { range: 2, dice: 4, damage: 1, type: 'sword' },
+           ] },
+      A: { label: 'A', name: 'Alathyrr',
+           move: 4, wounds: 4, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 2, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 2, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+    },
+  },
+
+  'brethren-of-the-bolt': {
+    name: 'Brethren of the Bolt',
+    abilities: ['Fulminating Hymn','Crackling Burst',"Heaven's Charge",'Coruscating Revival','Holy Capacitors'],
+    fighters: {
+      F: { label: 'F', name: 'Pater Filius', isLeader: true,
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+             { range: 3, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      G: { label: 'G', name: 'Galvic',
+           move: 3, wounds: 3, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      T: { label: 'T', name: 'Tazat',
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      Y: { label: 'Y', name: 'Yakob',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      A: { label: 'A', name: 'Arcus',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 2, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 2, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+    },
+  },
+
+  'daggoks-stab-ladz': {
+    name: "Daggok's Stab-ladz",
+    abilities: ["'Two against one, ya git!'","Thief of Kunnin'",'Nasty Poisons','Krule Stab',"Schemin' Gitz"],
+    fighters: {
+      D: { label: 'D', name: 'Daggok', isLeader: true,
+           move: 3, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 2, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 3, type: 'hammer' },
+             { range: 2, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      G: { label: 'G', name: 'Grakk',
+           move: 4, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 2, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 2, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      H: { label: 'H', name: 'Hurrk',
+           move: 3, wounds: 4, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      J: { label: 'J', name: 'Jagz',
+           move: 3, wounds: 4, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+    },
+  },
 };

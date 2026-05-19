@@ -129,8 +129,10 @@ export const GAMES = [
           inspired: [],
           glory: [3, 4],
           tokens: {
-            // Everyone has charged this round — except Cullon, whose activation is up.
+            // Everyone has charged this round — except Cullon, who moved
+            // into melee range and is now spending his activation attacking.
             Y: ['charge'],
+            C: ['move'],
             L: ['charge'],
             W: ['charge'],
             H: ['charge'],

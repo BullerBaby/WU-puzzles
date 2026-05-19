@@ -1,96 +1,182 @@
 /* ==================== BOARD ====================
  * Hex math, board SVG rendering, legend, and feature-token placement.
  *
- * Coordinate system: flat-top hexes laid out in a column-offset grid. Files
- * a–k (cols 0–10) map to x; ranks 1–9 map to y, with odd columns offset by
- * COL_OFFSET. R = inradius. Conversions are pure functions of (hex string,
- * board.rows).
+ * Coordinate systems:
+ *   - 0° / 180°: flat-top hexes on an 11×9 grid (canonical). Files a–k,
+ *     ranks ±4. Asymmetric col rule: odd cols pass through midline (have
+ *     a rank-0 hex); even cols straddle (skip rank 0).
+ *   - 90° / 270°: pointy-top hexes on a 9×11 grid (rotated, with its own
+ *     fresh coordinate system). Files a–i, ranks ±5. Symmetric col rule:
+ *     every col has a rank-0 hex.
  *
- * Rotation: passing rotation=180 to rotateHex/rotateHexes mirrors a hex to
- * the opposite corner of the board. Used both for the boardRotation game
- * field and the live-rotate button.
+ * The rotated coordinate system is INDEPENDENT of the canonical: a hex
+ * named "a0" in a 90° view is its own hex, not a translated canonical "a0".
+ * `rotateHex(canonicalId, rotation)` translates a canonical hex to its
+ * corresponding rotated-frame hex, used to display the canonical board's
+ * stagger/blocked/etc. positions in the rotated view.
  */
 
 import { BOARDS } from '../data/boards.js';
 
-/* ---- hex geometry ---- */
+/* ---- hex geometry ----
+ * Two orientations switched by the resolved board's `orientation`:
+ *   flat-top   (0° / 180°): flat top and bottom, points on left/right.
+ *                            Adjacent cols step horizontally; odd cols
+ *                            offset vertically by COL_OFFSET.
+ *   pointy-top (90° / 270°): points on top and bottom, flat on sides.
+ *                            Adjacent rows step vertically; odd rows
+ *                            offset horizontally. */
 export const R = 13;
-const COL_STEP = 19.5;
-const ROW_STEP = 22.5;
-const COL_OFFSET = 11.25;
+const SQRT3 = Math.sqrt(3);
+// Flat-top step sizes (used at 0° and 180°)
+const COL_STEP    = 1.5 * R;          // = 19.5
+const ROW_STEP    = R * SQRT3;        // ≈ 22.5
+const COL_OFFSET  = ROW_STEP / 2;     // ≈ 11.25
+// Pointy-top step sizes (used at 90° and 270°)
+const PT_COL_STEP = R * SQRT3;        // ≈ 22.5
+const PT_ROW_STEP = 1.5 * R;          // = 19.5
+const PT_ROW_OFF  = PT_COL_STEP / 2;  // ≈ 11.25
 const BASE_X = 32;
 const BASE_Y = 26;
 
 /* ---- centered rank notation ----
- * All hex coordinates throughout the system use the centered notation:
- *   - Positive (opp side): 'f1', 'a3', etc. — bare file + number
- *   - Zero (midline, only odd cols b/d/f/h/j): 'f0', 'b0', 'd0', etc.
- *   - Negative (your side): '-f1', '-a3', etc. — leading dash + file + number
- *
- * The midline of a 9-row board passes through the odd-column hexes at the
- * central rank (b0, d0, f0, h0, j0). Even columns straddle the midline so
- * they skip 0, going directly from -1 to +1.
- */
+ * Flat-top boards: midline only passes through odd cols (b0, d0, f0, h0, j0).
+ *   Even cols skip rank 0, going from -1 to +1.
+ * Pointy-top boards: midline passes through every col (a0, b0, ..., i0).
+ *   Symmetric col rule: n = absRank - mid for all cols. */
 
-// Parse a centered-notation hex into its (col, "absolute rank") components,
-// where absoluteRank is 1..boardRows in the legacy 1-indexed scheme that the
-// geometry math expects. Internal use only — keeps hexCenter, rotateHex, and
-// other geometric code simple.
-function parseHex(hexStr, boardRows) {
+function parseHex(hexStr, boardRows, orientation) {
+  const pointy = (orientation === 'pointy-top');
   let s = hexStr;
   let negative = false;
   if (s.charAt(0) === '-') { negative = true; s = s.slice(1); }
   const file = s.charAt(0);
   const n = parseInt(s.slice(1), 10);
   const col = file.charCodeAt(0) - 97;
-  const mid = Math.ceil(boardRows / 2);  // 5 for 9-row boards
+  const mid = Math.ceil(boardRows / 2);
   let absoluteRank;
-  if (negative)            absoluteRank = mid - n;
-  else if (n === 0)        absoluteRank = mid;
-  else if (col % 2 === 1)  absoluteRank = mid + n;
-  else                     absoluteRank = (mid - 1) + n;
+  if (pointy) {
+    absoluteRank = negative ? (mid - n) : (n === 0 ? mid : mid + n);
+  } else {
+    if (negative)            absoluteRank = mid - n;
+    else if (n === 0)        absoluteRank = mid;
+    else if (col % 2 === 1)  absoluteRank = mid + n;
+    else                     absoluteRank = (mid - 1) + n;
+  }
   return { file, col, rank: absoluteRank };
 }
 
-// Format a (file, absoluteRank, rows) triple as a centered-notation hex.
-// Internal use only — emitted whenever the renderer iterates (col, rank).
-function formatHex(file, absoluteRank, boardRows) {
+function formatHex(file, absoluteRank, boardRows, orientation) {
+  const pointy = (orientation === 'pointy-top');
   const col = file.charCodeAt(0) - 97;
   const mid = Math.ceil(boardRows / 2);
   let n;
-  if (col % 2 === 1)            n = absoluteRank - mid;
-  else if (absoluteRank < mid)  n = absoluteRank - mid;
-  else                          n = absoluteRank - (mid - 1);
+  if (pointy) {
+    n = absoluteRank - mid;
+  } else {
+    if (col % 2 === 1)            n = absoluteRank - mid;
+    else if (absoluteRank < mid)  n = absoluteRank - mid;
+    else                          n = absoluteRank - (mid - 1);
+  }
   if (n < 0) return '-' + file + Math.abs(n);
   return file + n;
 }
 
-export function hexCenter(hexStr, boardRows) {
-  const { col, rank } = parseHex(hexStr, boardRows);
+/* Translate a CANONICAL hex ID (flat-top, 11×9) into the rotated frame's
+ * hex ID. Used to display the canonical board's features (stagger, blocked,
+ * etc.) in their correct location on a rotated view.
+ *
+ *   90° CW: (col, absRank) → newCol = absRank - 1, newRank = cols - col
+ *           Result is in the 9×11 pointy-top frame.
+ *   180°:   (col, absRank) → newCol = cols-1-col, newRank = rows+1-rank
+ *           Result is in the 11×9 flat-top frame (mirrored).
+ *   270°:   (col, absRank) → newCol = rows - rank, newRank = col + 1
+ *           Result is in the 9×11 pointy-top frame.  */
+function rotateHex(canonicalHex, rotation, canonCols, canonRows) {
+  const r = ((rotation || 0) % 360 + 360) % 360;
+  if (r === 0) return canonicalHex;
+  const { col, rank } = parseHex(canonicalHex, canonRows, 'flat-top');
+  let newCol, newRank, newRows, outOrientation;
+  if (r === 90) {
+    newCol = rank - 1;
+    newRank = canonCols - col;
+    newRows = canonCols;      // 11 rows in rotated frame
+    outOrientation = 'pointy-top';
+  } else if (r === 180) {
+    newCol = canonCols - 1 - col;
+    newRank = canonRows + 1 - rank;
+    newRows = canonRows;      // 9 rows in rotated (= canonical) frame
+    outOrientation = 'flat-top';
+  } else if (r === 270) {
+    newCol = canonRows - rank;
+    newRank = col + 1;
+    newRows = canonCols;
+    outOrientation = 'pointy-top';
+  } else {
+    return canonicalHex;
+  }
+  return formatHex(String.fromCharCode(97 + newCol), newRank, newRows, outOrientation);
+}
+
+function rotateHexes(arr, rotation, canonCols, canonRows) {
+  return (arr || []).map(h => rotateHex(h, rotation, canonCols, canonRows));
+}
+
+/* Resolve a board for rendering at a given rotation. For 0° and 180°,
+ * returns a flat-top 11×9. For 90° and 270°, returns a pointy-top 9×11.
+ * The returned board's `excluded`, `stagger`, `blocked`, `waystone`, and
+ * `starting` lists are pre-rotated, so the renderer iterates directly. */
+export function resolveBoard(boardId, rotation) {
+  const board = BOARDS[boardId] || BOARDS['embergard-1'];
+  const r = ((rotation || 0) % 360 + 360) % 360;
+  const orientation = (r === 90 || r === 270) ? 'pointy-top' : 'flat-top';
+  const swap = (r === 90 || r === 270);
   return {
-    x: BASE_X + col * COL_STEP,
-    y: BASE_Y + (boardRows - rank) * ROW_STEP + (col % 2) * COL_OFFSET,
+    ...board,
+    cols: swap ? board.rows : board.cols,
+    rows: swap ? board.cols : board.rows,
+    orientation,
+    rotation: r,
+    excluded: rotateHexes(board.excluded, r, board.cols, board.rows),
+    stagger:  rotateHexes(board.stagger,  r, board.cols, board.rows),
+    blocked:  rotateHexes(board.blocked,  r, board.cols, board.rows),
+    waystone: rotateHexes(board.waystone, r, board.cols, board.rows),
+    starting: rotateHexes(board.starting, r, board.cols, board.rows),
   };
 }
 
-function hexPolyPoints(cx, cy) {
-  const h = R * Math.sqrt(3) / 2;
+export function hexCenter(hexStr, board) {
+  // Accept either a board object or a plain numeric rows (legacy callers).
+  const orientation = (typeof board === 'object' && board) ? (board.orientation || 'flat-top') : 'flat-top';
+  const rows = (typeof board === 'object' && board) ? board.rows : board;
+  const { col, rank } = parseHex(hexStr, rows, orientation);
+  const rowInv = rows - rank;  // 0 = top row, rows-1 = bottom row
+  if (orientation === 'pointy-top') {
+    return {
+      x: BASE_X + col * PT_COL_STEP + (rowInv % 2) * PT_ROW_OFF,
+      y: BASE_Y + rowInv * PT_ROW_STEP,
+    };
+  }
+  return {
+    x: BASE_X + col * COL_STEP,
+    y: BASE_Y + rowInv * ROW_STEP + (col % 2) * COL_OFFSET,
+  };
+}
+
+function hexPolyPoints(cx, cy, pointy) {
+  const h = R * SQRT3 / 2;
+  if (pointy) {
+    // Points top/bottom, flats on sides.
+    return [
+      [cx, cy - R],      [cx + h, cy - R/2], [cx + h, cy + R/2],
+      [cx, cy + R],      [cx - h, cy + R/2], [cx - h, cy - R/2],
+    ].map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+  }
+  // Flats top/bottom, points on sides.
   return [
-    [cx + R, cy], [cx + R/2, cy + h], [cx - R/2, cy + h],
-    [cx - R, cy], [cx - R/2, cy - h], [cx + R/2, cy - h],
+    [cx + R, cy],        [cx + R/2, cy + h], [cx - R/2, cy + h],
+    [cx - R, cy],        [cx - R/2, cy - h], [cx + R/2, cy - h],
   ].map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
-}
-
-function rotateHex(hex, rotation, cols, rows) {
-  if (rotation !== 180) return hex;
-  const { col, rank } = parseHex(hex, rows);
-  const newCol = cols - 1 - col;
-  const newRank = rows + 1 - rank;
-  return formatHex(String.fromCharCode(97 + newCol), newRank, rows);
-}
-
-function rotateHexes(arr, rotation, cols, rows) {
-  return (arr || []).map(h => rotateHex(h, rotation, cols, rows));
 }
 
 /* ---- SVG helpers ---- */
@@ -102,116 +188,206 @@ export function svgEl(tag, attrs) {
   return el;
 }
 
-/* ==================== RENDER BOARD ==================== */
+/* ==================== RENDER BOARD ====================
+ * Rotation model:
+ *   - Hex POSITIONS: hexes are rendered at their canonical (flat-top 11×9)
+ *     positions, then the whole hex group gets an SVG rotate transform for
+ *     90/180/270°. This keeps the visual layout consistent.
+ *   - Hex LABELS: each canonical hex is shown with its ROTATED-frame ID
+ *     (via rotateHex). The label is counter-rotated so it appears upright.
+ *   - Hex COLORS: tinting is based on the rotated-frame ID's rank sign
+ *     (negative=blue your-side, positive=coral opp, zero=neutral midline).
+ *   - AXIS LABELS: placed OUTSIDE the rotation group, in their natural
+ *     visual positions (rank numbers on left, file letters on bottom).
+ */
 export function renderBoard(game) {
   const svg = document.getElementById('board-svg');
   const board = BOARDS[game.board] || BOARDS['embergard-1'];
-  const rotation = game.boardRotation || 0;
+  const rotation = ((game.boardRotation || 0) % 360 + 360) % 360;
+  const isQuarter = (rotation === 90 || rotation === 270);
 
   svg.innerHTML = '';
-  const FILES = 'abcdefghijk'.slice(0, board.cols);
 
-  const lastColX = BASE_X + (board.cols - 1) * COL_STEP;
-  const lastRowY = BASE_Y + (board.rows - 1) * ROW_STEP + COL_OFFSET;
-  const vbW = Math.ceil(lastColX + R + 20);
-  const vbH = Math.ceil(lastRowY + R + 22);
-  svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+  const canonCols = board.cols;
+  const canonRows = board.rows;
+  const FILES = 'abcdefghijk'.slice(0, canonCols);
+
+  // Canonical (unrotated) content extent.
+  const canonW = Math.ceil(BASE_X + (canonCols - 1) * COL_STEP + R + 20);
+  const canonH = Math.ceil(BASE_Y + (canonRows - 1) * ROW_STEP + COL_OFFSET + R + 22);
+  const cx = canonW / 2;
+  const cy = canonH / 2;
+
+  // ViewBox: rotated dims for 90°/270°, plus margin for axis labels on left/bottom.
+  const margin = { left: 28, bottom: 22 };
+  let vbX, vbY, vbW, vbH;
+  if (isQuarter) {
+    vbX = (cx - cy) - margin.left;
+    vbY = (cy - cx);
+    vbW = canonH + margin.left;
+    vbH = canonW + margin.bottom;
+  } else {
+    vbX = -margin.left;
+    vbY = 0;
+    vbW = canonW + margin.left;
+    vbH = canonH + margin.bottom;
+  }
+  svg.setAttribute('viewBox', vbX + ' ' + vbY + ' ' + vbW + ' ' + vbH);
 
   const excludedSet = new Set(board.excluded || []);
-  const staggerSet  = new Set(rotateHexes(board.stagger,  rotation, board.cols, board.rows));
-  const blockedSet  = new Set(rotateHexes(board.blocked,  rotation, board.cols, board.rows));
-  const waystoneSet = new Set(rotateHexes(board.waystone, rotation, board.cols, board.rows));
+  const staggerSet  = new Set(board.stagger  || []);
+  const blockedSet  = new Set(board.blocked  || []);
+  const waystoneSet = new Set(board.waystone || []);
   const startingSet = new Set(board.starting || []);
 
-  const hexesG = svgEl('g');
-  svg.appendChild(hexesG);
-  for (let i = 0; i < FILES.length; i++) {
-    for (let rk = 1; rk <= board.rows; rk++) {
-      // Iterate (col, rank) for the geometry, then emit the centered-notation
-      // id for storage, lookups, and display.
-      const hexId = formatHex(FILES[i], rk, board.rows);
-      if (excludedSet.has(hexId)) continue;
+  // Hex content group — rotated for 90/180/270.
+  const hexGroup = svgEl('g');
+  if (rotation !== 0) {
+    hexGroup.setAttribute('transform', 'rotate(' + rotation + ' ' + cx + ' ' + cy + ')');
+  }
+  svg.appendChild(hexGroup);
+
+  // Render each canonical hex at its canonical position.
+  for (let i = 0; i < canonCols; i++) {
+    for (let rk = 1; rk <= canonRows; rk++) {
+      const canonId = formatHex(FILES[i], rk, canonRows, 'flat-top');
+      if (excludedSet.has(canonId)) continue;
+
+      // Compute the displayed (rotated-frame) ID.
+      const displayId = rotateHex(canonId, rotation, canonCols, canonRows);
+
       const x = BASE_X + i * COL_STEP;
-      const y = BASE_Y + (board.rows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
-      // Tint based on side relative to the midline. Negative = your side
-      // (blue tint), positive = opp side (coral), zero = midline (neutral).
-      // Parse our own emitted id to decide — keeps the rule in one place.
-      const sign = hexId.charAt(0) === '-' ? -1 : (hexId.indexOf('0') > 0 ? 0 : 1);
+      const y = BASE_Y + (canonRows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+
+      // Side tinting based on the displayed (rotated) ID.
+      const sign = displayId.charAt(0) === '-' ? -1 : (displayId.indexOf('0') > 0 ? 0 : 1);
       let cls = 'hex-poly';
       if (sign < 0)      cls += ' your-side';
       else if (sign > 0) cls += ' opp-side';
       else               cls += ' midline';
-      // Special hex types take over the fill regardless of side.
-      if (staggerSet.has(hexId))  cls = 'hex-poly stagger';
-      if (waystoneSet.has(hexId)) cls = 'hex-poly waystone';
-      if (blockedSet.has(hexId))  cls = 'hex-poly blocked';
-      const poly = svgEl('polygon', { points: hexPolyPoints(x, y), class: cls, 'data-hex': hexId });
+      // Special hex types remain attached to the canonical hex (they're a
+      // physical property of the board card, not the coord system).
+      if (staggerSet.has(canonId))  cls = 'hex-poly stagger';
+      if (waystoneSet.has(canonId)) cls = 'hex-poly waystone';
+      if (blockedSet.has(canonId))  cls = 'hex-poly blocked';
+
+      // Always render flat-top polygon — the visual rotation happens via the
+      // parent group's transform, which turns flat-top into pointy-top
+      // for 90°/270°.
+      const poly = svgEl('polygon', { points: hexPolyPoints(x, y, false), class: cls, 'data-hex': displayId });
       const title = svgEl('title', {});
-      title.textContent = hexId;
+      title.textContent = displayId;
       poly.appendChild(title);
-      hexesG.appendChild(poly);
-      // Tiny per-hex coord label, placed near the top of the hex. Naturally
-      // hidden behind a fighter when one's there (fighters-layer is on top).
+      hexGroup.appendChild(poly);
+
+      // Per-hex coord label — counter-rotated so it reads upright after the
+      // parent rotation.
       const coord = svgEl('text', {
         x: x.toFixed(1),
         y: (y - 8.2).toFixed(1),
         'text-anchor': 'middle',
         class: 'hex-coord',
       });
-      coord.textContent = hexId;
-      hexesG.appendChild(coord);
-      if (startingSet.has(hexId)) {
-        hexesG.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
+      if (rotation !== 0) {
+        coord.setAttribute('transform', 'rotate(' + (-rotation) + ' ' + x.toFixed(1) + ' ' + (y - 8.2).toFixed(1) + ')');
+      }
+      coord.textContent = displayId;
+      hexGroup.appendChild(coord);
+
+      if (startingSet.has(canonId)) {
+        hexGroup.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
       }
     }
   }
 
-  // Find the visually leftmost x and visually lowest y across all playable hexes,
-  // so edge labels can be aligned in a single column / row instead of zig-zagging
-  // along the hex grid's serrated edges.
-  let minXAll = Infinity, maxYAll = -Infinity;
-  for (let i = 0; i < FILES.length; i++) {
-    for (let rk = 1; rk <= board.rows; rk++) {
-      const hexId = formatHex(FILES[i], rk, board.rows);
-      if (excludedSet.has(hexId)) continue;
-      const x = BASE_X + i * COL_STEP;
-      const y = BASE_Y + (board.rows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
-      if (x < minXAll) minXAll = x;
-      if (y > maxYAll) maxYAll = y;
-    }
+  // --- AXIS LABELS (outside the rotation group) ---
+  // Compute the rotated visual position of every canonical hex, then for each
+  // displayed col/rank, place its label at the appropriate edge.
+  function rotPoint(x, y) {
+    if (rotation === 0) return { x, y };
+    const rad = rotation * Math.PI / 180;
+    const cosR = Math.cos(rad), sinR = Math.sin(rad);
+    const dx = x - cx, dy = y - cy;
+    return { x: cx + dx * cosR - dy * sinR, y: cy + dx * sinR + dy * cosR };
   }
-  const rowLabelX = minXAll - R - 3;
-  const colLabelY = maxYAll + R + 11;
 
-  for (let i = 0; i < FILES.length; i++) {
-    // Skip files that are entirely excluded
-    let anyPlayable = false;
-    for (let rk = 1; rk <= board.rows; rk++) {
-      if (!excludedSet.has(formatHex(FILES[i], rk, board.rows))) { anyPlayable = true; break; }
+  // Visual bounds of the rotated content (for placing labels at the edges).
+  let visMinX = Infinity, visMaxX = -Infinity, visMinY = Infinity, visMaxY = -Infinity;
+  for (let i = 0; i < canonCols; i++) {
+    for (let rk = 1; rk <= canonRows; rk++) {
+      const canonId = formatHex(FILES[i], rk, canonRows, 'flat-top');
+      if (excludedSet.has(canonId)) continue;
+      const x = BASE_X + i * COL_STEP;
+      const y = BASE_Y + (canonRows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+      const p = rotPoint(x, y);
+      if (p.x < visMinX) visMinX = p.x;
+      if (p.x > visMaxX) visMaxX = p.x;
+      if (p.y < visMinY) visMinY = p.y;
+      if (p.y > visMaxY) visMaxY = p.y;
     }
-    if (!anyPlayable) continue;
-    const x = BASE_X + i * COL_STEP;
-    const t = svgEl('text', { x: x.toFixed(1), y: colLabelY.toFixed(1), 'text-anchor': 'middle', class: 'coord-label' });
-    t.textContent = FILES[i];
-    svg.appendChild(t);
   }
-  for (let rk = 1; rk <= board.rows; rk++) {
-    // Skip ranks that are entirely excluded
-    let anyPlayable = false;
-    for (let i = 0; i < FILES.length; i++) {
-      if (!excludedSet.has(formatHex(FILES[i], rk, board.rows))) { anyPlayable = true; break; }
+  const rowLabelX = visMinX - R - 3;
+  const colLabelY = visMaxY + R + 11;
+
+  // Determine the displayed frame's dimensions and orientation.
+  const dispCols = isQuarter ? canonRows : canonCols;
+  const dispRows = isQuarter ? canonCols : canonRows;
+  const dispOrient = isQuarter ? 'pointy-top' : 'flat-top';
+  const dispFILES = 'abcdefghijk'.slice(0, dispCols);
+  const dispMid = Math.ceil(dispRows / 2);
+
+  // For each rotated col, find a visible canonical hex that maps to it and use
+  // that hex's bottom-most visual position for the file-letter label.
+  for (let dispCol = 0; dispCol < dispCols; dispCol++) {
+    let bottomX = null, bottomY = -Infinity;
+    for (let i = 0; i < canonCols; i++) {
+      for (let rk = 1; rk <= canonRows; rk++) {
+        const canonId = formatHex(FILES[i], rk, canonRows, 'flat-top');
+        if (excludedSet.has(canonId)) continue;
+        const dispId = rotateHex(canonId, rotation, canonCols, canonRows);
+        const { col: dCol } = parseHex(dispId, dispRows, dispOrient);
+        if (dCol !== dispCol) continue;
+        const x = BASE_X + i * COL_STEP;
+        const y = BASE_Y + (canonRows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+        const p = rotPoint(x, y);
+        if (p.y > bottomY) { bottomY = p.y; bottomX = p.x; }
+      }
     }
-    if (!anyPlayable) continue;
-    // Use the odd-column y reference (BASE_Y + ... + COL_OFFSET) so the
-    // labels align horizontally with the midline hexes (b, d, f, h, j at
-    // rank 5). The 0 label sits exactly next to b0/d0/f0/h0/j0.
-    const y = BASE_Y + (board.rows - rk) * ROW_STEP + COL_OFFSET;
-    const mid = Math.ceil(board.rows / 2);
-    const n = rk - mid;  // new-rank value at this y (odd-col reference)
-    const txt = String(n);
-    const t = svgEl('text', { x: rowLabelX.toFixed(1), y: (y + 3).toFixed(1), 'text-anchor': 'end', class: 'coord-label' + (n === 0 ? ' midline' : '') });
-    t.textContent = txt;
-    svg.appendChild(t);
+    if (bottomX !== null) {
+      const t = svgEl('text', { x: bottomX.toFixed(1), y: colLabelY.toFixed(1), 'text-anchor': 'middle', class: 'coord-label' });
+      t.textContent = dispFILES[dispCol];
+      svg.appendChild(t);
+    }
+  }
+
+  // For each rotated rank, find a visible canonical hex that maps to it and
+  // use that hex's leftmost visual position for the rank-number label.
+  for (let dispRk = 1; dispRk <= dispRows; dispRk++) {
+    let leftX = Infinity, leftY = null;
+    for (let i = 0; i < canonCols; i++) {
+      for (let rk = 1; rk <= canonRows; rk++) {
+        const canonId = formatHex(FILES[i], rk, canonRows, 'flat-top');
+        if (excludedSet.has(canonId)) continue;
+        const dispId = rotateHex(canonId, rotation, canonCols, canonRows);
+        const { rank: dRank } = parseHex(dispId, dispRows, dispOrient);
+        if (dRank !== dispRk) continue;
+        const x = BASE_X + i * COL_STEP;
+        const y = BASE_Y + (canonRows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+        const p = rotPoint(x, y);
+        if (p.x < leftX) { leftX = p.x; leftY = p.y; }
+      }
+    }
+    if (leftY !== null) {
+      const n = dispRk - dispMid;
+      const t = svgEl('text', {
+        x: rowLabelX.toFixed(1),
+        y: (leftY + 3).toFixed(1),
+        'text-anchor': 'end',
+        class: 'coord-label' + (n === 0 ? ' midline' : ''),
+      });
+      t.textContent = String(n);
+      svg.appendChild(t);
+    }
   }
 
   svg.appendChild(svgEl('g', { id: 'fighters-layer' }));

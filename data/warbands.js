@@ -132,4 +132,132 @@ export const WARBANDS = {
            ] },
     },
   },
+  'ephilims-pandaemonium': {
+    name: "Ephilim's Pandaemonium",
+    abilities: ['Glorious Change', 'Power Leech', 'Warpsplash', 'Wyrdflame'],
+    fighters: {
+      E: { label: 'E', name: 'Ephilim', isLeader: true,
+           move: 3, wounds: 4, glory: 2,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      S: { label: 'S', name: 'Spawnmaw',
+           move: 4, wounds: 3, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      F: { label: 'F', name: 'Flamespooler',
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 4, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      A: { label: 'A', name: "Apo'trax",
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      K: { label: 'K', name: 'Kindlefinger',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 1, damage: 2, type: 'hammer' },
+             { range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+             { range: 4, dice: 2, damage: 1, type: 'hammer' },
+           ] },
+    },
+  },
+  'thorns-of-the-briar-queen': {
+    name: 'Thorns of the Briar Queen',
+    abilities: ['Surrounded', 'Wave of Terror', 'Soul Warden', 'Throttle'],
+    fighters: {
+      B: { label: 'B', name: 'Briar Queen', isLeader: true,
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 2, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+             { range: 2, dice: 3, damage: 1, type: 'sword', note: 'Grievous' },
+           ] },
+      V: { label: 'V', name: 'Varclav',
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      H: { label: 'H', name: 'The Ever-hanged',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword', cleave: true, note: 'Ensnare' },
+           ] },
+      I: { label: 'I', name: 'The Ironwretch',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      X: { label: 'X', name: 'The Exhumed',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      S: { label: 'S', name: 'The Silenced',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword', note: 'Stagger' },
+           ] },
+      U: { label: 'U', name: 'The Uncrowned',
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword', cleave: true },
+           ] },
+    },
+  },
 };

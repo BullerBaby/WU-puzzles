@@ -150,7 +150,23 @@ section { margin-bottom: 1.5rem; }
 .left-column > .poll-panel { margin-bottom: 1rem; }
 .left-column > section:last-child { margin-bottom: 0; }
 @media (max-width: 980px) {
-  .main-layout { grid-template-columns: 1fr; }
+  /* On mobile, flatten both columns into one stream so individual
+     sections can be reordered. Order chosen for mobile reading flow:
+     puzzle title + nav → board → poll → description → custom (bottom). */
+  .main-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .left-column,
+  .right-column { display: contents; }
+  .left-column > section,
+  .left-column > .poll-panel { margin-bottom: 0; }
+  .game-row      { order: 1; }
+  .board-card    { order: 2; }
+  .poll-panel    { order: 3; }
+  .step-panel    { order: 4; }
+  .custom-section{ order: 5; }
 }
 
 .game-row {
@@ -713,6 +729,7 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   cursor: default;
 }
 .fighter-card:hover { border-color: var(--border-strong); z-index: 20; }
+.fighter-card.tooltip-open { border-color: var(--border-strong); z-index: 20; }
 .fighter-card.me { border-left: 3px solid var(--me-stroke); }
 .fighter-card.opp { border-left: 3px solid var(--opp-stroke); }
 .fighter-card.inspired {
@@ -867,7 +884,8 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   visibility: hidden;
   transition: opacity 0.12s, visibility 0.12s;
 }
-.fighter-card:hover .fighter-tooltip {
+.fighter-card:hover .fighter-tooltip,
+.fighter-card.tooltip-open .fighter-tooltip {
   opacity: 1;
   visibility: visible;
 }

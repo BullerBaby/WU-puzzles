@@ -15,6 +15,17 @@
 import { svgEl } from './board.js';
 import { WARBANDS } from '../data/warbands.js';
 
+/* Tap-outside-to-close handler for fighter-card tooltips on mobile.
+ * Registered once at module load. Clicking anywhere outside an open
+ * fighter card closes its tooltip. */
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('.fighter-card')) {
+    document.querySelectorAll('.fighter-card.tooltip-open').forEach(function(c) {
+      c.classList.remove('tooltip-open');
+    });
+  }
+});
+
 /* ==================== RENDER DICE ==================== */
 function makeDie(face) {
   const el = document.createElement('span');
@@ -350,22 +361,39 @@ export function renderFighterCards(game) {
     const card = buildFighterCard(id, info);
     (info.side === 'me' ? meRow : oppRow).appendChild(card);
   }
-  // Smart tooltip positioning: on hover, flip to right-align if it would overflow.
+  // Smart tooltip positioning: on hover/tap, flip to right-align if it would overflow.
+  function positionTooltip(card) {
+    const tip = card.querySelector('.fighter-tooltip');
+    if (!tip) return;
+    // Reset any previous override before measuring
+    tip.style.left = '';
+    tip.style.right = '';
+    // Defer to next frame so the tooltip has its natural width
+    requestAnimationFrame(function() {
+      const rect = tip.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 8) {
+        tip.style.left = 'auto';
+        tip.style.right = '0';
+      }
+    });
+  }
   document.querySelectorAll('.fighter-card').forEach(function(card) {
-    card.addEventListener('mouseenter', function() {
-      const tip = card.querySelector('.fighter-tooltip');
-      if (!tip) return;
-      // Reset any previous override before measuring
-      tip.style.left = '';
-      tip.style.right = '';
-      // Defer to next frame so the tooltip has its natural width
-      requestAnimationFrame(function() {
-        const rect = tip.getBoundingClientRect();
-        if (rect.right > window.innerWidth - 8) {
-          tip.style.left = 'auto';
-          tip.style.right = '0';
-        }
+    card.addEventListener('mouseenter', function() { positionTooltip(card); });
+    // Tap-to-toggle for touch devices (and for keyboard / desktop click).
+    // The CSS keeps the tooltip visible while .tooltip-open is on the card.
+    card.addEventListener('click', function(e) {
+      const wasOpen = card.classList.contains('tooltip-open');
+      // Close any other open tooltips
+      document.querySelectorAll('.fighter-card.tooltip-open').forEach(function(c) {
+        if (c !== card) c.classList.remove('tooltip-open');
       });
+      if (wasOpen) {
+        card.classList.remove('tooltip-open');
+      } else {
+        card.classList.add('tooltip-open');
+        positionTooltip(card);
+      }
+      e.stopPropagation();
     });
   });
 }

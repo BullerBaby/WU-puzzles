@@ -45,7 +45,14 @@
   <div class="game-info">
     <span class="game-title" id="game-title"></span>
     <span class="game-counter" id="game-counter"></span>
+    <span class="game-meta" id="game-meta" hidden></span>
   </div>
+  <label class="tag-filter-wrap" id="tag-filter-wrap" hidden>
+    <span class="tag-filter-label">Tag:</span>
+    <select id="tag-filter" class="tag-filter" aria-label="Filter puzzles by tag">
+      <option value="">All puzzles</option>
+    </select>
+  </label>
   <div class="game-nav-buttons">
     <button id="game-prev" type="button" class="game-nav-btn" title="Previous puzzle" aria-label="Previous puzzle">←</button>
     <button id="game-next" type="button" class="game-nav-btn" title="Next puzzle" aria-label="Next puzzle">→</button>

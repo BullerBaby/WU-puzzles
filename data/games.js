@@ -3,7 +3,8 @@
  * reference shared warband definitions via `warbands: { me, opp }` (see
  * warbands.js) or inline its own `fighters` + `abilities`.
  *
- * Game shape: { id, title, description?, board, round, boardRotation?,
+ * Game shape: { id, title, description?, tags?, date?, location?, credit?,
+ *               board, round, boardRotation?,
  *               warbands?: { me, opp }, fighters?, abilities?: { me, opp },
  *               decks?: { me, opp }, steps: [...] }
  *
@@ -23,6 +24,10 @@ export const GAMES = [
     id: 'headsmen-vs-emberwatch-r3-finale',
     title: "Demo - Wielder vs. Ardorn",
     description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. You're trailing 14-15 in glory. Opponent has burned all 4 activations; you have one left. What's the play?",
+    tags: ['demo'],
+    date: '',
+    location: '',
+    credit: '',
     round: 3,
     board: 'embergard-1',
     boardRotation: 0,
@@ -90,6 +95,10 @@ export const GAMES = [
     id: 'yurik-attack-choice',
     title: "Demo - Cullon's choice",
     description: "Round 2. Cullon, Axe of Kurnoth, has two attacks — sweeping hooves (4 sword dice, 1 dmg, Grapple) or chopping axe (2 hammer dice, 2 dmg). The Sharpener of the Blade sits adjacent with 2 wounds left. Which attack should Cullon use?",
+    tags: ['demo'],
+    date: '',
+    location: '',
+    credit: '',
     round: 2,
     board: 'embergard-1',
     boardRotation: 0,
@@ -166,6 +175,10 @@ export const GAMES = [
     id: 'ylarin-last-activation-tiebreaker',
     title: "Kurnoth's Heralds vs. Emberwatch — Last Activation",
     description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, and the game is on its final activation.",
+    tags: ['puzzle'],
+    date: '',
+    location: '',
+    credit: '',
     round: 3,
     board: 'embergard-1',
     boardRotation: 0,

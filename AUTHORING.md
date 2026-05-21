@@ -122,6 +122,10 @@ The top-level object:
   "id": "kebab-case-unique-id",
   "title": "Demo - short human title",
   "description": "1-2 sentences setting the scene.",
+  "tags": ["demo", "tutorial"],
+  "date": "2025-03-15",
+  "location": "Warhammer World",
+  "credit": "Frederik vs. Magnus",
   "round": 1 | 2 | 3,
   "board": "<one of the board ids above>",
   "boardRotation": 0 | 180,
@@ -132,6 +136,14 @@ The top-level object:
   },
   "steps": [ <one or more step objects> ]
 }
+
+`tags` is optional. Any strings you put there appear in the front-page tag dropdown,
+letting users filter prev/next/random to only puzzles with that tag.
+
+`date`, `location`, and `credit` are all optional free-text strings. Whichever are
+non-empty render in a small meta line under the puzzle title on the front page,
+separated by middle-dots (e.g. "2025-03-15 · Warhammer World · Frederik vs. Magnus").
+Format the values however you like — they're treated as plain text.
 
 Each step:
 

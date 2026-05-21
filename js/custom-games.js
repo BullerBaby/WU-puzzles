@@ -2,6 +2,12 @@
  * Load/save/validate/normalize user-pasted games. Custom games are stored
  * under STORAGE_KEY in localStorage and merged into GAMES on startup.
  *
+ * Also owns the tag-filter UI on the game-row: each game can carry an
+ * optional `tags: ['demo', ...]` array. The dropdown shows the union
+ * of all tags found across GAMES, plus an "All puzzles" option. The
+ * selected tag is persisted under TAG_STORAGE_KEY and consulted by
+ * navGame / navRandom / rebuildGameNav to constrain the visible pool.
+ *
  * Public API (called from main.js):
  *   rebuildGameNav(currentGameId?) — refresh the game title / counter UI
  *   loadCustomFromInput(onLoaded)  — read textarea, validate, push, save
@@ -9,6 +15,9 @@
  *   downloadCurrent(currentGame)   — download current game as .json
  *   clearCustoms(onCleared)        — drop all custom games from storage
  *   loadSavedCustoms()             — merge persisted customs into GAMES
+ *   getFilteredGames()             — GAMES filtered by current tag selection
+ *   getCurrentTag()                — current tag filter ('' = all)
+ *   setCurrentTag(tag)             — set the tag filter and persist
  */
 
 import { GAMES }    from '../data/games.js';
@@ -16,6 +25,96 @@ import { BOARDS }   from '../data/boards.js';
 import { WARBANDS } from '../data/warbands.js';
 
 const STORAGE_KEY = 'underworlds-replay-customs-v1';
+const TAG_STORAGE_KEY = 'underworlds-replay-tag-v1';
+
+/* ==================== TAG FILTER ==================== */
+
+function loadTagFromStorage() {
+  try { return localStorage.getItem(TAG_STORAGE_KEY) || ''; }
+  catch (e) { return ''; }
+}
+function saveTagToStorage(tag) {
+  try { localStorage.setItem(TAG_STORAGE_KEY, tag || ''); }
+  catch (e) {}
+}
+
+let currentTag = loadTagFromStorage();
+
+export function getCurrentTag() { return currentTag; }
+export function setCurrentTag(tag) {
+  currentTag = tag || '';
+  saveTagToStorage(currentTag);
+}
+
+/* Return the list of GAMES that match the current tag filter. An empty
+ * tag means "all". A game matches if its `tags` array contains the
+ * selected tag (case-insensitive). */
+export function getFilteredGames() {
+  if (!currentTag) return GAMES.slice();
+  const want = currentTag.toLowerCase();
+  return GAMES.filter(function(g) {
+    if (!Array.isArray(g.tags)) return false;
+    return g.tags.some(function(t) { return String(t).toLowerCase() === want; });
+  });
+}
+
+/* Collect every distinct tag used across all games, with a count. Tags
+ * are compared case-insensitively but the original casing of the first
+ * occurrence is preserved for display. Sorted alphabetically. */
+function collectAllTags() {
+  const map = new Map(); // lowercase → { display, count }
+  GAMES.forEach(function(g) {
+    if (!Array.isArray(g.tags)) return;
+    g.tags.forEach(function(t) {
+      const s = String(t).trim();
+      if (!s) return;
+      const key = s.toLowerCase();
+      if (map.has(key)) map.get(key).count += 1;
+      else map.set(key, { display: s, count: 1 });
+    });
+  });
+  return Array.from(map.values()).sort(function(a, b) {
+    return a.display.localeCompare(b.display);
+  });
+}
+
+function populateTagFilter() {
+  const sel = document.getElementById('tag-filter');
+  const wrap = document.getElementById('tag-filter-wrap');
+  if (!sel || !wrap) return;
+  const tags = collectAllTags();
+  if (!tags.length) {
+    // No tags anywhere — hide the dropdown entirely.
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  // Rebuild options. Preserve current selection if still valid.
+  const totalCount = GAMES.length;
+  const opts = ['<option value="">All puzzles (' + totalCount + ')</option>'];
+  tags.forEach(function(t) {
+    const sel = (t.display.toLowerCase() === currentTag.toLowerCase()) ? ' selected' : '';
+    const label = t.display + ' (' + t.count + ')';
+    opts.push('<option value="' + escapeAttr(t.display) + '"' + sel + '>' + escapeHtml(label) + '</option>');
+  });
+  sel.innerHTML = opts.join('');
+  // If the persisted tag is no longer present in any game, reset it silently.
+  const stillValid = !currentTag || tags.some(function(t) {
+    return t.display.toLowerCase() === currentTag.toLowerCase();
+  });
+  if (!stillValid) {
+    currentTag = '';
+    saveTagToStorage('');
+    sel.value = '';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+function escapeAttr(s) { return escapeHtml(s); }
 
 function loadCustomsFromStorage() {
   try {
@@ -118,6 +217,25 @@ function normalizeGame(g) {
   if (typeof g.round !== 'number') g.round = 1;
   if (typeof g.boardRotation !== 'number') g.boardRotation = 0;
   if (typeof g.description !== 'string') g.description = '';
+  // Optional metadata strings — all default to '' (rendered as blank line).
+  if (typeof g.date !== 'string')     g.date = '';
+  if (typeof g.location !== 'string') g.location = '';
+  if (typeof g.credit !== 'string')   g.credit = '';
+  // Normalize tags: drop non-strings, trim, drop empties, de-dupe (case-insens).
+  if (Array.isArray(g.tags)) {
+    const seen = Object.create(null);
+    g.tags = g.tags
+      .map(function(t) { return typeof t === 'string' ? t.trim() : ''; })
+      .filter(function(t) {
+        if (!t) return false;
+        const k = t.toLowerCase();
+        if (seen[k]) return false;
+        seen[k] = true;
+        return true;
+      });
+  } else {
+    g.tags = [];
+  }
   g.steps = g.steps.map(function(s) {
     s = Object.assign({}, s);
     s.state = Object.assign({
@@ -138,30 +256,82 @@ function showStatus(msg, kind) {
   el.className = 'custom-status' + (kind ? ' ' + kind : '');
 }
 
+/* Render the small meta line under the title: date · location · credit.
+ * Each field is optional; the line hides entirely when all three are empty.
+ * Pass null to clear the line (used when no current game). */
+function renderGameMeta(g) {
+  const el = document.getElementById('game-meta');
+  if (!el) return;
+  const parts = [];
+  if (g && typeof g.date === 'string' && g.date.trim())     parts.push(g.date.trim());
+  if (g && typeof g.location === 'string' && g.location.trim()) parts.push(g.location.trim());
+  if (g && typeof g.credit === 'string' && g.credit.trim()) parts.push(g.credit.trim());
+  if (!parts.length) {
+    el.hidden = true;
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  // Build with explicit separator spans so the middle-dot can carry its own styling.
+  el.innerHTML = parts.map(escapeHtml).join('<span class="game-meta-sep">·</span>');
+}
+
 export function rebuildGameNav(currentGameId) {
+  // Refresh the tag dropdown first (new customs may have introduced new tags,
+  // or a tag's last game may have been removed).
+  populateTagFilter();
+
   const titleEl   = document.getElementById('game-title');
   const counterEl = document.getElementById('game-counter');
   const prevBtn   = document.getElementById('game-prev');
   const nextBtn   = document.getElementById('game-next');
   const randomBtn = document.getElementById('game-random');
   if (!titleEl || !counterEl || !prevBtn || !nextBtn) return;
+
+  // Navigation operates on the filtered pool, not the full GAMES list.
+  const pool = getFilteredGames();
+
+  // Locate the current game within the filtered pool. If it isn't there
+  // (e.g. user just changed the tag and is sitting on a game from a
+  // different category), we still show its title but disable prev/next —
+  // the random button stays enabled when the filter pool is non-empty,
+  // so the user can jump into the filtered set.
   let idx = -1;
-  if (currentGameId) idx = GAMES.findIndex(function(g) { return g.id === currentGameId; });
-  if (idx < 0) idx = 0;
-  const g = GAMES[idx];
-  if (!g) {
-    titleEl.textContent = '(no games)';
-    counterEl.textContent = '';
+  if (currentGameId) idx = pool.findIndex(function(g) { return g.id === currentGameId; });
+
+  if (!pool.length) {
+    // No games match the current tag at all.
+    const fallback = currentGameId ? GAMES.find(function(g) { return g.id === currentGameId; }) : null;
+    titleEl.textContent = fallback ? fallback.title : '(no games)';
+    counterEl.textContent = currentTag ? 'no puzzles tagged "' + currentTag + '"' : '';
+    renderGameMeta(fallback);
     prevBtn.disabled = true;
     nextBtn.disabled = true;
     if (randomBtn) randomBtn.disabled = true;
     return;
   }
+
+  if (idx < 0) {
+    // Current game isn't in the filtered pool — still display it, but
+    // surface that prev/next will skip out of it on the next click.
+    const fallback = currentGameId ? GAMES.find(function(g) { return g.id === currentGameId; }) : null;
+    const g = fallback || pool[0];
+    titleEl.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
+    counterEl.textContent = '(not in current filter — ' + pool.length + ' available)';
+    renderGameMeta(g);
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    if (randomBtn) randomBtn.disabled = (pool.length === 0);
+    return;
+  }
+
+  const g = pool[idx];
   titleEl.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
-  counterEl.textContent = (idx + 1) + ' of ' + GAMES.length;
+  counterEl.textContent = (idx + 1) + ' of ' + pool.length;
+  renderGameMeta(g);
   prevBtn.disabled = (idx === 0);
-  nextBtn.disabled = (idx === GAMES.length - 1);
-  if (randomBtn) randomBtn.disabled = (GAMES.length <= 1);
+  nextBtn.disabled = (idx === pool.length - 1);
+  if (randomBtn) randomBtn.disabled = (pool.length <= 1);
 }
 
 export function loadCustomFromInput(onLoaded) {

@@ -27,6 +27,7 @@ import { renderPoll, resetStepAnswers } from './poll.js';
 import {
   rebuildGameNav, loadCustomFromInput, fillTemplate,
   downloadCurrent, clearCustoms, loadSavedCustoms,
+  getFilteredGames, getCurrentTag, setCurrentTag,
 } from './custom-games.js';
 
 /* ==================== STATE ==================== */
@@ -58,17 +59,20 @@ function markSeen(gameId) {
   saveSeen(seen);
 }
 /* Pick a random game the user hasn't seen yet, excluding the current one.
- * If everything is seen, reset the seen list (keeping just the current
- * puzzle so we don't immediately re-pick it) and return a random other
- * game. Returns null if there's only one puzzle in total. */
+ * Operates on the currently-filtered pool (see custom-games.getFilteredGames),
+ * so e.g. when "demo" is selected only demos are eligible. If everything in
+ * the pool is seen, reset the seen list (keeping just the current puzzle so
+ * we don't immediately re-pick it) and return a random other game from the
+ * pool. Returns null if the filtered pool has 0 or 1 entries. */
 function pickRandomUnseen(currentId) {
   let seen = loadSeen();
-  let pool = GAMES.filter(function(g) { return g.id !== currentId && !seen.has(g.id); });
+  const filtered = getFilteredGames();
+  let pool = filtered.filter(function(g) { return g.id !== currentId && !seen.has(g.id); });
   if (pool.length === 0) {
-    // All seen — reset, retaining only the current id so we don't loop.
+    // All seen in this filter — reset, retaining only the current id so we don't loop.
     seen = new Set(currentId ? [currentId] : []);
     saveSeen(seen);
-    pool = GAMES.filter(function(g) { return g.id !== currentId; });
+    pool = filtered.filter(function(g) { return g.id !== currentId; });
   }
   if (pool.length === 0) return null;
   return pool[Math.floor(Math.random() * pool.length)];
@@ -204,10 +208,19 @@ function loadGame(gameId) {
 
 function navGame(delta) {
   if (!currentGame) return;
-  const idx = GAMES.findIndex(function(g) { return g.id === currentGame.id; });
+  // Step through the filtered pool (set by the tag dropdown). If the
+  // current game isn't in the pool (e.g. user just changed the tag),
+  // jump to the first or last game in the pool depending on direction.
+  const pool = getFilteredGames();
+  if (!pool.length) return;
+  const idx = pool.findIndex(function(g) { return g.id === currentGame.id; });
+  if (idx < 0) {
+    loadGame(pool[delta > 0 ? 0 : pool.length - 1].id);
+    return;
+  }
   const next = idx + delta;
-  if (next < 0 || next >= GAMES.length) return;
-  loadGame(GAMES[next].id);
+  if (next < 0 || next >= pool.length) return;
+  loadGame(pool[next].id);
 }
 
 function navRandom() {
@@ -224,6 +237,24 @@ rebuildGameNav();
 document.getElementById('game-prev').addEventListener('click', function() { navGame(-1); });
 document.getElementById('game-next').addEventListener('click', function() { navGame(1); });
 document.getElementById('game-random').addEventListener('click', navRandom);
+
+// Tag filter dropdown — change the filter, then refresh the counter / button
+// states. If the user is sitting on a puzzle that isn't in the newly-selected
+// tag's pool, jump to the first puzzle in that pool (much less confusing than
+// leaving them on an off-filter game with prev/next disabled).
+const tagFilterEl = document.getElementById('tag-filter');
+if (tagFilterEl) {
+  tagFilterEl.addEventListener('change', function() {
+    setCurrentTag(tagFilterEl.value);
+    const pool = getFilteredGames();
+    const stillInPool = currentGame && pool.some(function(g) { return g.id === currentGame.id; });
+    if (!stillInPool && pool.length) {
+      loadGame(pool[0].id);
+    } else {
+      rebuildGameNav(currentGame ? currentGame.id : null);
+    }
+  });
+}
 
 document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
 document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });
@@ -272,4 +303,11 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'ArrowRight') { goStep(1); e.preventDefault(); }
 });
 
-loadGame(GAMES[0].id);
+// Initial load: prefer the first game in the user's persisted tag filter.
+// If their saved tag filter is empty (or its pool is empty), fall back
+// to the very first game in GAMES.
+(function initialLoad() {
+  const pool = getFilteredGames();
+  const first = (pool.length ? pool[0] : GAMES[0]);
+  if (first) loadGame(first.id);
+})();

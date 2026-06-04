@@ -666,4 +666,95 @@ export const WARBANDS = {
            ] },
     },
   },
+
+  // Morgok's Krushas — Ironjawz Brutes (Destruction). Three big, tough greenskins.
+  // Inspire mechanic: gain Waaagh! counters on attacks (yours or against you);
+  // spend 3 counters in your power step to inspire. See abilities below.
+  'morgoks-krushas': {
+    name: "Morgok's Krushas",
+    abilities: ["Waaagh! Energy", "Ded 'Ard", 'Shut It!', "Get a Move On, Ya Gitz!"],
+    fighters: {
+      M: { label: 'M', name: 'Morgok', isLeader: true,
+           move: 3, wounds: 5, glory: 3,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'hammer', note: 'Grievous' },
+           ] },
+      A: { label: 'A', name: "'Ardskull",
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 2, dice: 3, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 2, dice: 3, damage: 3, type: 'hammer', note: 'Brutal' },
+           ] },
+      T: { label: 'T', name: 'Thugg',
+           move: 3, wounds: 5, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 3, type: 'sword' },
+           ] },
+    },
+  },
+
+  // Thyrielle's Zephyrites — Lumineth Realm-lords (Order). Four fighters plus
+  // Tzul, a vulpine spirit *token* (not a fighter — can't be attacked, blocks
+  // movement, doesn't block line of sight). Most warband mechanics key off
+  // "windblown": any fighter in a straight line from Tzul to the board edge.
+  // Inspire: a friendly windblown fighter makes a successful Attack.
+  // NB. The schema has no slot for non-fighter companions; if you author a
+  // puzzle with this warband, draw Tzul as a custom feature token on the board.
+  'thyrielles-zephyrites': {
+    name: "Thyrielle's Zephyrites",
+    abilities: ['The Living Gale', 'Zephyr Leap', 'Hurricane Aid', 'Zephyr Dance', 'One with the Wind', 'Cyclonic Pull'],
+    fighters: {
+      T: { label: 'T', name: 'Thyrielle', isLeader: true,
+           move: 4, wounds: 4, glory: 3,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+             { range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+             { range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ] },
+      O: { label: 'O', name: 'Orieth',
+           move: 4, wounds: 3, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+             { range: 3, dice: 2, damage: 2, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+             { range: 3, dice: 3, damage: 2, type: 'hammer' },
+           ] },
+      A: { label: 'A', name: 'Anara',
+           move: 4, wounds: 3, glory: 2,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ] },
+      S: { label: 'S', name: 'Sirikith',
+           move: 4, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+    },
+  },
 };

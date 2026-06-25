@@ -21,7 +21,7 @@ import { renderBoard, renderFeatures, hexCenter, svgEl } from './board.js';
 import {
   renderFighterCards, updateFighterCards, renderFighterTokens,
   renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
-  renderHands, renderDice, renderPowerStep,
+  renderHands, renderDice, renderPowerStep, tokenLabel,
 } from './warband-panel.js';
 import { renderPoll, resetStepAnswers } from './poll.js';
 import {
@@ -97,13 +97,6 @@ function applyStep(idx) {
     }
     el.classList.toggle('slain', slain);
     el.classList.toggle('inspired', inspired);
-    const ftitle = document.getElementById('ftitle-' + id);
-    if (ftitle) {
-      const fname = (game.fighters[id] && game.fighters[id].name) || id;
-      ftitle.textContent = fname
-        + (inspired ? ' — Inspired' : '')
-        + (slain ? ' — Slain' : '');
-    }
     const wounds = (state.wounds || {})[id] || 0;
     const wb = document.getElementById('w-' + id);
     if (wounds > 0 && !slain) {
@@ -146,6 +139,7 @@ function applyStep(idx) {
   renderPowerStep(state.powerStep);
   renderHands(state);
   renderFeatures(state, board);
+  rebuildHexTitles(state, game);
   updateFighterCards(state, game);
   renderAbilities(game, state);
   renderActivations(state);
@@ -180,6 +174,62 @@ function applyStep(idx) {
   }
   document.getElementById('btn-prev').disabled = (idx === 0);
   document.getElementById('btn-next').disabled = (idx === game.steps.length - 1);
+}
+
+/* Compose one consolidated <title> per hex listing everything currently in it,
+ * e.g. "b1 — Treasure 3, Fighter Ylarin (inspired), Guard token". Individual
+ * board elements (fighters, feature tokens, action tokens) no longer carry
+ * their own titles, so the hex is the single hover target. */
+function rebuildHexTitles(state, game) {
+  const positions = state.positions || {};
+  const slain = state.slain || [];
+  const inspired = state.inspired || [];
+  const wounds = state.wounds || {};
+  const tokens = state.tokens || {};
+  const features = state.features || [];
+
+  // Group feature descriptions by hex.
+  const featByHex = {};
+  features.forEach(function(f) {
+    if (!f || !f.hex) return;
+    let d;
+    if (f.type === 'treasure')  d = 'Treasure ' + (f.label || '?');
+    else if (f.type === 'aqua') d = 'Aqua Ghyranis';
+    else                        d = (f.type || 'Feature');
+    if (f.delved) d += ' (delved)';
+    (featByHex[f.hex] = featByHex[f.hex] || []).push(d);
+  });
+
+  // Group fighter descriptions by hex.
+  const fighterByHex = {};
+  for (const id in positions) {
+    const hex = positions[id];
+    if (!hex || slain.indexOf(id) >= 0) continue;
+    const info = game.fighters[id] || {};
+    let d = 'Fighter ' + (info.name || id);
+    const extras = [];
+    if (inspired.indexOf(id) >= 0) extras.push('inspired');
+    if (wounds[id] > 0) extras.push(wounds[id] + ' wound' + (wounds[id] > 1 ? 's' : ''));
+    if (extras.length) d += ' (' + extras.join(', ') + ')';
+    (fighterByHex[hex] = fighterByHex[hex] || []).push(d);
+    // The fighter's action tokens are physically in that hex too.
+    (tokens[id] || []).forEach(function(t) {
+      (fighterByHex[hex] = fighterByHex[hex] || []).push(tokenLabel(t));
+    });
+  }
+
+  document.querySelectorAll('.hex-poly').forEach(function(poly) {
+    const hex = poly.getAttribute('data-hex');
+    const title = poly.querySelector('title');
+    if (!title) return;
+    const type = poly.getAttribute('data-hextype');
+    const parts = [];
+    if (featByHex[hex])    parts.push.apply(parts, featByHex[hex]);
+    if (fighterByHex[hex]) parts.push.apply(parts, fighterByHex[hex]);
+    let text = hex + (type ? ' — ' + type : '');
+    if (parts.length) text += (type ? ', ' : ' — ') + parts.join(', ');
+    title.textContent = text;
+  });
 }
 
 function goStep(delta) {

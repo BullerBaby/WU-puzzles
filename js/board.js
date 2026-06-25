@@ -275,13 +275,17 @@ export function renderBoard(game) {
       // parent group's transform, which turns flat-top into pointy-top
       // for 90°/270°.
       const poly = svgEl('polygon', { points: hexPolyPoints(x, y, false), class: cls, 'data-hex': displayId });
-      const title = svgEl('title', {});
-      let hexDesc = displayId;
-      if (staggerSet.has(canonId))       hexDesc = displayId + ' — Stagger hex';
-      else if (waystoneSet.has(canonId)) hexDesc = displayId + ' — Waystone hex';
-      else if (blockedSet.has(canonId))  hexDesc = displayId + ' — Blocked hex';
-      else if (startingSet.has(canonId)) hexDesc = displayId + ' — Starting hex';
-      title.textContent = hexDesc;
+      let hexTypeDesc = '';
+      if (staggerSet.has(canonId))       hexTypeDesc = 'Stagger hex';
+      else if (waystoneSet.has(canonId)) hexTypeDesc = 'Waystone hex';
+      else if (blockedSet.has(canonId))  hexTypeDesc = 'Blocked hex';
+      else if (startingSet.has(canonId)) hexTypeDesc = 'Starting hex';
+      if (hexTypeDesc) poly.setAttribute('data-hextype', hexTypeDesc);
+      // Title content is (re)built per step in main.js applyStep, since hex
+      // contents (fighters, tokens, features) change between steps. We seed it
+      // here with the hex id + static type so it's never empty.
+      const title = svgEl('title', { id: 'htitle-' + displayId });
+      title.textContent = displayId + (hexTypeDesc ? ' — ' + hexTypeDesc : '');
       poly.appendChild(title);
       hexGroup.appendChild(poly);
 
@@ -300,11 +304,7 @@ export function renderBoard(game) {
       hexGroup.appendChild(coord);
 
       if (startingSet.has(canonId)) {
-        const dot = svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' });
-        const dotTitle = svgEl('title', {});
-        dotTitle.textContent = displayId + ' — Starting hex';
-        dot.appendChild(dotTitle);
-        hexGroup.appendChild(dot);
+        hexGroup.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
       }
     }
   }
@@ -408,9 +408,6 @@ export function renderBoard(game) {
     const info = game.fighters[id];
     const g = svgEl('g', { id: 'f-' + id, class: 'fighter' });
     const isMe = info.side === 'me';
-    const fTitle = svgEl('title', { id: 'ftitle-' + id });
-    fTitle.textContent = info.name || info.label;
-    g.appendChild(fTitle);
     g.appendChild(svgEl('circle', {
       r: 10,
       fill: isMe ? 'var(--me-fill)' : 'var(--opp-fill)',
@@ -534,13 +531,6 @@ function drawFeatureToken(layer, feature, cx, cy) {
   // Delved → red outline on the token itself (mirrors how inspired colours the fighter's stroke).
   const circleCls = 'feature-circle ' + cls + (feature.delved ? ' delved' : '');
   const c = svgEl('circle', { cx: 0, cy: 0, r: r, class: circleCls });
-  const tip = svgEl('title');
-  let tipText = isTreasure
-    ? 'Treasure token ' + (feature.label || '?')
-    : 'Aqua Ghyranis';
-  if (feature.delved) tipText += ' (delved)';
-  tip.textContent = tipText;
-  c.appendChild(tip);
   g.appendChild(c);
   const lbl = svgEl('text', {
     x: 0, y: 0.25,

@@ -197,6 +197,15 @@ function tokenSpec(rawName) {
   return { key: k, letter: String(rawName).charAt(0).toUpperCase(), color: 'var(--tok-other)', label: rawName };
 }
 
+/* Short label for a single action token, used by the per-hex hover tooltip
+ * (e.g. "Guard token", "Move token"). */
+export function tokenLabel(rawName) {
+  const spec = tokenSpec(rawName);
+  const NICE = { move: 'Move', charge: 'Charge', guard: 'Guard', stagger: 'Stagger', cleave: 'Cleave', defence: 'Defence' };
+  const base = NICE[spec.key] || (String(rawName).charAt(0).toUpperCase() + String(rawName).slice(1));
+  return base + ' token';
+}
+
 export function renderFighterTokens(fighterId, tokens, slain) {
   const g = document.getElementById('t-' + fighterId);
   if (!g) return;
@@ -218,9 +227,6 @@ export function renderFighterTokens(fighterId, tokens, slain) {
     const spec = tokenSpec(t);
     const cx = startX + i * step;
     const c = svgEl('circle', { cx: cx.toFixed(2), cy: cy, r: r, fill: spec.color, class: 'tok-circle' });
-    const tooltip = svgEl('title');
-    tooltip.textContent = spec.label;
-    c.appendChild(tooltip);
     g.appendChild(c);
     const lbl = svgEl('text', { x: cx.toFixed(2), y: cy + 0.2, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'tok-label' });
     lbl.textContent = spec.letter;

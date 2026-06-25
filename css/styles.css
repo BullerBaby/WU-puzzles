@@ -714,7 +714,7 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .docs-block h3 { font-size: 12px; font-weight: 500; color: var(--text-3); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.6px; }
 .docs-block code { font-family: ui-monospace, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 12px; color: var(--text); }
 
-.hex-poly { fill: var(--surface-2); stroke: var(--border); stroke-width: 0.5; }
+.hex-poly { fill: var(--surface-2); stroke: var(--border); stroke-width: 0.5; cursor: help; }
 .hex-poly.your-side { fill: var(--your-side); }
 .hex-poly.opp-side  { fill: var(--opp-side); }
 .hex-poly.midline   { fill: var(--midline); }
@@ -727,17 +727,17 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   stroke: var(--hex-feature-border);
   stroke-width: 1.0;
 }
-.starting-dot { fill: var(--text-3); }
+.starting-dot { fill: var(--text-3); pointer-events: none; }
 .coord-label { font-size: 9px; fill: var(--text-3); font-family: ui-monospace, monospace; }
 .coord-label.midline { fill: var(--accent); font-weight: 600; }
 .hex-coord { font-size: 4px; fill: var(--text-3); font-family: ui-monospace, monospace; opacity: 0.55; pointer-events: none; user-select: none; }
-.fighter { transition: transform 0.7s cubic-bezier(.5,.1,.3,1.05), opacity 0.5s; }
+.fighter { transition: transform 0.7s cubic-bezier(.5,.1,.3,1.05), opacity 0.5s; pointer-events: none; }
 .fighter.slain { display: none; }
 .fighter.inspired circle.bg { stroke: var(--inspired) !important; stroke-width: 3 !important; }
 .tok-circle { stroke: var(--surface); stroke-width: 0.6; }
 .tok-label { font-size: 4.5px; fill: #FFFFFF; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
 
-.feature-token { pointer-events: auto; cursor: help; }
+.feature-token { pointer-events: none; }
 .feature-circle.treasure { fill: var(--treasure-bg); stroke: var(--treasure-border); stroke-width: 0.6; }
 .feature-circle.aqua { fill: var(--aqua-bg); stroke: var(--aqua-border); stroke-width: 0.6; }
 .feature-circle.delved { stroke: var(--danger); stroke-width: 1.4; }

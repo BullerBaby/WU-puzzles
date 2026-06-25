@@ -757,4 +757,101 @@ export const WARBANDS = {
            ] },
     },
   },
+
+  // Zarbag's Gitz — Moonclan Grots (Destruction). Rules current as of the
+  // official Rules Updates, February 2026. Bonekrakka & Gobbaluk fighter cards
+  // and the Inspire condition / warband abilities reflect the updated wording.
+  // Inspire: each time you gain a sixth or subsequent Glory point, inspire a
+  //   friendly fighter (warband-wide condition, identical on every card).
+  // Squigs (Bonekrakka, Gobbaluk) and the herded Squig tokens are handled by
+  //   the Squig Herder / Make Some Noise! abilities.
+  'zarbags-gitz': {
+    name: "Zarbag's Gitz",
+    abilities: ['Volley', 'Slippery Gitz', 'Fungal Burst', 'Gang Up', 'Make Some Noise!'],
+    fighters: {
+      Z: { label: 'Z', name: 'Zarbag', isLeader: true,
+           move: 3, wounds: 3, glory: 2,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { name: 'Sickle', range: 1, dice: 3, damage: 2, type: 'sword' },
+             { name: 'Curse',  range: 3, dice: 4, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { name: 'Sickle', range: 1, dice: 3, damage: 2, type: 'sword' },
+             { name: 'Curse',  range: 3, dice: 4, damage: 1, type: 'hammer' },
+           ] },
+      N: { label: 'N', name: 'Snirk Sourtongue',
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Ball and Chain', range: 1, dice: 3, damage: 3, type: 'sword' },
+           ],
+           attacksInspired: [
+             { name: 'Ball and Chain', range: 1, dice: 3, damage: 3, type: 'sword' },
+           ] },
+      D: { label: 'D', name: 'Drizgit da Squig-hunter',
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      P: { label: 'P', name: 'Prog da Netter',
+           move: 3, wounds: 1, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Net', range: 3, dice: 2, damage: 1, type: 'sword', note: 'Volley' },
+           ],
+           attacksInspired: [
+             { name: 'Net', range: 3, dice: 2, damage: 1, type: 'sword', note: 'Volley' },
+           ] },
+      T: { label: 'T', name: 'Stikkit',
+           move: 3, wounds: 1, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Bow', range: 3, dice: 3, damage: 1, type: 'sword', note: 'Volley' },
+           ],
+           attacksInspired: [
+             { name: 'Bow', range: 3, dice: 3, damage: 1, type: 'sword', note: 'Volley' },
+           ] },
+      I: { label: 'I', name: 'Dibbz',
+           move: 3, wounds: 1, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Bow', range: 3, dice: 3, damage: 1, type: 'sword', note: 'Volley' },
+           ],
+           attacksInspired: [
+             { name: 'Bow', range: 3, dice: 3, damage: 1, type: 'sword', note: 'Volley' },
+           ] },
+      R: { label: 'R', name: 'Redkap',
+           move: 3, wounds: 1, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Bow', range: 3, dice: 3, damage: 1, type: 'sword', note: 'Volley' },
+           ],
+           attacksInspired: [
+             { name: 'Bow', range: 3, dice: 3, damage: 1, type: 'sword', note: 'Volley' },
+           ] },
+      K: { label: 'K', name: 'Bonekrakka',
+           move: 3, wounds: 1, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      G: { label: 'G', name: 'Gobbaluk',
+           move: 3, wounds: 1, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           attacks: [
+             { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+    },
+  },
 };

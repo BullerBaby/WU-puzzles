@@ -9,7 +9,7 @@
  *   - Power-step events (chips for cards / abilities / reactions)
  *   - Warscroll abilities (chips marked used / unused)
  *   - Activation tokens (4 per side, right-most go hollow as used)
- *   - Decks header (deck pair + plot-card chips)
+ *   - Decks header (deck pair, with plot rules on deck-name hover)
  */
 
 import { svgEl } from './board.js';
@@ -575,11 +575,10 @@ export function renderWarbandLabels(game) {
   });
 }
 
-/* ==================== RENDER DECKS (deck pair + plot cards) ====================
- * Each game can declare `decks: { me: { pair, plots }, opp: { pair, plots } }`
- * where `pair` is a string like "Hunters of Huanchi / Shadeborn" and `plots`
- * is an array of up to 2 plot-card names. Rendered in the warband panel
- * header below the side label.
+/* ==================== RENDER DECKS (deck pair) ====================
+ * Each game can declare `decks: { me: { pair }, opp: { pair } }`
+ * where `pair` is a string like "Hunters of Huanchi / Shadeborn".
+ * Rendered in the warband panel header below the side label.
  *
  * Each deck name in the pair is split on " / " and rendered as a hoverable
  * span. The hover tooltip shows the deck's plot-card rule text (from
@@ -611,18 +610,6 @@ export function renderDecks(game) {
         wrap.appendChild(makeDeckNameEl(name));
       });
       container.appendChild(wrap);
-    }
-    if (d.plots && d.plots.length) {
-      const plots = document.createElement('span');
-      plots.className = 'plot-chips';
-      d.plots.slice(0, 2).forEach(function(name) {
-        const chip = document.createElement('span');
-        chip.className = 'plot-chip';
-        chip.textContent = name;
-        chip.title = name;
-        plots.appendChild(chip);
-      });
-      container.appendChild(plots);
     }
   });
 }

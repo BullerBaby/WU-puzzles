@@ -557,7 +557,7 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .side-panel.me  .hand-label::before { content: "● "; color: var(--me-stroke); }
 .side-panel.opp .hand-label::before { content: "● "; color: var(--opp-stroke); }
 
-/* Deck pair + plot cards in the warband panel header */
+/* Deck pair in the warband panel header */
 .warband-meta {
   display: flex;
   flex-wrap: wrap;
@@ -645,33 +645,6 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   color: var(--text-3);
   font-style: italic;
 }
-.plot-chips {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  align-items: center;
-}
-.plot-chips::before {
-  content: 'Plots:';
-  color: var(--text-3);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-right: 2px;
-}
-.plot-chip {
-  font-size: 10.5px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-  border-left-width: 3px;
-  white-space: nowrap;
-  font-style: normal;
-}
-.side-panel.me  .plot-chip { border-left-color: var(--me-stroke); }
-.side-panel.opp .plot-chip { border-left-color: var(--opp-stroke); }
 .hand-counts { display: inline-flex; gap: 4px; }
 .hand-pill { font-size: 11px; padding: 1px 7px; border-radius: 10px; line-height: 1.5; }
 .hand-pill.obj { background: var(--obj-bg); color: var(--obj-text); }

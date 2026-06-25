@@ -33,8 +33,8 @@ export const GAMES = [
     boardRotation: 0,
     warbands: { me: 'headsmens-curse', opp: 'emberwatch' },
     decks: {
-      me:  { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
-      opp: { pair: 'Blazing Assault / Emberstone Sentinels',   plots: [] },
+      me:  { pair: 'Blazing Assault / Countdown to Cataclysm' },
+      opp: { pair: 'Blazing Assault / Emberstone Sentinels' },
     },
     steps: [
       {
@@ -104,8 +104,8 @@ export const GAMES = [
     boardRotation: 0,
     warbands: { me: 'kurnoths-heralds', opp: 'headsmens-curse' },
     decks: {
-      me:  { pair: 'Hunting Grounds / Pillage and Plunder',     plots: [] },
-      opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
+      me:  { pair: 'Hunting Grounds / Pillage and Plunder' },
+      opp: { pair: 'Blazing Assault / Countdown to Cataclysm' },
     },
     steps: [
       {
@@ -184,8 +184,8 @@ export const GAMES = [
     boardRotation: 0,
     warbands: { me: 'kurnoths-heralds', opp: 'emberwatch' },
     decks: {
-      me:  { pair: 'Hunting Grounds / Pillage and Plunder', plots: [] },
-      opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
+      me:  { pair: 'Hunting Grounds / Pillage and Plunder' },
+      opp: { pair: 'Blazing Assault / Countdown to Cataclysm' },
     },
     steps: [
       {

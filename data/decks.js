@@ -1,6 +1,6 @@
 /* ==================== RIVALS DECKS ====================
  * Library of universal Rivals decks players can choose from. Each player
- * brings 2 decks; games reference them via `decks: { me: { pair, plots } }`
+ * brings 2 decks; games reference them via `decks: { me: { pair } }`
  * where `pair` is a string like "Blazing Assault / Countdown to Cataclysm".
  *
  * The `plot` text is the special rule that the deck's Plot card brings to

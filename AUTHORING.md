@@ -106,7 +106,7 @@ In particular: **do not output a `fighters: { ... }` block** with stats. Just re
 
 What you DO supply per fighter, in the step's `state` object, is the DYNAMIC info: where they stand (`positions`), how many wounds they've taken (`wounds`), whether they're inspired or slain, what tokens/upgrades they carry. None of that lives in the warband.
 
-# DECK PAIRS AND PLOT CARDS
+# DECK PAIRS
 
 Each player brings 2 Rivals decks. Write the `pair` field as `"Deck A / Deck B"`
 (two names separated by `" / "`). Each name is split out in the UI and hoverable —
@@ -132,13 +132,8 @@ case-insensitive):
 Decks not in this list still render as plain text without a tooltip, so
 homebrew or as-yet-unreleased decks keep working fine.
 
-`plots` is a separate array — list any Plot cards that are *actually in play*
-for that side (some decks bring a Plot card, but the player has to choose to
-include and play it). Empty array is fine.
-
-Examples:
-- `"pair": "Blazing Assault / Countdown to Cataclysm"`, `"plots": ["Countdown to Cataclysm"]`
-- `"pair": "Hunting Grounds / Pillage and Plunder"`, `"plots": []`
+Example:
+- `"pair": "Blazing Assault / Countdown to Cataclysm"`
 
 # SCHEMA
 
@@ -157,8 +152,8 @@ The top-level object:
   "boardRotation": 0 | 180,
   "warbands": { "me": "<warband id>", "opp": "<warband id>" },
   "decks": {
-    "me":  { "pair": "<deck pair name>", "plots": ["<plot 1>", "<plot 2>"] },
-    "opp": { "pair": "<deck pair name>", "plots": [] }
+    "me":  { "pair": "<deck pair name>" },
+    "opp": { "pair": "<deck pair name>" }
   },
   "steps": [ <one or more step objects> ]
 }
@@ -258,8 +253,8 @@ Output:
   "boardRotation": 0,
   "warbands": { "me": "headsmens-curse", "opp": "emberwatch" },
   "decks": {
-    "me":  { "pair": "Blazing Assault / Countdown to Cataclysm", "plots": ["Countdown to Cataclysm"] },
-    "opp": { "pair": "Blazing Assault / Emberstone Sentinels",   "plots": [] }
+    "me":  { "pair": "Blazing Assault / Countdown to Cataclysm" },
+    "opp": { "pair": "Blazing Assault / Emberstone Sentinels" }
   },
   "steps": [
     {
@@ -354,7 +349,7 @@ Now wait for the user's puzzle description (or photo).
 | `board` | string | `embergard-1` etc. |
 | `boardRotation` | `0` or `180` | Board setup orientation (default 0). Rotates baked-in features (stagger, blocked, waystone) only; fighter positions and treasures are written in the post-rotation view. |
 | `warbands` | `{me, opp}` | Both are warband IDs |
-| `decks` | `{me, opp}` | Each has `pair` and `plots` |
+| `decks` | `{me, opp}` | Each has `pair` (deck rules shown on deck-name hover) |
 | `steps` | array | One step per state shown |
 
 Per step:

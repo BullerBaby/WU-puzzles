@@ -276,7 +276,12 @@ export function renderBoard(game) {
       // for 90°/270°.
       const poly = svgEl('polygon', { points: hexPolyPoints(x, y, false), class: cls, 'data-hex': displayId });
       const title = svgEl('title', {});
-      title.textContent = displayId;
+      let hexDesc = displayId;
+      if (staggerSet.has(canonId))       hexDesc = displayId + ' — Stagger hex';
+      else if (waystoneSet.has(canonId)) hexDesc = displayId + ' — Waystone hex';
+      else if (blockedSet.has(canonId))  hexDesc = displayId + ' — Blocked hex';
+      else if (startingSet.has(canonId)) hexDesc = displayId + ' — Starting hex';
+      title.textContent = hexDesc;
       poly.appendChild(title);
       hexGroup.appendChild(poly);
 
@@ -295,7 +300,11 @@ export function renderBoard(game) {
       hexGroup.appendChild(coord);
 
       if (startingSet.has(canonId)) {
-        hexGroup.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' }));
+        const dot = svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: 'starting-dot' });
+        const dotTitle = svgEl('title', {});
+        dotTitle.textContent = displayId + ' — Starting hex';
+        dot.appendChild(dotTitle);
+        hexGroup.appendChild(dot);
       }
     }
   }
@@ -399,6 +408,9 @@ export function renderBoard(game) {
     const info = game.fighters[id];
     const g = svgEl('g', { id: 'f-' + id, class: 'fighter' });
     const isMe = info.side === 'me';
+    const fTitle = svgEl('title', { id: 'ftitle-' + id });
+    fTitle.textContent = info.name || info.label;
+    g.appendChild(fTitle);
     g.appendChild(svgEl('circle', {
       r: 10,
       fill: isMe ? 'var(--me-fill)' : 'var(--opp-fill)',
@@ -429,57 +441,14 @@ export function renderBoard(game) {
 }
 
 /* ==================== RENDER LEGEND ==================== */
+/* The board legend was removed: every element that used to be explained in
+ * the legend (feature tokens, action tokens, inspired fighters, special hex
+ * types) now carries its own SVG <title>, so the explanation shows on hover
+ * over the actual element on the board. Kept as a safe no-op so existing
+ * callers don't break. */
 export function renderLegend(game) {
-  const board = BOARDS[game.board] || BOARDS['embergard-1'];
   const aside = document.getElementById('legend-side');
-  aside.innerHTML = '';
-
-  function block(title, items) {
-    const b = document.createElement('div');
-    b.className = 'legend-block';
-    const h = document.createElement('h4');
-    h.textContent = title;
-    b.appendChild(h);
-    const ul = document.createElement('ul');
-    items.forEach(function(it) {
-      const li = document.createElement('li');
-      const dot = document.createElement('span');
-      dot.className = it.dotClass;
-      if (it.dotText) dot.textContent = it.dotText;
-      li.appendChild(dot);
-      const label = document.createElement('span');
-      label.textContent = it.label;
-      li.appendChild(label);
-      ul.appendChild(li);
-    });
-    b.appendChild(ul);
-    return b;
-  }
-
-  // (Fighters now live in the warband panels, not the legend.)
-
-  aside.appendChild(block('Status', [
-    { dotClass: 'legend-dot inspired', label: 'Inspired' },
-  ]));
-
-  aside.appendChild(block('Features', [
-    { dotClass: 'legend-feat treasure', dotText: '1', label: 'Treasure token (1–5)' },
-    { dotClass: 'legend-feat aqua',     dotText: 'A', label: 'Aqua Ghyranis' },
-    { dotClass: 'legend-feat delved',   dotText: '4', label: 'Delved (red outline)' },
-  ]));
-
-  aside.appendChild(block('Action tokens', [
-    { dotClass: 'legend-tok move',    dotText: 'M', label: 'Move action' },
-    { dotClass: 'legend-tok charge',  dotText: 'C', label: 'Charge action' },
-    { dotClass: 'legend-tok guard',   dotText: 'G', label: 'Guard' },
-    { dotClass: 'legend-tok stagger', dotText: 'S', label: 'Stagger' },
-  ]));
-
-  const hexItems = [{ dotClass: 'legend-hex starting', label: 'Starting hex' }];
-  if (board.stagger  && board.stagger.length)  hexItems.push({ dotClass: 'legend-hex stagger',  label: 'Stagger hex' });
-  if (board.blocked  && board.blocked.length)  hexItems.push({ dotClass: 'legend-hex blocked',  label: 'Blocked hex' });
-  if (board.waystone && board.waystone.length) hexItems.push({ dotClass: 'legend-hex waystone', label: 'Waystone hex' });
-  aside.appendChild(block('Hex types', hexItems));
+  if (aside) aside.innerHTML = '';
 }
 
 /* ==================== RENDER FEATURE TOKENS ====================

@@ -258,31 +258,6 @@ section { margin-bottom: 1.5rem; }
 .board-area { display: flex; flex-direction: column; gap: 12px; align-items: stretch; margin-bottom: 0.5rem; }
 .board-side { flex: 1; min-width: 0; display: flex; justify-content: center; }
 .board-side > svg { width: 100%; max-width: 1000px; height: auto; }
-/* Legend now sits below the board (full board width) as a wrapping strip,
- * so the board itself can use the whole column. */
-.legend-side {
-  flex: none;
-  padding-top: 4px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 2rem;
-}
-
-.legend-block { margin-bottom: 1rem; font-size: 12px; }
-.legend-block h4 { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); margin: 0 0 6px; }
-.legend-block ul { list-style: none; padding: 0; margin: 0; }
-.legend-block li { display: flex; align-items: center; gap: 8px; padding: 2px 0; line-height: 1.4; }
-.legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid transparent; }
-.legend-dot.me { background: var(--me-fill); border-color: var(--me-stroke); }
-.legend-dot.opp { background: var(--opp-fill); border-color: var(--opp-stroke); }
-.legend-dot.leader { border-width: 2.5px; }
-.legend-dot.inspired { background: var(--me-fill); border-color: var(--inspired); border-width: 2.5px; }
-.legend-hex { width: 16px; height: 14px; flex-shrink: 0; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
-.legend-hex.stagger { background: var(--stagger); }
-.legend-hex.waystone { background: var(--waystone); }
-.legend-hex.blocked { background: var(--blocked); }
-.legend-hex.starting { background: var(--surface-2); position: relative; }
-.legend-hex.starting::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; border-radius: 50%; background: var(--text-2); }
 
 .controls-row {
   display: flex; align-items: center; justify-content: center;
@@ -762,20 +737,7 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .tok-circle { stroke: var(--surface); stroke-width: 0.6; }
 .tok-label { font-size: 4.5px; fill: #FFFFFF; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
 
-.legend-tok { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: #FFF; font-size: 8px; font-weight: 700; font-family: ui-monospace, monospace; border: 0.5px solid rgba(0,0,0,0.15); }
-.legend-tok.move { background: var(--tok-move); }
-.legend-tok.charge { background: var(--tok-charge); }
-.legend-tok.guard { background: var(--tok-guard); }
-.legend-tok.stagger { background: var(--tok-stagger); }
-.legend-tok.cleave { background: var(--tok-cleave); }
-.legend-tok.defence { background: var(--tok-defence); }
-
-.legend-feat { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; font-family: ui-monospace, monospace; }
-.legend-feat.treasure { background: var(--treasure-bg); color: var(--treasure-text); border: 1px solid var(--treasure-border); }
-.legend-feat.aqua { background: var(--aqua-bg); color: var(--aqua-text); border: 1px solid var(--aqua-border); }
-.legend-feat.delved { background: var(--treasure-bg); color: var(--treasure-text); border: 2px solid var(--danger); }
-
-.feature-token { pointer-events: none; }
+.feature-token { pointer-events: auto; cursor: help; }
 .feature-circle.treasure { fill: var(--treasure-bg); stroke: var(--treasure-border); stroke-width: 0.6; }
 .feature-circle.aqua { fill: var(--aqua-bg); stroke: var(--aqua-border); stroke-width: 0.6; }
 .feature-circle.delved { stroke: var(--danger); stroke-width: 1.4; }
@@ -1115,9 +1077,6 @@ footer code { font-family: ui-monospace, monospace; background: var(--surface-2)
 @media (max-width: 720px) {
   .container { padding: 1.5rem 1rem 2rem; }
   h1 { font-size: 22px; }
-  .board-area { flex-direction: column; }
-  .legend-side { flex: 1; width: 100%; padding-top: 12px; border-top: 1px solid var(--border); }
-  .legend-side > .legend-block { display: inline-block; vertical-align: top; min-width: 160px; margin-right: 1rem; }
   .hands-panel { grid-template-columns: 1fr; }
   .stats { gap: 12px; font-size: 12px; }
   .buttons { gap: 6px; }

@@ -17,7 +17,7 @@ import { BOARDS } from '../data/boards.js';
 import { GAMES }  from '../data/games.js';
 
 import { resolveWarbands, expandSteps } from './state.js';
-import { renderBoard, renderLegend, renderFeatures, hexCenter, svgEl } from './board.js';
+import { renderBoard, renderFeatures, hexCenter, svgEl } from './board.js';
 import {
   renderFighterCards, updateFighterCards, renderFighterTokens,
   renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
@@ -97,6 +97,13 @@ function applyStep(idx) {
     }
     el.classList.toggle('slain', slain);
     el.classList.toggle('inspired', inspired);
+    const ftitle = document.getElementById('ftitle-' + id);
+    if (ftitle) {
+      const fname = (game.fighters[id] && game.fighters[id].name) || id;
+      ftitle.textContent = fname
+        + (inspired ? ' — Inspired' : '')
+        + (slain ? ' — Slain' : '');
+    }
     const wounds = (state.wounds || {})[id] || 0;
     const wb = document.getElementById('w-' + id);
     if (wounds > 0 && !slain) {
@@ -205,7 +212,6 @@ function loadGame(gameId) {
   markSeen(game.id);
   rebuildGameNav(game.id);
   renderBoard(game);
-  renderLegend(game);
   renderFighterCards(game);
   renderWarbandLabels(game);
   renderDecks(game);

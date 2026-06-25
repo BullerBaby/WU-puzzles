@@ -10,6 +10,10 @@
  * POLLS_KEY, keyed by `gameId:stepIdx`, so the colouring stays after
  * a reload. For back-compat with games that used the old `actual`
  * field, `actual` is read as a fallback when `correct` is missing.
+ *
+ * renderPoll accepts an optional `onCorrect(stepIdx)` callback, fired the
+ * first time the correct option is clicked. The host uses it to reveal a
+ * follow-up step (e.g. the opponent's hidden power card).
  */
 
 const POLLS_KEY = 'underworlds-poll-answers-v1';
@@ -48,7 +52,7 @@ export function resetStepAnswers(gameId, stepIdx) {
   if (all[k]) { delete all[k]; saveAll(all); }
 }
 
-export function renderPoll(game, stepIdx) {
+export function renderPoll(game, stepIdx, onCorrect) {
   const panel = document.getElementById('poll-panel');
   if (!panel || !game) return;
   const step = game.steps[stepIdx];
@@ -113,8 +117,15 @@ export function renderPoll(game, stepIdx) {
     btn.appendChild(wrap);
 
     btn.addEventListener('click', function() {
+      const alreadyClicked = clickedSet.has(i);
       addClicked(game.id, stepIdx, i);
-      renderPoll(game, stepIdx);
+      renderPoll(game, stepIdx, onCorrect);
+      // Reveal the follow-up (e.g. opponent's hidden power card) the first
+      // time the correct option is picked. `onCorrect` is responsible for
+      // deciding whether there's anything to advance to.
+      if (!alreadyClicked && i === correctIdx && typeof onCorrect === 'function') {
+        onCorrect(stepIdx);
+      }
     });
     optsEl.appendChild(btn);
   });

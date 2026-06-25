@@ -191,6 +191,7 @@ export const GAMES = [
       {
         notation: '(R3 — last activation, glory 20-20)',
         title: 'Last activation decision',
+        revealOnCorrect: true,
         explanation: "Ylarin stands on j3 while Ardorn clings to 3 wounds remaining on -c1. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
         poll: {
           question: "What's your move?",
@@ -198,7 +199,7 @@ export const GAMES = [
             'Move to treasure token 5 on f2',
             'Move to treasure token 4 on i1',
             'Charge Ardorn on -c1',
-            'Guard in place and accept the 20-20 tie',
+            'Go on guard',
           ],
           correct: 1,
         },

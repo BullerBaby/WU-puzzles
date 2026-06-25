@@ -125,7 +125,7 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-.container { max-width: 1240px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.container { max-width: 1600px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 header { margin-bottom: 1.5rem; }
 h1 { font-size: 26px; font-weight: 500; margin: 0; }
 section { margin-bottom: 1.5rem; }
@@ -255,9 +255,18 @@ section { margin-bottom: 1.5rem; }
   padding: 1rem 1.25rem 1.25rem;
 }
 
-.board-area { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 0.5rem; }
+.board-area { display: flex; flex-direction: column; gap: 12px; align-items: stretch; margin-bottom: 0.5rem; }
 .board-side { flex: 1; min-width: 0; display: flex; justify-content: center; }
-.legend-side { flex: 0 0 200px; padding-top: 4px; }
+.board-side > svg { width: 100%; max-width: 1000px; height: auto; }
+/* Legend now sits below the board (full board width) as a wrapping strip,
+ * so the board itself can use the whole column. */
+.legend-side {
+  flex: none;
+  padding-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2rem;
+}
 
 .legend-block { margin-bottom: 1rem; font-size: 12px; }
 .legend-block h4 { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); margin: 0 0 6px; }

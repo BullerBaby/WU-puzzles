@@ -142,7 +142,14 @@ function applyStep(idx) {
   updateFighterCards(state, game);
   renderAbilities(game, state);
   renderActivations(state);
-  renderPoll(game, idx);
+  renderPoll(game, idx, function(stepIdx) {
+    // If this step opts in, reveal the next step (e.g. the opponent's hidden
+    // power card) as soon as the correct option is chosen.
+    const s = game.steps[stepIdx];
+    if (s && s.revealOnCorrect && stepIdx === currentStep && stepIdx + 1 < game.steps.length) {
+      goStep(1);
+    }
+  });
 
   const lines = document.querySelectorAll('.notation-line');
   for (let i = 0; i < lines.length; i++) {

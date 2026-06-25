@@ -14,6 +14,7 @@
 
 import { svgEl } from './board.js';
 import { WARBANDS } from '../data/warbands.js';
+import { lookupDeck } from '../data/decks.js';
 
 /* Tap-outside-to-close handler for fighter-card tooltips on mobile.
  * Registered once at module load. Clicking anywhere outside an open
@@ -21,6 +22,16 @@ import { WARBANDS } from '../data/warbands.js';
 document.addEventListener('click', function(e) {
   if (!e.target.closest || !e.target.closest('.fighter-card')) {
     document.querySelectorAll('.fighter-card.tooltip-open').forEach(function(c) {
+      c.classList.remove('tooltip-open');
+    });
+  }
+});
+
+/* Same pattern for deck-name tooltips: clicking outside an open deck name
+ * closes any open plot tooltips. */
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('.deck-name')) {
+    document.querySelectorAll('.deck-name.tooltip-open').forEach(function(c) {
       c.classList.remove('tooltip-open');
     });
   }
@@ -569,6 +580,11 @@ export function renderWarbandLabels(game) {
  * where `pair` is a string like "Hunters of Huanchi / Shadeborn" and `plots`
  * is an array of up to 2 plot-card names. Rendered in the warband panel
  * header below the side label.
+ *
+ * Each deck name in the pair is split on " / " and rendered as a hoverable
+ * span. The hover tooltip shows the deck's plot-card rule text (from
+ * data/decks.js). Decks that aren't in the library still render — just
+ * without a tooltip — so unknown / custom deck names keep working.
  */
 export function renderDecks(game) {
   const decks = game.decks || {};
@@ -579,10 +595,22 @@ export function renderDecks(game) {
     const d = decks[side];
     if (!d) return;
     if (d.pair) {
-      const pair = document.createElement('span');
-      pair.className = 'deck-pair';
-      pair.textContent = d.pair;
-      container.appendChild(pair);
+      const wrap = document.createElement('span');
+      wrap.className = 'deck-pair';
+      // Split on " / " (the canonical separator) and render each piece as a
+      // hoverable deck-name span. Preserve the literal " / " separator
+      // between them so the visual layout matches the old single-string form.
+      const parts = String(d.pair).split(/\s*\/\s*/);
+      parts.forEach(function(name, i) {
+        if (i > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'deck-name-sep';
+          sep.textContent = ' / ';
+          wrap.appendChild(sep);
+        }
+        wrap.appendChild(makeDeckNameEl(name));
+      });
+      container.appendChild(wrap);
     }
     if (d.plots && d.plots.length) {
       const plots = document.createElement('span');
@@ -597,4 +625,59 @@ export function renderDecks(game) {
       container.appendChild(plots);
     }
   });
+}
+
+/* Build a single deck-name span: the deck name, plus a tooltip with the
+ * deck's plot rule text if we recognise it. Falls back to a plain span
+ * (no tooltip) if the deck isn't in the library. */
+function makeDeckNameEl(name) {
+  const trimmed = String(name).trim();
+  const el = document.createElement('span');
+  el.className = 'deck-name';
+  el.textContent = trimmed;
+
+  const entry = lookupDeck(trimmed);
+  if (!entry) return el; // unknown deck — render as plain text, no tooltip
+
+  el.classList.add('has-tooltip');
+  const tip = document.createElement('span');
+  tip.className = 'deck-tooltip';
+
+  const title = document.createElement('span');
+  title.className = 'deck-tooltip-title';
+  title.textContent = trimmed;
+  tip.appendChild(title);
+
+  const body = document.createElement('span');
+  body.className = 'deck-tooltip-body';
+  if (entry.plot) {
+    // Preserve paragraph and bullet structure from the source text.
+    String(entry.plot).split(/\n\n+/).forEach(function(para) {
+      const p = document.createElement('span');
+      p.className = 'deck-tooltip-para';
+      p.textContent = para;
+      body.appendChild(p);
+    });
+  } else {
+    const p = document.createElement('span');
+    p.className = 'deck-tooltip-para deck-tooltip-empty';
+    p.textContent = 'No plot card — this deck has no special rule.';
+    body.appendChild(p);
+  }
+  tip.appendChild(body);
+  el.appendChild(tip);
+
+  // Tap-to-toggle on mobile (matches the fighter-card pattern). Hover
+  // still works on desktop via the :hover CSS rule.
+  el.addEventListener('click', function(ev) {
+    ev.stopPropagation();
+    const wasOpen = el.classList.contains('tooltip-open');
+    document.querySelectorAll('.deck-name.tooltip-open').forEach(function(c) {
+      if (c !== el) c.classList.remove('tooltip-open');
+    });
+    if (wasOpen) el.classList.remove('tooltip-open');
+    else         el.classList.add('tooltip-open');
+  });
+
+  return el;
 }

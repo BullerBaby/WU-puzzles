@@ -104,7 +104,7 @@ export const GAMES = [
     boardRotation: 0,
     warbands: { me: 'kurnoths-heralds', opp: 'headsmens-curse' },
     decks: {
-      me:  { pair: 'Hunting Grounds / Pillage to Plunder',     plots: [] },
+      me:  { pair: 'Hunting Grounds / Pillage and Plunder',     plots: [] },
       opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
     },
     steps: [
@@ -184,7 +184,7 @@ export const GAMES = [
     boardRotation: 0,
     warbands: { me: 'kurnoths-heralds', opp: 'emberwatch' },
     decks: {
-      me:  { pair: 'Hunting Grounds / Pillage to Plunder', plots: [] },
+      me:  { pair: 'Hunting Grounds / Pillage and Plunder', plots: [] },
       opp: { pair: 'Blazing Assault / Countdown to Cataclysm', plots: ['Countdown to Cataclysm'] },
     },
     steps: [

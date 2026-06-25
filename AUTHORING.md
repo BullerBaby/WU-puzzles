@@ -108,11 +108,37 @@ What you DO supply per fighter, in the step's `state` object, is the DYNAMIC inf
 
 # DECK PAIRS AND PLOT CARDS
 
-The decks field is descriptive — it's shown in the UI but doesn't drive logic. Use real Underworlds names where known, or leave plots as an empty array.
+Each player brings 2 Rivals decks. Write the `pair` field as `"Deck A / Deck B"`
+(two names separated by `" / "`). Each name is split out in the UI and hoverable —
+hovering or tapping a deck name shows that deck's Plot card rule text from
+`data/decks.js`.
+
+**Recognised deck names** (from the universal Rivals deck library; match is
+case-insensitive):
+
+- Nexus of Power
+- Hunting Grounds
+- Deadly Synergy
+- Raging Slayers
+- Realmstone Raiders
+- Edge of the Knife
+- Reckless Fury
+- Wrack and Ruin
+- Blazing Assault
+- Emberstone Sentinels
+- Pillage and Plunder
+- Countdown to Cataclysm
+
+Decks not in this list still render as plain text without a tooltip, so
+homebrew or as-yet-unreleased decks keep working fine.
+
+`plots` is a separate array — list any Plot cards that are *actually in play*
+for that side (some decks bring a Plot card, but the player has to choose to
+include and play it). Empty array is fine.
 
 Examples:
-- "Blazing Assault / Countdown to Cataclysm" + plot "Countdown to Cataclysm"
-- "Blazing Assault / Emberstone Sentinels" + plot "Sigmar Watches Over Us"
+- `"pair": "Blazing Assault / Countdown to Cataclysm"`, `"plots": ["Countdown to Cataclysm"]`
+- `"pair": "Hunting Grounds / Pillage and Plunder"`, `"plots": []`
 
 # SCHEMA
 

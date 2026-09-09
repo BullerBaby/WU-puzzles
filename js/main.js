@@ -29,6 +29,8 @@ import {
   downloadCurrent, clearCustoms, loadSavedCustoms,
   getFilteredGames, getCurrentTag, setCurrentTag,
 } from './custom-games.js';
+import * as Challenge from './challenge.js';
+import * as Leaderboard from './leaderboard.js';
 
 /* ==================== STATE ==================== */
 let currentGame  = null;
@@ -150,6 +152,9 @@ function applyStep(idx) {
     if (s && s.revealOnCorrect && stepIdx === currentStep && stepIdx + 1 < game.steps.length) {
       goStep(1);
     }
+  }, function(result) {
+    // Challenge-mode scoring hook (no-op outside a run).
+    onPollResult(game, result);
   });
 
   const lines = document.querySelectorAll('.notation-line');
@@ -260,7 +265,16 @@ function loadGame(gameId) {
   currentBoard = BOARDS[game.board] || BOARDS['embergard-1'];
   currentStep = 0;
   markSeen(game.id);
+  // In a challenge run, clear any stored poll answers for this game so it
+  // plays fresh (important when the run loops back to an already-solved
+  // puzzle on a higher ramp).
+  if (Challenge.isActive()) {
+    (game.steps || []).forEach(function(s, i) {
+      if (s && s.poll) resetStepAnswers(game.id, i);
+    });
+  }
   rebuildGameNav(game.id);
+  decorateDifficulty(game);
   renderBoard(game);
   renderFighterCards(game);
   renderWarbandLabels(game);
@@ -291,6 +305,242 @@ function navRandom() {
   const pick = pickRandomUnseen(currentGame.id);
   if (pick) loadGame(pick.id);
 }
+
+/* ==================== CHALLENGE MODE ====================
+ * Wires the Challenge controller (js/challenge.js) and leaderboard
+ * (js/leaderboard.js) to the DOM. In a run, solving a puzzle's poll on the
+ * first try scores points and auto-loads the next (harder) puzzle; a wrong
+ * answer ends the run and shows the results overlay. */
+
+const $ = function (id) { return document.getElementById(id); };
+
+/* Append 1–5 difficulty pips to the puzzle title. */
+function decorateDifficulty(game) {
+  const titleEl = $('game-title');
+  if (!titleEl) return;
+  const existing = titleEl.querySelector('.difficulty-pips');
+  if (existing) existing.remove();
+  const d = Number(game && game.difficulty);
+  if (!(d >= 1 && d <= 5)) return;
+  const wrap = document.createElement('span');
+  wrap.className = 'difficulty-pips';
+  wrap.title = 'Difficulty ' + d + '/5';
+  for (let i = 1; i <= 5; i++) {
+    const pip = document.createElement('span');
+    pip.className = 'difficulty-pip' + (i <= d ? ' on' : '');
+    wrap.appendChild(pip);
+  }
+  titleEl.appendChild(wrap);
+}
+
+/* Called by the poll result hook for every fresh option click. */
+function onPollResult(game, result) {
+  if (!Challenge.isActive()) return;
+  if (!currentGame || game.id !== currentGame.id) return;
+  if (game.id !== Challenge.currentPuzzleId()) return;
+
+  if (result.correct && result.firstTry) {
+    const award = Challenge.solved();
+    updateHud(true, award);
+    // Give the solved state a beat to show, then load the next run puzzle.
+    setTimeout(function () {
+      if (!Challenge.isActive()) return;
+      const nextId = Challenge.nextPuzzleId();
+      if (nextId) loadGame(nextId);
+    }, 850);
+  } else if (!result.correct) {
+    // Any wrong click ends the run (first try or not — you already committed).
+    const snap = Challenge.failed();
+    finishRun(snap);
+  }
+}
+
+function startRun() {
+  const nameInput = $('challenge-name');
+  if (nameInput) Leaderboard.setPlayerName(nameInput.value);
+  const pool = getFilteredGames();
+  const firstId = Challenge.startRun(pool);
+  if (!firstId) {
+    setLeaderboardNote('No scorable puzzles in this pool.');
+    return;
+  }
+  $('challenge-idle').hidden = true;
+  $('challenge-hud').hidden = false;
+  hideResult();
+  updateHud(false, 0);
+  loadGame(firstId);
+}
+
+function quitRun() {
+  const snap = Challenge.endRun();
+  finishRun(snap, /*quiet*/ true);
+}
+
+function finishRun(snap, quiet) {
+  $('challenge-hud').hidden = true;
+  $('challenge-idle').hidden = false;
+
+  const entry = {
+    name: Leaderboard.getPlayerName() || 'Anon',
+    score: snap.score,
+    streak: snap.bestStreak,
+    cleared: snap.cleared,
+    difficultyReached: snap.difficultyReached,
+    ts: Date.now(),
+  };
+  const { isBest } = Leaderboard.recordPersonal(entry);
+  renderBest();
+
+  // Show results overlay unless the user simply quit at zero.
+  if (!(quiet && snap.score === 0)) {
+    showResult(snap, isBest, entry);
+  }
+  // Submit to the global board in the background (best-effort).
+  if (snap.score > 0) {
+    Leaderboard.submitGlobal(entry).then(function (res) {
+      if (res.ok) {
+        const rankEl = $('result-rank');
+        if (rankEl) rankEl.textContent = 'Global rank #' + res.rank;
+      }
+      if (lbTab === 'global') renderLeaderboard();
+    });
+  }
+}
+
+/* ---- HUD ---- */
+function updateHud(justSolved, award) {
+  const s = Challenge.snapshot();
+  $('hud-score').textContent = s.score;
+  $('hud-streak').textContent = s.streak;
+  $('hud-cleared').textContent = s.cleared;
+  $('hud-tier').textContent = s.difficultyReached;
+  const sm = $('hud-streak-mult');
+  sm.textContent = s.streakMult > 1 ? '×' + s.streakMult.toFixed(1) : '';
+  const ramp = $('hud-ramp');
+  if (s.ramp > 0) {
+    ramp.hidden = false;
+    $('hud-ramp-n').textContent = s.ramp + 1;
+    $('hud-ramp-mult').textContent = s.rampMult.toFixed(1);
+  } else {
+    ramp.hidden = true;
+  }
+  if (justSolved && award > 0) {
+    const a = $('hud-award');
+    a.textContent = '+' + award;
+    a.classList.remove('pop');
+    void a.offsetWidth; // reflow to restart animation
+    a.classList.add('pop');
+  }
+}
+
+/* ---- Results overlay ---- */
+function showResult(snap, isBest, entry) {
+  $('result-score').textContent = snap.score;
+  $('result-sub').textContent =
+    snap.cleared + (snap.cleared === 1 ? ' puzzle' : ' puzzles') + ' cleared · best streak ' + snap.bestStreak;
+  const badge = $('result-badge');
+  if (isBest && snap.score > 0) {
+    badge.hidden = false;
+    badge.textContent = '★ New personal best!';
+  } else {
+    badge.hidden = true;
+  }
+  const rankEl = $('result-rank');
+  rankEl.textContent = Leaderboard.isGlobalEnabled() && snap.score > 0
+    ? 'Submitting to global board…'
+    : '';
+  $('result-overlay').hidden = false;
+}
+function hideResult() { $('result-overlay').hidden = true; }
+
+/* ---- Personal best line + leaderboard ---- */
+function renderBest() {
+  const best = Leaderboard.getPersonalBest();
+  const el = $('challenge-best');
+  if (el) el.textContent = best ? 'Your best: ' + best.score : '';
+}
+
+let lbTab = Leaderboard.isGlobalEnabled() ? 'global' : 'personal';
+
+function setLeaderboardNote(txt) {
+  const n = $('leaderboard-note');
+  if (n) n.textContent = txt || '';
+}
+
+function renderLeaderboardList(entries, opts) {
+  const list = $('leaderboard-list');
+  list.innerHTML = '';
+  if (!entries || !entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'leaderboard-empty';
+    empty.textContent = opts && opts.emptyText || 'No scores yet — start a run!';
+    list.appendChild(empty);
+    return;
+  }
+  const myName = Leaderboard.getPlayerName();
+  entries.slice(0, 25).forEach(function (e, i) {
+    const li = document.createElement('li');
+    if (opts && opts.highlightSelf && e.name === myName) li.classList.add('you');
+    const rank = document.createElement('span'); rank.className = 'lb-rank'; rank.textContent = (i + 1);
+    const name = document.createElement('span'); name.className = 'lb-name';
+    name.textContent = e.name || 'Anon';
+    const score = document.createElement('span'); score.className = 'lb-score'; score.textContent = e.score;
+    li.appendChild(rank); li.appendChild(name); li.appendChild(score);
+    list.appendChild(li);
+  });
+}
+
+function renderLeaderboard() {
+  // Toggle tab visuals
+  $('lb-tab-global').classList.toggle('active', lbTab === 'global');
+  $('lb-tab-personal').classList.toggle('active', lbTab === 'personal');
+
+  if (lbTab === 'personal') {
+    const best = Leaderboard.getPersonalBest();
+    renderLeaderboardList(best ? [best] : [], { emptyText: 'No personal best yet.', highlightSelf: false });
+    setLeaderboardNote('Saved on this device.');
+    return;
+  }
+  // Global
+  if (!Leaderboard.isGlobalEnabled()) {
+    renderLeaderboardList([], { emptyText: 'Global board not configured.' });
+    setLeaderboardNote('Set a remote URL in js/leaderboard.js to enable the shared board.');
+    return;
+  }
+  setLeaderboardNote('Loading…');
+  Leaderboard.fetchGlobal().then(function (res) {
+    if (res.ok) {
+      renderLeaderboardList(res.entries, { emptyText: 'No scores yet — be the first!', highlightSelf: true });
+      setLeaderboardNote('Shared with everyone.');
+    } else {
+      renderLeaderboardList([], { emptyText: 'Global board offline.' });
+      setLeaderboardNote('Couldn’t reach the shared board — showing nothing.');
+    }
+  });
+}
+
+/* ---- Challenge wiring ---- */
+(function wireChallenge() {
+  const nameInput = $('challenge-name');
+  if (nameInput) nameInput.value = Leaderboard.getPlayerName();
+  renderBest();
+  renderLeaderboard();
+
+  const startBtn = $('challenge-start');
+  if (startBtn) startBtn.addEventListener('click', startRun);
+  const quitBtn = $('challenge-quit');
+  if (quitBtn) quitBtn.addEventListener('click', quitRun);
+
+  const again = $('result-again');
+  if (again) again.addEventListener('click', function () { hideResult(); startRun(); });
+  const close = $('result-close');
+  if (close) close.addEventListener('click', function () { hideResult(); renderLeaderboard(); });
+
+  const gTab = $('lb-tab-global');
+  const pTab = $('lb-tab-personal');
+  if (gTab) gTab.addEventListener('click', function () { lbTab = 'global'; renderLeaderboard(); });
+  if (pTab) pTab.addEventListener('click', function () { lbTab = 'personal'; renderLeaderboard(); });
+})();
 
 /* ==================== INIT ==================== */
 // Merge persisted custom games into GAMES before building the nav.

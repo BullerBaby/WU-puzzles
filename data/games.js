@@ -3,8 +3,10 @@
  * reference shared warband definitions via `warbands: { me, opp }` (see
  * warbands.js) or inline its own `fighters` + `abilities`.
  *
- * Game shape: { id, title, description?, tags?, date?, location?, credit?,
- *               board, round, boardRotation?,
+ * Game shape: { id, title, description?, tags?, difficulty?, date?, location?,
+ *               credit?, board, round, boardRotation?,
+ *   - difficulty: integer 1 (easiest) .. 5 (hardest). Drives ordering and
+ *     scoring in Challenge mode (js/challenge.js). Untagged games default to 3.
  *               warbands?: { me, opp }, fighters?, abilities?: { me, opp },
  *               decks?: { me, opp }, steps: [...] }
  *
@@ -25,6 +27,7 @@ export const GAMES = [
     title: "Demo - Wielder vs. Ardorn",
     description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. You're trailing 14-15 in glory. Opponent has burned all 4 activations; you have one left. What's the play?",
     tags: ['demo'],
+    difficulty: 1,
     date: '',
     location: '',
     credit: '',
@@ -96,6 +99,7 @@ export const GAMES = [
     title: "Demo - Cullon's choice",
     description: "Round 2. Cullon, Axe of Kurnoth, has two attacks — sweeping hooves (4 sword dice, 1 dmg, Grapple) or chopping axe (2 hammer dice, 2 dmg). The Sharpener of the Blade sits adjacent with 2 wounds left. Which attack should Cullon use?",
     tags: ['demo'],
+    difficulty: 2,
     date: '',
     location: '',
     credit: '',
@@ -176,6 +180,7 @@ export const GAMES = [
     title: "Kurnoth's Heralds vs. Emberwatch — Last Activation",
     description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, and the game is on its final activation.",
     tags: ['puzzle'],
+    difficulty: 3,
     date: '',
     location: '',
     credit: '',

@@ -52,7 +52,7 @@ export function resetStepAnswers(gameId, stepIdx) {
   if (all[k]) { delete all[k]; saveAll(all); }
 }
 
-export function renderPoll(game, stepIdx, onCorrect) {
+export function renderPoll(game, stepIdx, onCorrect, onResult) {
   const panel = document.getElementById('poll-panel');
   if (!panel || !game) return;
   const step = game.steps[stepIdx];
@@ -118,13 +118,21 @@ export function renderPoll(game, stepIdx, onCorrect) {
 
     btn.addEventListener('click', function() {
       const alreadyClicked = clickedSet.has(i);
+      // "First try" = no option had been clicked for this step before now.
+      const isFirstAttempt = clicked.length === 0;
       addClicked(game.id, stepIdx, i);
-      renderPoll(game, stepIdx, onCorrect);
+      renderPoll(game, stepIdx, onCorrect, onResult);
       // Reveal the follow-up (e.g. opponent's hidden power card) the first
       // time the correct option is picked. `onCorrect` is responsible for
       // deciding whether there's anything to advance to.
       if (!alreadyClicked && i === correctIdx && typeof onCorrect === 'function') {
         onCorrect(stepIdx);
+      }
+      // Report the outcome of a fresh click to any listener (Challenge mode
+      // uses this to score the run). Fires once per new click, with whether
+      // it was correct and whether it was the very first attempt on this step.
+      if (!alreadyClicked && typeof onResult === 'function') {
+        onResult({ stepIdx: stepIdx, correct: i === correctIdx, firstTry: isFirstAttempt });
       }
     });
     optsEl.appendChild(btn);

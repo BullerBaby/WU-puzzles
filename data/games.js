@@ -24,8 +24,8 @@
 export const GAMES = [
   {
     id: 'headsmen-vs-emberwatch-r3-finale',
-    title: "Demo - Wielder vs. Ardorn",
-    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. You're trailing 14-15 in glory. Opponent has burned all 4 activations; you have one left. What's the play?",
+    title: "Headsmen's Curse vs. Emberwatch",
+    description: "Round 3, last activation of the game. You are one glory behind",
     tags: ['demo'],
     difficulty: 1,
     date: '',
@@ -96,8 +96,8 @@ export const GAMES = [
 
   {
     id: 'yurik-attack-choice',
-    title: "Demo - Cullon's choice",
-    description: "Round 2. Cullon, Axe of Kurnoth, has two attacks — sweeping hooves (4 sword dice, 1 dmg, Grapple) or chopping axe (2 hammer dice, 2 dmg). The Sharpener of the Blade sits adjacent with 2 wounds left. Which attack should Cullon use?",
+    title: "Kurnoth's Heralds vs Headsmen's Curse",
+    description: "Round 2. Which attack should Cullon use?",
     tags: ['demo'],
     difficulty: 2,
     date: '',

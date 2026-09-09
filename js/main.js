@@ -342,11 +342,16 @@ function onPollResult(game, result) {
   if (result.correct && result.firstTry) {
     const award = Challenge.solved();
     updateHud(true, award);
-    // Give the solved state a beat to show, then load the next run puzzle.
+    // Give the solved state a beat to show, then load the next puzzle — or
+    // finish the run if every puzzle has been cleared.
     setTimeout(function () {
-      if (!Challenge.isActive()) return;
       const nextId = Challenge.nextPuzzleId();
-      if (nextId) loadGame(nextId);
+      if (nextId) {
+        loadGame(nextId);
+      } else {
+        // Whole set cleared — run complete.
+        finishRun(Challenge.snapshot());
+      }
     }, 850);
   } else if (!result.correct) {
     // Any wrong click ends the run (first try or not — you already committed).
@@ -383,7 +388,6 @@ function finishRun(snap, quiet) {
   const entry = {
     name: Leaderboard.getPlayerName() || 'Anon',
     score: snap.score,
-    streak: snap.bestStreak,
     cleared: snap.cleared,
     difficultyReached: snap.difficultyReached,
     ts: Date.now(),
@@ -411,19 +415,8 @@ function finishRun(snap, quiet) {
 function updateHud(justSolved, award) {
   const s = Challenge.snapshot();
   $('hud-score').textContent = s.score;
-  $('hud-streak').textContent = s.streak;
   $('hud-cleared').textContent = s.cleared;
-  $('hud-tier').textContent = s.difficultyReached;
-  const sm = $('hud-streak-mult');
-  sm.textContent = s.streakMult > 1 ? '×' + s.streakMult.toFixed(1) : '';
-  const ramp = $('hud-ramp');
-  if (s.ramp > 0) {
-    ramp.hidden = false;
-    $('hud-ramp-n').textContent = s.ramp + 1;
-    $('hud-ramp-mult').textContent = s.rampMult.toFixed(1);
-  } else {
-    ramp.hidden = true;
-  }
+  $('hud-progress').textContent = s.position + ' / ' + s.total;
   if (justSolved && award > 0) {
     const a = $('hud-award');
     a.textContent = '+' + award;
@@ -435,9 +428,13 @@ function updateHud(justSolved, award) {
 
 /* ---- Results overlay ---- */
 function showResult(snap, isBest, entry) {
+  const heading = $('result-heading');
+  if (heading) heading.textContent = snap.complete ? 'All clear!' : 'Run over';
   $('result-score').textContent = snap.score;
-  $('result-sub').textContent =
-    snap.cleared + (snap.cleared === 1 ? ' puzzle' : ' puzzles') + ' cleared · best streak ' + snap.bestStreak;
+  const unit = snap.score === 1 ? ' point' : ' points';
+  $('result-sub').textContent = snap.complete
+    ? 'Perfect — every puzzle solved (' + snap.score + unit + ')'
+    : snap.cleared + (snap.cleared === 1 ? ' puzzle' : ' puzzles') + ' cleared of ' + snap.total;
   const badge = $('result-badge');
   if (isBest && snap.score > 0) {
     badge.hidden = false;

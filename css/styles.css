@@ -1180,6 +1180,7 @@ footer code { font-family: ui-monospace, monospace; background: var(--surface-2)
   display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.55); padding: 1rem;
 }
+.result-overlay[hidden] { display: none; }
 .result-card {
   background: var(--surface); border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg); padding: 28px 32px; max-width: 340px; width: 100%;

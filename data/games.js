@@ -43,7 +43,7 @@ export const GAMES = [
       {
         notation: '(R3 — last activation, glory 15-15)',
         title: 'Last stand — your final activation',
-        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
+        explanation: "Round 3, last activation of the game. You are one glory behind",
         poll: {
           question: "What's your move?",
           options: [
@@ -115,7 +115,7 @@ export const GAMES = [
       {
         notation: '(R2 — Cullon to attack)',
         title: 'Two attacks, one activation',
-        explanation: "Cullon's last activation — he's the only me fighter who hasn't acted yet, and the Headsmen have spent all four of theirs. The Sharpener (H) at f1 is the only adjacent target, 2 wounds left, Dodge save. Either attack can kill on a single landed hit, but Hooves' 4 sword dice spread the risk — Axe whiffs on a double miss (~25% of the time), while Hooves only completely whiffs ~6%. Grapple on a crit also locks the Sharpener down for next round, so even a partial result has value.",
+        explanation: "Round 2. Which attack should Cullon use?",
         poll: {
           question: "Cullon's activation — which attack?",
           options: [

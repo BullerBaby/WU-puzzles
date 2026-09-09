@@ -197,7 +197,7 @@ export const GAMES = [
         notation: '(R3 — last activation, glory 20-20)',
         title: 'Last activation decision',
         revealOnCorrect: true,
-        explanation: "Ylarin stands on j3 while Ardorn clings to 3 wounds remaining on -c1. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
+        explanation: "Last activation of the game. Glory is tied at 20-20. What to do?",
         poll: {
           question: "What's your move?",
           options: [

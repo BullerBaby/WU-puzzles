@@ -1,259 +1,432 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Underworlds puzzles</title>
-<link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
+/* ==================== CUSTOM GAMES ====================
+ * Load/save/validate/normalize user-pasted games. Custom games are stored
+ * under STORAGE_KEY in localStorage and merged into GAMES on startup.
+ *
+ * Also owns the tag-filter UI on the game-row: each game can carry an
+ * optional `tags: ['demo', ...]` array. The dropdown shows the union
+ * of all tags found across GAMES, plus an "All puzzles" option. The
+ * selected tag is persisted under TAG_STORAGE_KEY and consulted by
+ * navGame / navRandom / rebuildGameNav to constrain the visible pool.
+ *
+ * Public API (called from main.js):
+ *   rebuildGameNav(currentGameId?) — refresh the game title / counter UI
+ *   loadCustomFromInput(onLoaded)  — read textarea, validate, push, save
+ *   fillTemplate(currentGame)      — dump current game to textarea
+ *   downloadCurrent(currentGame)   — download current game as .json
+ *   clearCustoms(onCleared)        — drop all custom games from storage
+ *   loadSavedCustoms()             — merge persisted customs into GAMES
+ *   getFilteredGames()             — GAMES filtered by current tag selection
+ *   getCurrentTag()                — current tag filter ('' = all)
+ *   setCurrentTag(tag)             — set the tag filter and persist
+ */
 
-<div class="container">
+import { GAMES }    from '../data/games.js';
+import { BOARDS }   from '../data/boards.js';
+import { WARBANDS } from '../data/warbands.js';
 
-<header>
-  <h1>Warhammer Underworlds Puzzles</h1>
-</header>
+const STORAGE_KEY = 'underworlds-replay-customs-v1';
+const TAG_STORAGE_KEY = 'underworlds-replay-tag-v1';
 
-<div class="main-layout">
+/* ==================== TAG FILTER ==================== */
 
-<aside class="left-column">
+function loadTagFromStorage() {
+  try { return localStorage.getItem(TAG_STORAGE_KEY) || ''; }
+  catch (e) { return ''; }
+}
+function saveTagToStorage(tag) {
+  try { localStorage.setItem(TAG_STORAGE_KEY, tag || ''); }
+  catch (e) {}
+}
 
-<section class="step-panel">
-  <div class="step-notation" id="curr-notation"></div>
-  <div class="step-title" id="curr-title"></div>
-  <div class="step-dice" id="curr-dice"></div>
-  <div class="power-step" id="power-step">
-    <div class="power-step-label">Power step</div>
-    <div class="power-events" id="power-events"></div>
-  </div>
-  <p class="step-explanation" id="curr-explanation"></p>
-</section>
+let currentTag = loadTagFromStorage();
 
-<div class="poll-panel" id="poll-panel" hidden>
-  <div class="poll-header">
-    <span class="poll-question" id="poll-question"></span>
-    <span class="poll-meta" id="poll-meta"></span>
-  </div>
-  <div class="poll-options" id="poll-options"></div>
-  <div class="poll-actions">
-    <span class="poll-hint">Click an option to check your answer.</span>
-    <button class="poll-reset" id="poll-reset" type="button">Clear your answer</button>
-  </div>
-</div>
+export function getCurrentTag() { return currentTag; }
+export function setCurrentTag(tag) {
+  currentTag = tag || '';
+  saveTagToStorage(currentTag);
+}
 
-<section class="game-row">
-  <div class="game-info">
-    <span class="game-title" id="game-title"></span>
-    <span class="game-counter" id="game-counter"></span>
-    <span class="game-meta" id="game-meta" hidden></span>
-  </div>
-  <label class="tag-filter-wrap" id="tag-filter-wrap" hidden>
-    <span class="tag-filter-label">Tag:</span>
-    <select id="tag-filter" class="tag-filter" aria-label="Filter puzzles by tag">
-      <option value="">All puzzles</option>
-    </select>
-  </label>
-  <div class="game-nav-buttons">
-    <button id="game-prev" type="button" class="game-nav-btn" title="Previous puzzle" aria-label="Previous puzzle">←</button>
-    <button id="game-next" type="button" class="game-nav-btn" title="Next puzzle" aria-label="Next puzzle">→</button>
-    <button id="game-random" type="button" class="game-nav-btn" title="Random puzzle" aria-label="Random puzzle">🎲</button>
-  </div>
-</section>
+/* Return the list of GAMES that match the current tag filter. An empty
+ * tag means "all". A game matches if its `tags` array contains the
+ * selected tag (case-insensitive). */
+export function getFilteredGames() {
+  if (!currentTag) return GAMES.slice();
+  const want = currentTag.toLowerCase();
+  return GAMES.filter(function(g) {
+    if (!Array.isArray(g.tags)) return false;
+    return g.tags.some(function(t) { return String(t).toLowerCase() === want; });
+  });
+}
 
-<section class="challenge-panel" id="challenge-panel">
-  <div class="challenge-head">
-    <span class="challenge-title">⚔ Challenge run</span>
-    <span class="challenge-best" id="challenge-best"></span>
-  </div>
+/* Collect every distinct tag used across all games, with a count. Tags
+ * are compared case-insensitively but the original casing of the first
+ * occurrence is preserved for display. Sorted alphabetically. */
+function collectAllTags() {
+  const map = new Map(); // lowercase → { display, count }
+  GAMES.forEach(function(g) {
+    if (!Array.isArray(g.tags)) return;
+    g.tags.forEach(function(t) {
+      const s = String(t).trim();
+      if (!s) return;
+      const key = s.toLowerCase();
+      if (map.has(key)) map.get(key).count += 1;
+      else map.set(key, { display: s, count: 1 });
+    });
+  });
+  return Array.from(map.values()).sort(function(a, b) {
+    return a.display.localeCompare(b.display);
+  });
+}
 
-  <!-- Idle: start button + leaderboard -->
-  <div class="challenge-idle" id="challenge-idle">
-    <p class="challenge-blurb">A run through the puzzles, hardest last. Each is served once — solve it on the first try for 1 point. One wrong call ends the run.</p>
-    <div class="challenge-name-row">
-      <input type="text" id="challenge-name" class="challenge-name-input" maxlength="20" placeholder="Your name for the leaderboard" spellcheck="false" />
-    </div>
-    <button id="challenge-start" class="primary challenge-start" type="button">Start run ▶</button>
+function populateTagFilter() {
+  const sel = document.getElementById('tag-filter');
+  const wrap = document.getElementById('tag-filter-wrap');
+  if (!sel || !wrap) return;
+  const tags = collectAllTags();
+  if (!tags.length) {
+    // No tags anywhere — hide the dropdown entirely.
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  // Rebuild options. Preserve current selection if still valid.
+  const totalCount = GAMES.length;
+  const opts = ['<option value="">All puzzles (' + totalCount + ')</option>'];
+  tags.forEach(function(t) {
+    const sel = (t.display.toLowerCase() === currentTag.toLowerCase()) ? ' selected' : '';
+    const label = t.display + ' (' + t.count + ')';
+    opts.push('<option value="' + escapeAttr(t.display) + '"' + sel + '>' + escapeHtml(label) + '</option>');
+  });
+  sel.innerHTML = opts.join('');
+  // If the persisted tag is no longer present in any game, reset it silently.
+  const stillValid = !currentTag || tags.some(function(t) {
+    return t.display.toLowerCase() === currentTag.toLowerCase();
+  });
+  if (!stillValid) {
+    currentTag = '';
+    saveTagToStorage('');
+    sel.value = '';
+  }
+}
 
-    <div class="leaderboard" id="leaderboard">
-      <div class="leaderboard-tabs">
-        <button class="lb-tab active" id="lb-tab-global" type="button">Global</button>
-        <button class="lb-tab" id="lb-tab-personal" type="button">You</button>
-      </div>
-      <ol class="leaderboard-list" id="leaderboard-list"></ol>
-      <div class="leaderboard-note" id="leaderboard-note"></div>
-    </div>
-  </div>
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+function escapeAttr(s) { return escapeHtml(s); }
 
-  <!-- Active: live HUD -->
-  <div class="challenge-hud" id="challenge-hud" hidden>
-    <div class="hud-score-row">
-      <div class="hud-score">
-        <span class="hud-score-num" id="hud-score">0</span>
-        <span class="hud-award" id="hud-award"></span>
-      </div>
-      <button id="challenge-quit" class="challenge-quit" type="button" title="End run">✕</button>
-    </div>
-    <div class="hud-stats">
-      <span class="hud-stat"><strong id="hud-cleared">0</strong> solved</span>
-      <span class="hud-stat">puzzle <strong id="hud-progress">1 / 1</strong></span>
-    </div>
-  </div>
-</section>
+function loadCustomsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
 
-<section class="custom-section">
-  <details class="custom-details" id="custom-details">
-    <summary>Load your own game (paste JSON)</summary>
-    <div class="custom-body">
-      <p class="custom-help">
-        Paste a game as JSON below, then click <strong>Load game</strong>. The easiest start is <strong>Use current as template</strong>: it dumps the game you're viewing into the box so you can edit it. Custom games are saved in your browser (<code>localStorage</code>) and added to the dropdown. Single game or a JSON array of games both work. Required fields: <code>title</code>, <code>board</code>, <code>warbands</code> (one of the registered ids — fighter stats and abilities come from there), <code>steps</code>. To create one from a description or photo using an AI, see the <a href="AUTHORING.md" target="_blank" rel="noopener">authoring guide</a> — it has a ready-to-paste prompt that converts plain English (or a board photo) into valid JSON.
-      </p>
-      <textarea id="custom-input" rows="14" spellcheck="false" placeholder='{ "title": "My game", "board": "embergard-1", "round": 1, "fighters": { ... }, "steps": [ ... ] }'></textarea>
-      <div class="custom-buttons">
-        <button id="btn-load-custom" class="primary" type="button">Load game</button>
-        <button id="btn-template" type="button">Use current as template</button>
-        <button id="btn-download" type="button">Download current as JSON</button>
-        <button id="btn-copy-prompt" type="button">📋 Copy AI prompt</button>
-        <button id="btn-clear-custom" type="button">Clear saved customs</button>
-      </div>
-      <div id="custom-status" class="custom-status"></div>
-    </div>
-  </details>
-</section>
+function saveCustomsToStorage(customs) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(customs));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
-</aside>
+function validateGame(g) {
+  const errors = [];
+  if (!g || typeof g !== 'object' || Array.isArray(g)) {
+    errors.push('Game must be a JSON object.');
+    return errors;
+  }
+  if (!g.title || typeof g.title !== 'string') {
+    errors.push('Missing "title" (string).');
+  }
+  if (!g.board || !BOARDS[g.board]) {
+    errors.push('Missing or unknown "board". Valid boards: ' + Object.keys(BOARDS).join(', ') + '.');
+  }
+  // Fighter source: warbands reference (preferred) or inline fighters.
+  // At least one must be present.
+  const hasWarbands = g.warbands && typeof g.warbands === 'object' &&
+                      (g.warbands.me || g.warbands.opp);
+  const hasFighters = g.fighters && typeof g.fighters === 'object' &&
+                      Object.keys(g.fighters).length > 0;
+  if (!hasWarbands && !hasFighters) {
+    errors.push('Missing "warbands" (preferred — e.g. {"me":"headsmens-curse","opp":"emberwatch"}) ' +
+                'or inline "fighters" object. Valid warband ids: ' + Object.keys(WARBANDS).join(', ') + '.');
+  } else if (hasWarbands) {
+    ['me', 'opp'].forEach(function(side) {
+      const id = g.warbands[side];
+      if (id && !WARBANDS[id]) {
+        errors.push('Unknown warband for ' + side + ': "' + id + '". Valid: ' + Object.keys(WARBANDS).join(', ') + '.');
+      }
+    });
+    // If inline fighters are also present, they must specify side+label (overrides only)
+    if (hasFighters) {
+      for (const id in g.fighters) {
+        const f = g.fighters[id];
+        if (f && f.side && f.side !== 'me' && f.side !== 'opp') {
+          errors.push('Override fighter "' + id + '": side must be "me" or "opp" if specified.');
+        }
+      }
+    }
+  } else if (hasFighters) {
+    // Fully inline — needs side + label per fighter
+    for (const id in g.fighters) {
+      const f = g.fighters[id];
+      if (!f || (f.side !== 'me' && f.side !== 'opp')) {
+        errors.push('Fighter "' + id + '" needs side: "me" or "opp".');
+      }
+      if (!f || !f.label) {
+        errors.push('Fighter "' + id + '" needs a label.');
+      }
+    }
+  }
+  if (!Array.isArray(g.steps) || !g.steps.length) {
+    errors.push('Missing "steps" (non-empty array).');
+  } else {
+    g.steps.forEach(function(s, i) {
+      if (!s || typeof s !== 'object') {
+        errors.push('Step ' + (i+1) + ' must be an object.');
+        return;
+      }
+      // A step needs state OR diff (first step usually has state; later may use diff).
+      const hasState = s.state && typeof s.state === 'object';
+      const hasDiff  = s.diff  && typeof s.diff  === 'object';
+      if (!hasState && !hasDiff) {
+        errors.push('Step ' + (i+1) + ' needs a "state" or "diff" object.');
+      } else if (i === 0 && !hasState) {
+        errors.push('Step 1 needs "state" (full snapshot); only later steps can use "diff".');
+      } else if (hasState && !s.state.positions) {
+        // Only require positions on the first/explicit state — diffs may omit
+        if (i === 0) errors.push('Step 1 state needs "positions" object.');
+      }
+    });
+  }
+  return errors;
+}
 
-<main class="right-column">
+function normalizeGame(g) {
+  g = Object.assign({}, g);
+  if (!g.id || typeof g.id !== 'string') {
+    g.id = 'custom-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+  } else if (g.id.indexOf('custom-') !== 0) {
+    g.id = 'custom-' + g.id;
+  }
+  if (typeof g.round !== 'number') g.round = 1;
+  if (typeof g.boardRotation !== 'number') g.boardRotation = 0;
+  if (typeof g.description !== 'string') g.description = '';
+  // Optional metadata strings — all default to '' (rendered as blank line).
+  if (typeof g.date !== 'string')     g.date = '';
+  if (typeof g.location !== 'string') g.location = '';
+  if (typeof g.credit !== 'string')   g.credit = '';
+  // Normalize tags: drop non-strings, trim, drop empties, de-dupe (case-insens).
+  if (Array.isArray(g.tags)) {
+    const seen = Object.create(null);
+    g.tags = g.tags
+      .map(function(t) { return typeof t === 'string' ? t.trim() : ''; })
+      .filter(function(t) {
+        if (!t) return false;
+        const k = t.toLowerCase();
+        if (seen[k]) return false;
+        seen[k] = true;
+        return true;
+      });
+  } else {
+    g.tags = [];
+  }
+  g.steps = g.steps.map(function(s) {
+    s = Object.assign({}, s);
+    s.state = Object.assign({
+      positions: {}, wounds: {}, slain: [],
+      inspired: [], glory: [0, 0], tokens: {}, upgrades: {}, abilitiesUsed: {}, activationsUsed: {}, features: [], hand: { me: 0, opp: 0 }, powerStep: [],
+    }, s.state || {});
+    if (!s.notation) s.notation = s.title || '(step)';
+    if (typeof s.title !== 'string') s.title = '';
+    if (typeof s.explanation !== 'string') s.explanation = '';
+    return s;
+  });
+  return g;
+}
 
-<section class="board-card">
+function showStatus(msg, kind) {
+  const el = document.getElementById('custom-status');
+  el.textContent = msg;
+  el.className = 'custom-status' + (kind ? ' ' + kind : '');
+}
 
-  <div class="side-panel opp">
-    <div class="hand-header">
-      <div class="hand-header-left">
-        <span class="hand-label" id="opp-warband-name">Opponent's warband</span>
-        <div class="warband-meta" id="opp-warband-meta"></div>
-      </div>
-      <span class="hand-counts">
-        <span class="hand-pill obj"><strong id="opp-obj-count">0</strong> obj</span>
-        <span class="hand-pill pow"><strong id="opp-pow-count">0</strong> pow</span>
-      </span>
-    </div>
-    <div id="fighter-cards-opp" class="fighter-cards-row opp"></div>
-    <div class="hand-group" id="abilities-group-opp" hidden>
-      <div class="hand-group-label">Abilities</div>
-      <div class="abilities-list" id="abilities-opp"></div>
-    </div>
-    <div class="hand-group">
-      <div class="hand-group-label">Objectives</div>
-      <div class="hand-group-row">
-        <div class="hand-cards" id="opp-obj-cards"></div>
-        <span class="pile-pill deck"    title="Objective deck">deck <strong id="opp-obj-deck">0</strong></span>
-        <span class="pile-pill discard" title="Objective discard">disc <strong id="opp-obj-discard">0</strong></span>
-      </div>
-    </div>
-    <div class="hand-group">
-      <div class="hand-group-label">Power</div>
-      <div class="hand-group-row">
-        <div class="hand-cards" id="opp-pow-cards"></div>
-        <span class="pile-pill deck"    title="Power deck">deck <strong id="opp-pow-deck">0</strong></span>
-        <span class="pile-pill discard" title="Power discard">disc <strong id="opp-pow-discard">0</strong></span>
-      </div>
-    </div>
-  </div>
+/* Render the small meta line under the title: date · location · credit.
+ * Each field is optional; the line hides entirely when all three are empty.
+ * Pass null to clear the line (used when no current game). */
+function renderGameMeta(g) {
+  const el = document.getElementById('game-meta');
+  if (!el) return;
+  const parts = [];
+  if (g && typeof g.date === 'string' && g.date.trim())     parts.push(g.date.trim());
+  if (g && typeof g.location === 'string' && g.location.trim()) parts.push(g.location.trim());
+  if (g && typeof g.credit === 'string' && g.credit.trim()) parts.push(g.credit.trim());
+  if (!parts.length) {
+    el.hidden = true;
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  // Build with explicit separator spans so the middle-dot can carry its own styling.
+  el.innerHTML = parts.map(escapeHtml).join('<span class="game-meta-sep">·</span>');
+}
 
-  <div class="stats-strip opp">
-    <span class="stats-strip-label">Opponent</span>
-    <span class="activations" id="opp-activations"></span>
-    <span class="glory-badge" id="glory-opp" title="Opponent glory">0</span>
-  </div>
+export function rebuildGameNav(currentGameId) {
+  // Refresh the tag dropdown first (new customs may have introduced new tags,
+  // or a tag's last game may have been removed).
+  populateTagFilter();
 
-  <div class="board-area">
-    <div class="board-with-stats">
-      <div class="stats-side">
-        <div class="round-banner">
-          <span class="round-label">Round</span>
-          <span class="round-number" id="current-round">1</span>
-        </div>
-      </div>
-      <div class="board-side">
-        <svg id="board-svg" width="100%" viewBox="0 0 320 280" role="img" aria-label="Underworlds replay board"></svg>
-      </div>
-    </div>
-  </div>
+  const titleEl   = document.getElementById('game-title');
+  const counterEl = document.getElementById('game-counter');
+  const prevBtn   = document.getElementById('game-prev');
+  const nextBtn   = document.getElementById('game-next');
+  const randomBtn = document.getElementById('game-random');
+  if (!titleEl || !counterEl || !prevBtn || !nextBtn) return;
 
-  <div class="stats-strip me">
-    <span class="stats-strip-label">You</span>
-    <span class="activations" id="my-activations"></span>
-    <span class="glory-badge" id="glory-me" title="Your glory">0</span>
-  </div>
+  // Navigation operates on the filtered pool, not the full GAMES list.
+  const pool = getFilteredGames();
 
-  <div class="side-panel me">
-    <div class="hand-header">
-      <div class="hand-header-left">
-        <span class="hand-label" id="me-warband-name">Your warband</span>
-        <div class="warband-meta" id="me-warband-meta"></div>
-      </div>
-      <span class="hand-counts">
-        <span class="hand-pill obj"><strong id="my-obj-count">0</strong> obj</span>
-        <span class="hand-pill pow"><strong id="my-pow-count">0</strong> pow</span>
-      </span>
-    </div>
-    <div id="fighter-cards-me" class="fighter-cards-row me"></div>
-    <div class="hand-group" id="abilities-group-me" hidden>
-      <div class="hand-group-label">Abilities</div>
-      <div class="abilities-list" id="abilities-me"></div>
-    </div>
-    <div class="hand-group">
-      <div class="hand-group-label">Objectives</div>
-      <div class="hand-group-row">
-        <div class="hand-cards" id="my-obj-cards"></div>
-        <span class="pile-pill deck"    title="Objective deck">deck <strong id="my-obj-deck">0</strong></span>
-        <span class="pile-pill discard" title="Objective discard">disc <strong id="my-obj-discard">0</strong></span>
-      </div>
-    </div>
-    <div class="hand-group">
-      <div class="hand-group-label">Power</div>
-      <div class="hand-group-row">
-        <div class="hand-cards" id="my-pow-cards"></div>
-        <span class="pile-pill deck"    title="Power deck">deck <strong id="my-pow-deck">0</strong></span>
-        <span class="pile-pill discard" title="Power discard">disc <strong id="my-pow-discard">0</strong></span>
-      </div>
-    </div>
-  </div>
+  // Locate the current game within the filtered pool. If it isn't there
+  // (e.g. user just changed the tag and is sitting on a game from a
+  // different category), we still show its title but disable prev/next —
+  // the random button stays enabled when the filter pool is non-empty,
+  // so the user can jump into the filtered set.
+  let idx = -1;
+  if (currentGameId) idx = pool.findIndex(function(g) { return g.id === currentGameId; });
 
-  <div class="controls-row">
-    <div class="buttons">
-      <button id="btn-prev" type="button">← Prev</button>
-      <span id="step-indicator">1 / 1</span>
-      <button id="btn-next" type="button">Next →</button>
-    </div>
-  </div>
+  if (!pool.length) {
+    // No games match the current tag at all.
+    const fallback = currentGameId ? GAMES.find(function(g) { return g.id === currentGameId; }) : null;
+    titleEl.textContent = fallback ? fallback.title : '(no games)';
+    counterEl.textContent = currentTag ? 'no puzzles tagged "' + currentTag + '"' : '';
+    renderGameMeta(fallback);
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    if (randomBtn) randomBtn.disabled = true;
+    return;
+  }
 
-  <div class="log-section">
-    <div class="log-label">Notation log — click to jump (←/→/space also work)</div>
-    <div id="notation-log"></div>
-  </div>
-</section>
+  if (idx < 0) {
+    // Current game isn't in the filtered pool — still display it, but
+    // surface that prev/next will skip out of it on the next click.
+    const fallback = currentGameId ? GAMES.find(function(g) { return g.id === currentGameId; }) : null;
+    const g = fallback || pool[0];
+    titleEl.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
+    counterEl.textContent = '(not in current filter — ' + pool.length + ' available)';
+    renderGameMeta(g);
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    if (randomBtn) randomBtn.disabled = (pool.length === 0);
+    return;
+  }
 
-</main>
+  const g = pool[idx];
+  titleEl.textContent = g.title + (g.id.indexOf('custom-') === 0 ? '  (custom)' : '');
+  counterEl.textContent = (idx + 1) + ' of ' + pool.length;
+  renderGameMeta(g);
+  prevBtn.disabled = (idx === 0);
+  nextBtn.disabled = (idx === pool.length - 1);
+  if (randomBtn) randomBtn.disabled = (pool.length <= 1);
+}
 
-</div>
+export function loadCustomFromInput(onLoaded) {
+  const input = document.getElementById('custom-input').value.trim();
+  if (!input) {
+    showStatus('Paste game JSON in the box above first.', 'error');
+    return;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(input);
+  } catch (e) {
+    showStatus('JSON parse error — ' + e.message + '. Tip: no trailing commas, double-quote keys and strings.', 'error');
+    return;
+  }
+  const games = Array.isArray(parsed) ? parsed : [parsed];
+  if (!games.length) {
+    showStatus('No games found in input.', 'error');
+    return;
+  }
+  const allErrors = [];
+  const validated = [];
+  games.forEach(function(g, i) {
+    const errs = validateGame(g);
+    if (errs.length) {
+      allErrors.push('Game ' + (i+1) + ':\n  • ' + errs.join('\n  • '));
+    } else {
+      validated.push(normalizeGame(g));
+    }
+  });
+  if (allErrors.length) {
+    showStatus(allErrors.join('\n\n'), 'error');
+    return;
+  }
+  validated.forEach(function(g) {
+    const idx = GAMES.findIndex(function(x) { return x.id === g.id; });
+    if (idx >= 0) GAMES[idx] = g;
+    else GAMES.push(g);
+  });
+  const customs = GAMES.filter(function(g) { return g.id.indexOf('custom-') === 0; });
+  const saved = saveCustomsToStorage(customs);
+  const firstNew = validated[0];
+  rebuildGameNav(firstNew.id);
+  if (typeof onLoaded === 'function') onLoaded(firstNew.id);
+  const word = validated.length === 1 ? 'game' : 'games';
+  showStatus('Loaded ' + validated.length + ' ' + word + '.' + (saved ? '' : ' (Note: couldn\'t save to localStorage — game will be lost on reload.)'), 'success');
+}
 
-</div>
+export function fillTemplate(currentGame) {
+  if (!currentGame) return;
+  const clone = JSON.parse(JSON.stringify(currentGame));
+  delete clone.id;
+  clone.title = currentGame.title + ' (copy)';
+  document.getElementById('custom-input').value = JSON.stringify(clone, null, 2);
+  showStatus('Template loaded into the box. Edit, then click "Load game".', '');
+}
 
-<div class="result-overlay" id="result-overlay" hidden>
-  <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="result-heading">
-    <div class="result-heading" id="result-heading">Run over</div>
-    <div class="result-score" id="result-score">0</div>
-    <div class="result-sub" id="result-sub"></div>
-    <div class="result-badge" id="result-badge" hidden></div>
-    <div class="result-rank" id="result-rank"></div>
-    <div class="result-actions">
-      <button id="result-again" class="primary" type="button">Run again ▶</button>
-      <button id="result-close" type="button">Close</button>
-    </div>
-  </div>
-</div>
+export function downloadCurrent(currentGame) {
+  if (!currentGame) return;
+  const clone = JSON.parse(JSON.stringify(currentGame));
+  const blob = new Blob([JSON.stringify(clone, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (currentGame.id || 'game') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showStatus('Downloaded ' + a.download, 'success');
+}
 
-<script type="module" src="js/main.js"></script>
-</body>
-</html>
+export function clearCustoms(onCleared) {
+  const customCount = GAMES.filter(function(g) { return g.id.indexOf('custom-') === 0; }).length;
+  if (!customCount) {
+    showStatus('No custom games to clear.', '');
+    return;
+  }
+  if (!confirm('Clear all ' + customCount + ' custom game' + (customCount === 1 ? '' : 's') + ' from this browser?')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  for (let i = GAMES.length - 1; i >= 0; i--) {
+    if (GAMES[i].id.indexOf('custom-') === 0) GAMES.splice(i, 1);
+  }
+  rebuildGameNav(GAMES.length ? GAMES[0].id : null);
+  if (GAMES.length && typeof onCleared === 'function') onCleared(GAMES[0].id);
+  showStatus('Custom games cleared.', 'success');
+}
+
+/* Merge persisted customs into GAMES. Called once at app startup. */
+export function loadSavedCustoms() {
+  const saved = loadCustomsFromStorage();
+  saved.forEach(function(g) {
+    try {
+      const errs = validateGame(g);
+      if (!errs.length) GAMES.push(normalizeGame(g));
+    } catch (e) {}
+  });
+}

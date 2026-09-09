@@ -1,434 +1,623 @@
-# Authoring puzzles with AI
+/* ==================== MAIN ====================
+ * Entry point. Holds the small mutable app state (current game / step / etc.),
+ * orchestrates the per-step render pipeline, and wires DOM event listeners.
+ *
+ * Module browses:
+ *   data/boards.js, data/warbands.js, data/games.js — pure data
+ *   js/state.js          — game resolution + step expansion
+ *   js/board.js          — board SVG, hex math, features, legend
+ *   js/warband-panel.js  — side panels (fighters, hands, dice, etc.)
+ *   js/poll.js           — per-step opinion polls
+ *   js/custom-games.js   — load/save/validate user games
+ *
+ * Loaded with <script type="module">, so DOM is ready when the module runs.
+ */
 
-You can describe a Warhammer Underworlds puzzle in plain English (or hand a photo to a vision-capable AI), and let the AI emit the JSON the app expects. Then paste that JSON into **Load your own game** at the top of the page.
+import { BOARDS } from '../data/boards.js';
+import { GAMES }  from '../data/games.js';
 
-This guide gives you:
-- A ready-to-paste **AI prompt** with all the schema and reference data the AI needs.
-- A **schema reference** for hand-editing or debugging.
-- A worked example: description in, JSON out.
+import { resolveWarbands, expandSteps } from './state.js';
+import { renderBoard, renderFeatures, hexCenter, svgEl } from './board.js';
+import {
+  renderFighterCards, updateFighterCards, renderFighterTokens,
+  renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
+  renderHands, renderDice, renderPowerStep, tokenLabel,
+} from './warband-panel.js';
+import { renderPoll, resetStepAnswers } from './poll.js';
+import {
+  rebuildGameNav, loadCustomFromInput, fillTemplate,
+  downloadCurrent, clearCustoms, loadSavedCustoms,
+  getFilteredGames, getCurrentTag, setCurrentTag,
+} from './custom-games.js';
+import * as Challenge from './challenge.js';
+import * as Leaderboard from './leaderboard.js';
 
----
+/* ==================== STATE ==================== */
+let currentGame  = null;
+let currentBoard = null;
+let currentStep  = 0;
 
-## Quick start
+/* ==================== SEEN-PUZZLE TRACKER ====================
+ * Remembers which puzzles the user has loaded, so the "Next puzzle"
+ * button can pick a random unseen one rather than just stepping by
+ * index. Persisted in localStorage; if storage fails (private mode,
+ * quota), tracking degrades silently to "nothing seen yet". */
+const SEEN_KEY = 'underworlds-seen-puzzles-v1';
 
-1. Open ChatGPT, Claude.ai, Gemini, or any LLM with at least 8k context (vision-capable if you want to use a photo).
-2. Paste the **AI prompt** below.
-3. Add your description (or attach a photo) and send.
-4. Copy the JSON the AI returns.
-5. In the app, open **Load your own game**, paste, click **Load game**.
-
-If the JSON fails to load, the app will tell you what's missing. The AI also sometimes drops a field — re-prompt with "this failed because X" and it'll usually fix it.
-
----
-
-## The AI prompt
-
-Copy everything between the `=== BEGIN AI PROMPT ===` and `=== END AI PROMPT ===` markers and paste it as your first message to the AI. Then send a second message with your puzzle description (or attach the photo).
-
-```
-=== BEGIN AI PROMPT ===
-You are converting a Warhammer Underworlds puzzle description (or photo of a game state) into the JSON format used by the WU-puzzles app. Output ONE valid JSON object, with no prose, no comments, and no markdown fences — just raw JSON.
-
-# COORDINATE SYSTEM
-
-Hexes are labeled by file letter (column, a–k left to right) + signed rank (distance from the board's midline). The board midline is rank 0.
-
-- Positive ranks (opp side, toward the opponent's edge): bare number, e.g. f1, d3, h4.
-- Zero (only on odd columns b, d, f, h, j — these sit ON the midline): bare 0, e.g. b0, d0, f0, h0, j0.
-- Negative ranks (your side, toward your edge): dash prefix, e.g. -f1, -d3, -h4.
-
-Important rules:
-- Even columns (a, c, e, g, i, k) have NO 0 hex. They straddle the midline, going from -1 directly to +1.
-- Maximum rank magnitude is 4 (boards have 9 ranks total, midline + 4 either side).
-- Hex IDs are strings. "f0" and "-d4" are correct; the JS number 0 is not.
-
-Excluded (non-existent) hexes on the standard 9×11 board:
-your-side corners cut: -a4, -b4, -j4, -k4 (these are NOT playable hexes; do not place anything on them).
-opp-side corners cut: a4, a5, b4, c5, e5, g5, i5, k5, j4, k4 (also not playable; never place fighters/tokens there).
-
-# AVAILABLE BOARDS
-
-- "embergard-1" — Spinning Scythes. Stagger hexes at -g3, e3.
-- "embergard-2" — Chained Pillars. Stagger at -b2, j2. Blocked at -e1, g2.
-- "spitewood-1" — brown. Stagger at -d2, h2. Waystones at -c2, i3.
-- "spitewood-2" — green. Stagger at f0. Waystones at -c2, -i2, c3, i3.
-
-# AVAILABLE WARBANDS
-
-Each warband has fixed fighter IDs (one-letter codes used in positions/wounds/etc.) and a leader.
-
-- "headsmens-curse" — Headsmen's Curse:
-    W = Wielder of Doom (leader),  B = Bearer of Punishment,
-    S = Scriptor of Suffering,     H = Sharpener of Sins.
-- "emberwatch" — Ardorn's Emberwatch:
-    A = Ardorn (leader),  F = Farasa,  Y = Yurik Velzaine.
-- "kurnoths-heralds" — Kurnoth's Heralds (Order, Sylvaneth/Kurnothi):
-    Y = Ylarin, Master of the Paths (leader),
-    C = Cullon, Axe of Kurnoth,
-    L = Lenwythe, Eye of the Forest.
-
-# FIGHTER ID COLLISION RULE
-
-Fighter codes can repeat across warbands. The Y code is used by both Yurik (Emberwatch) and Ylarin (Kurnoth's Heralds), for example. When me and opp warbands share a fighter code:
-
-- The **me-side** fighter keeps the original code in your JSON (`Y` stays `Y`).
-- The **opp-side** fighter is referenced with an `o` prefix (`Y` becomes `oY`).
-- This applies everywhere a fighter id is used: `positions`, `wounds`, `slain`, `inspired`, `tokens`, `upgrades`.
-
-Example with me=Emberwatch, opp=Kurnoth's Heralds (both have Y):
-```
-"positions": {
-  "Y":  "-f1",   // me's Yurik on your side
-  "A":  "-e2",
-  "F":  "-g2",
-  "oY": "f1",    // opp's Ylarin on opp side
-  "C":  "c0",
-  "L":  "i1"
+function loadSeen() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]');
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (e) { return new Set(); }
 }
-```
-
-If me=Kurnoth's Heralds, opp=Emberwatch, then `Y` is Ylarin and `oY` is Yurik. The `o` always means "the opp-side fighter with this code".
-
-Codes that appear in only one of the two warbands stay unprefixed regardless of which side they're on (e.g. `A` is always Ardorn; `W` is always the Wielder).
-
-If a player's warband is none of the registered ones, fall back to inline fighters (advanced) and put the real warband name in the title or description.
-
-# WHAT THE WARBAND PROVIDES (DON'T REDEFINE)
-
-When you reference a warband via `"warbands": { "me": "id", "opp": "id" }`, the app automatically loads each warband's fighters with their full base stats and abilities. DO NOT include any of the following in your output — they come from the warband:
-
-- Fighter names, labels, leader flag
-- Move, Wounds, Glory, Save (dice + type)
-- Attack profiles (uninspired and inspired) — name, range, dice, damage, type, cleave, notes
-- Warscroll abilities
-
-In particular: **do not output a `fighters: { ... }` block** with stats. Just reference the warband. The `fighters` block is only for advanced per-fighter overrides (e.g. testing a homebrew variant); for normal puzzles, leave it out entirely.
-
-What you DO supply per fighter, in the step's `state` object, is the DYNAMIC info: where they stand (`positions`), how many wounds they've taken (`wounds`), whether they're inspired or slain, what tokens/upgrades they carry. None of that lives in the warband.
-
-# DECK PAIRS
-
-Each player brings 2 Rivals decks. Write the `pair` field as `"Deck A / Deck B"`
-(two names separated by `" / "`). Each name is split out in the UI and hoverable —
-hovering or tapping a deck name shows that deck's Plot card rule text from
-`data/decks.js`.
-
-**Recognised deck names** (from the universal Rivals deck library; match is
-case-insensitive):
-
-- Nexus of Power
-- Hunting Grounds
-- Deadly Synergy
-- Raging Slayers
-- Realmstone Raiders
-- Edge of the Knife
-- Reckless Fury
-- Wrack and Ruin
-- Blazing Assault
-- Emberstone Sentinels
-- Pillage and Plunder
-- Countdown to Cataclysm
-
-Decks not in this list still render as plain text without a tooltip, so
-homebrew or as-yet-unreleased decks keep working fine.
-
-Example:
-- `"pair": "Blazing Assault / Countdown to Cataclysm"`
-
-# SCHEMA
-
-The top-level object:
-
-{
-  "id": "kebab-case-unique-id",
-  "title": "Demo - short human title",
-  "description": "1-2 sentences setting the scene.",
-  "tags": ["demo", "tutorial"],
-  "date": "2025-03-15",
-  "location": "Warhammer World",
-  "credit": "Frederik vs. Magnus",
-  "round": 1 | 2 | 3,
-  "board": "<one of the board ids above>",
-  "boardRotation": 0 | 180,
-  "warbands": { "me": "<warband id>", "opp": "<warband id>" },
-  "decks": {
-    "me":  { "pair": "<deck pair name>" },
-    "opp": { "pair": "<deck pair name>" }
-  },
-  "steps": [ <one or more step objects> ]
+function saveSeen(seen) {
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(seen))); }
+  catch (e) {}
+}
+function markSeen(gameId) {
+  const seen = loadSeen();
+  if (seen.has(gameId)) return;
+  seen.add(gameId);
+  saveSeen(seen);
+}
+/* Pick a random game the user hasn't seen yet, excluding the current one.
+ * Operates on the currently-filtered pool (see custom-games.getFilteredGames),
+ * so e.g. when "demo" is selected only demos are eligible. If everything in
+ * the pool is seen, reset the seen list (keeping just the current puzzle so
+ * we don't immediately re-pick it) and return a random other game from the
+ * pool. Returns null if the filtered pool has 0 or 1 entries. */
+function pickRandomUnseen(currentId) {
+  let seen = loadSeen();
+  const filtered = getFilteredGames();
+  let pool = filtered.filter(function(g) { return g.id !== currentId && !seen.has(g.id); });
+  if (pool.length === 0) {
+    // All seen in this filter — reset, retaining only the current id so we don't loop.
+    seen = new Set(currentId ? [currentId] : []);
+    saveSeen(seen);
+    pool = filtered.filter(function(g) { return g.id !== currentId; });
+  }
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-`tags` is optional. Any strings you put there appear in the front-page tag dropdown,
-letting users filter prev/next/random to only puzzles with that tag.
+/* ==================== APPLY STEP ==================== */
+function applyStep(idx) {
+  const game = currentGame;
+  const board = currentBoard;
+  const step = game.steps[idx];
+  const state = step._state || step.state;
 
-`date`, `location`, and `credit` are all optional free-text strings. Whichever are
-non-empty render in a small meta line under the puzzle title on the front page,
-separated by middle-dots (e.g. "2025-03-15 · Warhammer World · Frederik vs. Magnus").
-Format the values however you like — they're treated as plain text.
+  for (const id in game.fighters) {
+    const pos = state.positions[id];
+    const el = document.getElementById('f-' + id);
+    if (!el) continue;
+    const slain = (state.slain || []).indexOf(id) >= 0;
+    const inspired = (state.inspired || []).indexOf(id) >= 0;
+    if (pos) {
+      const { x, y } = hexCenter(pos, board.rows);
+      el.style.transform = 'translate(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px)';
+    }
+    el.classList.toggle('slain', slain);
+    el.classList.toggle('inspired', inspired);
+    const wounds = (state.wounds || {})[id] || 0;
+    const wb = document.getElementById('w-' + id);
+    if (wounds > 0 && !slain) {
+      wb.setAttribute('opacity', '1');
+      wb.querySelector('text').textContent = wounds;
+    } else {
+      wb.setAttribute('opacity', '0');
+    }
+    renderFighterTokens(id, (state.tokens || {})[id], slain);
+  }
 
-Each step:
+  if (step.anim && step.anim.attack) {
+    const af = step.anim.attack;
+    const prev = idx > 0 ? (game.steps[idx-1]._state || game.steps[idx-1].state) : null;
+    const tpos = (prev && prev.positions[af.target]) || state.positions[af.target];
+    if (tpos) {
+      const { x, y } = hexCenter(tpos, board.rows);
+      const layer = document.getElementById('dmg-layer');
+      const wrap = svgEl('g', { transform: 'translate(' + x.toFixed(1) + ',' + (y - 18).toFixed(1) + ')' });
+      const inner = svgEl('g', { class: 'dmg-flash' });
+      const tx = svgEl('text', { 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: 'var(--danger)' });
+      tx.textContent = '−' + af.dmg;
+      inner.appendChild(tx);
+      wrap.appendChild(inner);
+      layer.appendChild(wrap);
+      setTimeout(function() { if (wrap.parentNode) wrap.remove(); }, 1500);
+    }
+  }
 
-{
-  "notation": "(short tag for the activity log, e.g. '(R2 — Yurik to attack)')",
-  "title": "Step title shown above the explanation",
-  "explanation": "Longer prose explaining what's happening.",
-  "poll": {
-    "question": "What's your move?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correct": <0-indexed integer of the best option>
-  },
-  "state": { <state object — see below — required for the FIRST step> }
+  const gl = state.glory || [0, 0];
+  document.getElementById('glory-me').textContent = gl[0];
+  document.getElementById('glory-opp').textContent = gl[1];
+  document.getElementById('curr-notation').textContent = step.notation || '';
+  document.getElementById('curr-title').textContent = step.title || '';
+  document.getElementById('curr-explanation').textContent = step.explanation || '';
+  document.getElementById('step-indicator').textContent = (idx + 1) + ' / ' + game.steps.length;
+  document.getElementById('current-round').textContent = game.round || 1;
+
+  renderDice(step.dice);
+  renderPowerStep(state.powerStep);
+  renderHands(state);
+  renderFeatures(state, board);
+  rebuildHexTitles(state, game);
+  updateFighterCards(state, game);
+  renderAbilities(game, state);
+  renderActivations(state);
+  renderPoll(game, idx, function(stepIdx) {
+    // If this step opts in, reveal the next step (e.g. the opponent's hidden
+    // power card) as soon as the correct option is chosen.
+    const s = game.steps[stepIdx];
+    if (s && s.revealOnCorrect && stepIdx === currentStep && stepIdx + 1 < game.steps.length) {
+      goStep(1);
+    }
+  }, function(result) {
+    // Challenge-mode scoring hook (no-op outside a run).
+    onPollResult(game, result);
+  });
+
+  const lines = document.querySelectorAll('.notation-line');
+  for (let i = 0; i < lines.length; i++) {
+    lines[i].classList.toggle('current', i === idx);
+  }
+  // Scroll the active line into view, but ONLY within the notation-log container.
+  // Using element.scrollIntoView() would scroll the whole document when the log
+  // doesn't have its own scroll context — making the page jump when changing
+  // puzzles or stepping through. This manual version is contained.
+  const active = lines[idx];
+  if (active) {
+    const container = active.parentElement;
+    if (container) {
+      const cTop = container.scrollTop;
+      const cBot = cTop + container.clientHeight;
+      const aTop = active.offsetTop;
+      const aBot = aTop + active.offsetHeight;
+      if (aTop < cTop)      container.scrollTop = aTop;
+      else if (aBot > cBot) container.scrollTop = aBot - container.clientHeight;
+    }
+  }
+  document.getElementById('btn-prev').disabled = (idx === 0);
+  document.getElementById('btn-next').disabled = (idx === game.steps.length - 1);
 }
 
-Subsequent steps can use "diff" instead of "state" to specify only what changed since the previous step. For a single-step puzzle (most common), use "state" only.
+/* Compose one consolidated <title> per hex listing everything currently in it,
+ * e.g. "b1 — Treasure 3, Fighter Ylarin (inspired), Guard token". Individual
+ * board elements (fighters, feature tokens, action tokens) no longer carry
+ * their own titles, so the hex is the single hover target. */
+function rebuildHexTitles(state, game) {
+  const positions = state.positions || {};
+  const slain = state.slain || [];
+  const inspired = state.inspired || [];
+  const wounds = state.wounds || {};
+  const tokens = state.tokens || {};
+  const features = state.features || [];
 
-State object — all fields optional; omit what doesn't apply:
+  // Group feature descriptions by hex.
+  const featByHex = {};
+  features.forEach(function(f) {
+    if (!f || !f.hex) return;
+    let d;
+    if (f.type === 'treasure')  d = 'Treasure ' + (f.label || '?');
+    else if (f.type === 'aqua') d = 'Aqua Ghyranis';
+    else                        d = (f.type || 'Feature');
+    if (f.delved) d += ' (delved)';
+    (featByHex[f.hex] = featByHex[f.hex] || []).push(d);
+  });
 
-{
-  "positions": { "<fighter-id>": "<hex>" },  // alive fighters' hexes
-  "wounds":    { "<fighter-id>": <int>    },  // wounds TAKEN (not remaining)
-  "slain":     ["<fighter-id>", ...],         // fighters off the board
-  "inspired":  ["<fighter-id>", ...],
-  "glory":     [<me glory>, <opp glory>],
-  "tokens":    { "<fighter-id>": ["move"|"charge"|"guard"|"stagger", ...] },
-  "upgrades":  { "<fighter-id>": ["<upgrade card name>", ...] },
-  "abilitiesUsed": {
-    "me":  ["<warscroll ability name>", ...],
-    "opp": ["<warscroll ability name>", ...]
-  },
-  "activationsUsed": { "me": <0-4>, "opp": <0-4> },
-  "powerStepsUsed":  { "me": <0-4>, "opp": <0-4> },  // optional; defaults to mirror activationsUsed
-  "features": [
-    { "type": "treasure", "label": "1"|"2"|"3"|"4"|"5", "hex": "<hex>" },
-    { "type": "aqua",                                    "hex": "<hex>" }
-    // "delved": true on a treasure shows a red outline on the token
-  ],
-  "hand": {
-    "me":  { "objectives": <int>, "power": <int> },  // cards in hand
-    "opp": { "objectives": <int>, "power": <int> }
-  },
-  "deck": {
-    "me":  { "objectives": <int>, "power": <int> },  // cards remaining in deck
-    "opp": { "objectives": <int>, "power": <int> }
-  },
-  "discard": {
-    "me":  { "objectives": <int>, "power": <int> },  // cards in discard pile
-    "opp": { "objectives": <int>, "power": <int> }
+  // Group fighter descriptions by hex.
+  const fighterByHex = {};
+  for (const id in positions) {
+    const hex = positions[id];
+    if (!hex || slain.indexOf(id) >= 0) continue;
+    const info = game.fighters[id] || {};
+    let d = 'Fighter ' + (info.name || id);
+    const extras = [];
+    if (inspired.indexOf(id) >= 0) extras.push('inspired');
+    if (wounds[id] > 0) extras.push(wounds[id] + ' wound' + (wounds[id] > 1 ? 's' : ''));
+    if (extras.length) d += ' (' + extras.join(', ') + ')';
+    (fighterByHex[hex] = fighterByHex[hex] || []).push(d);
+    // The fighter's action tokens are physically in that hex too.
+    (tokens[id] || []).forEach(function(t) {
+      (fighterByHex[hex] = fighterByHex[hex] || []).push(tokenLabel(t));
+    });
+  }
+
+  document.querySelectorAll('.hex-poly').forEach(function(poly) {
+    const hex = poly.getAttribute('data-hex');
+    const title = poly.querySelector('title');
+    if (!title) return;
+    const type = poly.getAttribute('data-hextype');
+    const parts = [];
+    if (featByHex[hex])    parts.push.apply(parts, featByHex[hex]);
+    if (fighterByHex[hex]) parts.push.apply(parts, fighterByHex[hex]);
+    let text = hex + (type ? ' — ' + type : '');
+    if (parts.length) text += (type ? ', ' : ' — ') + parts.join(', ');
+    title.textContent = text;
+  });
+}
+
+function goStep(delta) {
+  const ni = currentStep + delta;
+  if (ni < 0 || ni >= currentGame.steps.length) return;
+  currentStep = ni;
+  applyStep(currentStep);
+}
+
+function buildLog(game) {
+  const log = document.getElementById('notation-log');
+  log.innerHTML = '';
+  game.steps.forEach(function(s, i) {
+    const div = document.createElement('div');
+    div.className = 'notation-line';
+    div.textContent = (i + 1) + '.  ' + (s.notation || s.title || '(step ' + (i+1) + ')');
+    div.onclick = function() { currentStep = i; applyStep(i); };
+    log.appendChild(div);
+  });
+}
+
+function loadGame(gameId) {
+  const game = GAMES.find(function(g) { return g.id === gameId; });
+  if (!game) return;
+  resolveWarbands(game);
+  expandSteps(game);
+  currentGame = game;
+  currentBoard = BOARDS[game.board] || BOARDS['embergard-1'];
+  currentStep = 0;
+  markSeen(game.id);
+  // In a challenge run, clear any stored poll answers for this game so it
+  // plays fresh (important when the run loops back to an already-solved
+  // puzzle on a higher ramp).
+  if (Challenge.isActive()) {
+    (game.steps || []).forEach(function(s, i) {
+      if (s && s.poll) resetStepAnswers(game.id, i);
+    });
+  }
+  rebuildGameNav(game.id);
+  decorateDifficulty(game);
+  renderBoard(game);
+  renderFighterCards(game);
+  renderWarbandLabels(game);
+  renderDecks(game);
+  buildLog(game);
+  setTimeout(function() { applyStep(0); }, 50);
+}
+
+function navGame(delta) {
+  if (!currentGame) return;
+  // Step through the filtered pool (set by the tag dropdown). If the
+  // current game isn't in the pool (e.g. user just changed the tag),
+  // jump to the first or last game in the pool depending on direction.
+  const pool = getFilteredGames();
+  if (!pool.length) return;
+  const idx = pool.findIndex(function(g) { return g.id === currentGame.id; });
+  if (idx < 0) {
+    loadGame(pool[delta > 0 ? 0 : pool.length - 1].id);
+    return;
+  }
+  const next = idx + delta;
+  if (next < 0 || next >= pool.length) return;
+  loadGame(pool[next].id);
+}
+
+function navRandom() {
+  if (!currentGame) return;
+  const pick = pickRandomUnseen(currentGame.id);
+  if (pick) loadGame(pick.id);
+}
+
+/* ==================== CHALLENGE MODE ====================
+ * Wires the Challenge controller (js/challenge.js) and leaderboard
+ * (js/leaderboard.js) to the DOM. In a run, solving a puzzle's poll on the
+ * first try scores points and auto-loads the next (harder) puzzle; a wrong
+ * answer ends the run and shows the results overlay. */
+
+const $ = function (id) { return document.getElementById(id); };
+
+/* Append 1–5 difficulty pips to the puzzle title. */
+function decorateDifficulty(game) {
+  const titleEl = $('game-title');
+  if (!titleEl) return;
+  const existing = titleEl.querySelector('.difficulty-pips');
+  if (existing) existing.remove();
+  const d = Number(game && game.difficulty);
+  if (!(d >= 1 && d <= 5)) return;
+  const wrap = document.createElement('span');
+  wrap.className = 'difficulty-pips';
+  wrap.title = 'Difficulty ' + d + '/5';
+  for (let i = 1; i <= 5; i++) {
+    const pip = document.createElement('span');
+    pip.className = 'difficulty-pip' + (i <= d ? ' on' : '');
+    wrap.appendChild(pip);
+  }
+  titleEl.appendChild(wrap);
+}
+
+/* Called by the poll result hook for every fresh option click. */
+function onPollResult(game, result) {
+  if (!Challenge.isActive()) return;
+  if (!currentGame || game.id !== currentGame.id) return;
+  if (game.id !== Challenge.currentPuzzleId()) return;
+
+  if (result.correct && result.firstTry) {
+    const award = Challenge.solved();
+    updateHud(true, award);
+    // Give the solved state a beat to show, then load the next puzzle — or
+    // finish the run if every puzzle has been cleared.
+    setTimeout(function () {
+      const nextId = Challenge.nextPuzzleId();
+      if (nextId) {
+        loadGame(nextId);
+      } else {
+        // Whole set cleared — run complete.
+        finishRun(Challenge.snapshot());
+      }
+    }, 850);
+  } else if (!result.correct) {
+    // Any wrong click ends the run (first try or not — you already committed).
+    const snap = Challenge.failed();
+    finishRun(snap);
   }
 }
 
-# STANDARD TOKEN PLACEMENT
-
-If the puzzle doesn't specify where tokens are, use these defaults for a stadard 5-treasure + 2-aqua setup:
-
-  Treasures:  -d2 (1), -h2 (2), c1 (3), i1 (4), h3 (5)
-  Aqua Ghyranis: -f3, f3
-
-For non-standard setups, place tokens wherever the source describes.
-
-# COMMON PITFALLS TO AVOID
-
-- Do not include fighter base stats (move, wounds, save, attacks, name, etc.) — these come from the warband automatically. The `fighters` field is reserved for rare per-fighter overrides.
-- Do not include the warband's warscroll abilities in the schema — they're loaded from the warband. The state's `abilitiesUsed` array does belong though; it tracks which abilities have been spent this round.
-- Don't write "a0" — column a is even and has no 0 hex.
-- Don't place fighters on excluded hexes (corners).
-- Wounds is wounds TAKEN, e.g. a fighter with 3 max wounds and 1 wound taken has 2 left.
-- Glory is [me, opp] — get the order right.
-- Fighter IDs are single letters or 2-char codes (W, A, o1) — never the full name.
-- "me" is the side asking the question (the protagonist of the puzzle); "opp" is the other side.
-- Inspired fighters go in the inspired array; the wounds threshold is warband-specific (don't add fighters to inspired just because they're hurt).
-
-# WORKED EXAMPLE
-
-Input:
-"Round 3 finale. My Wielder (Headsmen's Curse, leader, inspired, one wound left) is at the centre of the board. Ardorn (Emberwatch leader, inspired, two wounds left) sits one hex toward the opp side. All other fighters on both sides are slain. Glory is tied 15-15. Opponent has used all 4 activations; I have one left. Standard 5 treasures + 2 aqua. Best play: grab the aqua token instead of going for the leader kill."
-
-Output:
-{
-  "id": "wielder-vs-ardorn-finale",
-  "title": "Demo - Wielder vs. Ardorn",
-  "description": "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied. Opponent has burned all 4 activations; you have one left. What's the play?",
-  "round": 3,
-  "board": "embergard-1",
-  "boardRotation": 0,
-  "warbands": { "me": "headsmens-curse", "opp": "emberwatch" },
-  "decks": {
-    "me":  { "pair": "Blazing Assault / Countdown to Cataclysm" },
-    "opp": { "pair": "Blazing Assault / Emberstone Sentinels" }
-  },
-  "steps": [
-    {
-      "notation": "(R3 — last activation, glory 15-15)",
-      "title": "Last stand — your final activation",
-      "explanation": "Wielder is the last fighter standing on your side, inspired with one wound left. Ardorn stands adjacent, inspired, with two wounds left. Both sides have burned every activation; only your last one remains.",
-      "poll": {
-        "question": "What's your move?",
-        "options": [
-          "Move to the aqua ghyranis token",
-          "Attack Ardorn for the kill",
-          "Guard — accept the 15-15 tie",
-          "Move to treasure token 4 on i1"
-        ],
-        "correct": 0
-      },
-      "state": {
-        "positions": { "W": "f0", "A": "f1" },
-        "wounds":    { "W": 1, "A": 2 },
-        "slain":     ["B", "S", "H", "F", "Y"],
-        "inspired":  ["W", "A"],
-        "glory":     [15, 15],
-        "activationsUsed": { "me": 3, "opp": 4 },
-        "features": [
-          { "type": "treasure", "label": "1", "hex": "-d2" },
-          { "type": "treasure", "label": "2", "hex": "-h2" },
-          { "type": "treasure", "label": "3", "hex": "c1"  },
-          { "type": "treasure", "label": "4", "hex": "i1"  },
-          { "type": "treasure", "label": "5", "hex": "h3"  },
-          { "type": "aqua", "hex": "-f3" },
-          { "type": "aqua", "hex": "f3"  }
-        ],
-        "hand": {
-          "me":  { "objectives": 3, "power": 0 },
-          "opp": { "objectives": 3, "power": 0 }
-        }
-      }
-    }
-  ]
+function startRun() {
+  const nameInput = $('challenge-name');
+  if (nameInput) Leaderboard.setPlayerName(nameInput.value);
+  const pool = getFilteredGames();
+  const firstId = Challenge.startRun(pool);
+  if (!firstId) {
+    setLeaderboardNote('No scorable puzzles in this pool.');
+    return;
+  }
+  $('challenge-idle').hidden = true;
+  $('challenge-hud').hidden = false;
+  hideResult();
+  updateHud(false, 0);
+  loadGame(firstId);
 }
 
-# READING FROM A PHOTO
+function quitRun() {
+  const snap = Challenge.endRun();
+  finishRun(snap, /*quiet*/ true);
+}
 
-When the user attaches a photo of a board state instead of typing a description:
+function finishRun(snap, quiet) {
+  $('challenge-hud').hidden = true;
+  $('challenge-idle').hidden = false;
 
-1. Identify the board by looking at unique markings (stagger hex positions, waystones). Pick the matching id from the AVAILABLE BOARDS list.
-2. Identify each fighter on the board by their colour/sculpt and assign them their warband fighter-id.
-3. For each fighter, read off its hex coordinate using the file (column) and signed rank (distance from midline, negative below, positive above).
-4. Look for wound counters (dice or markers near a fighter showing damage taken).
-5. Identify treasure and aqua tokens, noting their hex positions.
-6. If glory/activation state is shown on the tracker, read those too. If not, leave them at defaults (0-0 for early-round, set sensibly otherwise).
-7. Ask the user clarifying questions if anything is ambiguous (e.g. "is this fighter inspired?" if there's no obvious marker).
+  const entry = {
+    name: Leaderboard.getPlayerName() || 'Anon',
+    score: snap.score,
+    cleared: snap.cleared,
+    difficultyReached: snap.difficultyReached,
+    ts: Date.now(),
+  };
+  const { isBest } = Leaderboard.recordPersonal(entry);
+  renderBest();
 
-# FINAL CHECK BEFORE EMITTING
+  // Show results overlay unless the user simply quit at zero.
+  if (!(quiet && snap.score === 0)) {
+    showResult(snap, isBest, entry);
+  }
+  // Submit to the global board in the background (best-effort).
+  if (snap.score > 0) {
+    Leaderboard.submitGlobal(entry).then(function (res) {
+      if (res.ok) {
+        const rankEl = $('result-rank');
+        if (rankEl) rankEl.textContent = 'Global rank #' + res.rank;
+      }
+      if (lbTab === 'global') renderLeaderboard();
+    });
+  }
+}
 
-Before you output the JSON:
-- Every hex string is in centered notation (signed, files a–k, ranks -4 to +4).
-- No hex references a non-existent corner (cross-check against the excluded list).
-- Glory is a 2-element array, not an object.
-- Wounds is wounds taken, not remaining.
-- The "correct" poll index is within bounds of options.
-- The JSON parses (mentally — balanced braces, no trailing commas).
+/* ---- HUD ---- */
+function updateHud(justSolved, award) {
+  const s = Challenge.snapshot();
+  $('hud-score').textContent = s.score;
+  $('hud-cleared').textContent = s.cleared;
+  $('hud-progress').textContent = s.position + ' / ' + s.total;
+  if (justSolved && award > 0) {
+    const a = $('hud-award');
+    a.textContent = '+' + award;
+    a.classList.remove('pop');
+    void a.offsetWidth; // reflow to restart animation
+    a.classList.add('pop');
+  }
+}
 
-Now wait for the user's puzzle description (or photo).
-=== END AI PROMPT ===
-```
+/* ---- Results overlay ---- */
+function showResult(snap, isBest, entry) {
+  const heading = $('result-heading');
+  if (heading) heading.textContent = snap.complete ? 'All clear!' : 'Run over';
+  $('result-score').textContent = snap.score;
+  const unit = snap.score === 1 ? ' point' : ' points';
+  $('result-sub').textContent = snap.complete
+    ? 'Perfect — every puzzle solved (' + snap.score + unit + ')'
+    : snap.cleared + (snap.cleared === 1 ? ' puzzle' : ' puzzles') + ' cleared of ' + snap.total;
+  const badge = $('result-badge');
+  if (isBest && snap.score > 0) {
+    badge.hidden = false;
+    badge.textContent = '★ New personal best!';
+  } else {
+    badge.hidden = true;
+  }
+  const rankEl = $('result-rank');
+  rankEl.textContent = Leaderboard.isGlobalEnabled() && snap.score > 0
+    ? 'Submitting to global board…'
+    : '';
+  $('result-overlay').hidden = false;
+}
+function hideResult() { $('result-overlay').hidden = true; }
 
----
+/* ---- Personal best line + leaderboard ---- */
+function renderBest() {
+  const best = Leaderboard.getPersonalBest();
+  const el = $('challenge-best');
+  if (el) el.textContent = best ? 'Your best: ' + best.score : '';
+}
 
-## Tips for getting good results
+let lbTab = Leaderboard.isGlobalEnabled() ? 'global' : 'personal';
 
-**Be specific about who's where.** "Wielder at f0" is clearer than "Wielder in the middle". If you're describing rather than uploading a photo, use the file+rank notation — the AI handles it more reliably than relative descriptions.
+function setLeaderboardNote(txt) {
+  const n = $('leaderboard-note');
+  if (n) n.textContent = txt || '';
+}
 
-**Mention which warband is yours.** The AI needs to know whether to use `"me": "headsmens-curse"` or `"me": "emberwatch"`. "I was playing Headsmen's Curse against Emberwatch" is enough.
+function renderLeaderboardList(entries, opts) {
+  const list = $('leaderboard-list');
+  list.innerHTML = '';
+  if (!entries || !entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'leaderboard-empty';
+    empty.textContent = opts && opts.emptyText || 'No scores yet — start a run!';
+    list.appendChild(empty);
+    return;
+  }
+  const myName = Leaderboard.getPlayerName();
+  entries.slice(0, 25).forEach(function (e, i) {
+    const li = document.createElement('li');
+    if (opts && opts.highlightSelf && e.name === myName) li.classList.add('you');
+    const rank = document.createElement('span'); rank.className = 'lb-rank'; rank.textContent = (i + 1);
+    const name = document.createElement('span'); name.className = 'lb-name';
+    name.textContent = e.name || 'Anon';
+    const score = document.createElement('span'); score.className = 'lb-score'; score.textContent = e.score;
+    li.appendChild(rank); li.appendChild(name); li.appendChild(score);
+    list.appendChild(li);
+  });
+}
 
-**Round and activations matter.** "Round 2, I've used 1 activation, opp 2" lets the AI fill in `activationsUsed` correctly.
+function renderLeaderboard() {
+  // Toggle tab visuals
+  $('lb-tab-global').classList.toggle('active', lbTab === 'global');
+  $('lb-tab-personal').classList.toggle('active', lbTab === 'personal');
 
-**Tell it what the correct answer is.** The AI doesn't know the right play unless you tell it. End your description with something like "Best move: grab the aqua token because it secures a tiebreaker win without risk."
+  if (lbTab === 'personal') {
+    const best = Leaderboard.getPersonalBest();
+    renderLeaderboardList(best ? [best] : [], { emptyText: 'No personal best yet.', highlightSelf: false });
+    setLeaderboardNote('Saved on this device.');
+    return;
+  }
+  // Global
+  if (!Leaderboard.isGlobalEnabled()) {
+    renderLeaderboardList([], { emptyText: 'Global board not configured.' });
+    setLeaderboardNote('Set a remote URL in js/leaderboard.js to enable the shared board.');
+    return;
+  }
+  setLeaderboardNote('Loading…');
+  Leaderboard.fetchGlobal().then(function (res) {
+    if (res.ok) {
+      renderLeaderboardList(res.entries, { emptyText: 'No scores yet — be the first!', highlightSelf: true });
+      setLeaderboardNote('Shared with everyone.');
+    } else {
+      renderLeaderboardList([], { emptyText: 'Global board offline.' });
+      setLeaderboardNote('Couldn’t reach the shared board — showing nothing.');
+    }
+  });
+}
 
-**Iterate.** First pass is usually 90% right. If a hex is wrong or a fighter is missing, just say "Yurik is at f1, not e2 — fix that" and the AI will re-emit.
+/* ---- Challenge wiring ---- */
+(function wireChallenge() {
+  const nameInput = $('challenge-name');
+  if (nameInput) nameInput.value = Leaderboard.getPlayerName();
+  renderBest();
+  renderLeaderboard();
 
----
+  const startBtn = $('challenge-start');
+  if (startBtn) startBtn.addEventListener('click', startRun);
+  const quitBtn = $('challenge-quit');
+  if (quitBtn) quitBtn.addEventListener('click', quitRun);
 
-## Schema reference (cheatsheet)
+  const again = $('result-again');
+  if (again) again.addEventListener('click', function () { hideResult(); startRun(); });
+  const close = $('result-close');
+  if (close) close.addEventListener('click', function () { hideResult(); renderLeaderboard(); });
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | string | Unique per game, kebab-case |
-| `title` | string | Shown above the board |
-| `description` | string | 1-2 sentences scene-setter |
-| `round` | 1, 2, or 3 | The game round |
-| `board` | string | `embergard-1` etc. |
-| `boardRotation` | `0` or `180` | Board setup orientation (default 0). Rotates baked-in features (stagger, blocked, waystone) only; fighter positions and treasures are written in the post-rotation view. |
-| `warbands` | `{me, opp}` | Both are warband IDs |
-| `decks` | `{me, opp}` | Each has `pair` (deck rules shown on deck-name hover) |
-| `steps` | array | One step per state shown |
+  const gTab = $('lb-tab-global');
+  const pTab = $('lb-tab-personal');
+  if (gTab) gTab.addEventListener('click', function () { lbTab = 'global'; renderLeaderboard(); });
+  if (pTab) pTab.addEventListener('click', function () { lbTab = 'personal'; renderLeaderboard(); });
+})();
 
-Per step:
+/* ==================== INIT ==================== */
+// Merge persisted custom games into GAMES before building the nav.
+loadSavedCustoms();
+rebuildGameNav();
 
-| Field | Type | Notes |
-|---|---|---|
-| `notation` | string | Tag for the log line |
-| `title` | string | Bold heading above explanation |
-| `explanation` | string | Prose describing the situation |
-| `poll` | object | `{question, options, correct}` |
-| `state` | object | First step only; later steps can use `diff` |
-| `diff` | object | Subset of state — only changed fields |
+document.getElementById('game-prev').addEventListener('click', function() { navGame(-1); });
+document.getElementById('game-next').addEventListener('click', function() { navGame(1); });
+document.getElementById('game-random').addEventListener('click', navRandom);
 
-State fields summarised:
+// Tag filter dropdown — change the filter, then refresh the counter / button
+// states. If the user is sitting on a puzzle that isn't in the newly-selected
+// tag's pool, jump to the first puzzle in that pool (much less confusing than
+// leaving them on an off-filter game with prev/next disabled).
+const tagFilterEl = document.getElementById('tag-filter');
+if (tagFilterEl) {
+  tagFilterEl.addEventListener('change', function() {
+    setCurrentTag(tagFilterEl.value);
+    const pool = getFilteredGames();
+    const stillInPool = currentGame && pool.some(function(g) { return g.id === currentGame.id; });
+    if (!stillInPool && pool.length) {
+      loadGame(pool[0].id);
+    } else {
+      rebuildGameNav(currentGame ? currentGame.id : null);
+    }
+  });
+}
 
-| Field | Type | Notes |
-|---|---|---|
-| `positions` | `{fid: hex}` | Where alive fighters are |
-| `wounds` | `{fid: int}` | Wounds **taken** |
-| `slain` | `[fid, ...]` | Off the board |
-| `inspired` | `[fid, ...]` | Flipped to inspired side |
-| `glory` | `[int, int]` | `[me, opp]` |
-| `tokens` | `{fid: [name, ...]}` | move / charge / guard / stagger |
-| `upgrades` | `{fid: [card-name, ...]}` | Upgrade cards on fighter |
-| `abilitiesUsed` | `{me: [...], opp: [...]}` | Warscroll abilities marked used |
-| `activationsUsed` | `{me: 0-4, opp: 0-4}` | Activations spent this round |
-| `powerStepsUsed` | `{me: 0-4, opp: 0-4}` | Power steps resolved this round (optional, mirrors activationsUsed by default) |
-| `features` | `[{type, label?, hex, delved?}]` | Treasure / aqua tokens |
-| `hand` | `{me, opp}` each `{objectives, power}` | Card counts in hand |
-| `deck` | `{me, opp}` each `{objectives, power}` | Cards remaining in deck (optional, default 0) |
-| `discard` | `{me, opp}` each `{objectives, power}` | Cards in discard pile (optional, default 0) |
+document.getElementById('btn-prev').addEventListener('click', function() { goStep(-1); });
+document.getElementById('btn-next').addEventListener('click', function() { goStep(1); });
 
----
+document.getElementById('btn-load-custom').addEventListener('click', function() {
+  loadCustomFromInput(loadGame);
+});
+document.getElementById('btn-template').addEventListener('click', function() {
+  fillTemplate(currentGame);
+});
+document.getElementById('btn-download').addEventListener('click', function() {
+  downloadCurrent(currentGame);
+});
+document.getElementById('btn-clear-custom').addEventListener('click', function() {
+  clearCustoms(loadGame);
+});
 
-## Coordinate cheatsheet
+document.getElementById('btn-copy-prompt').addEventListener('click', async function() {
+  const btn = this;
+  const original = btn.textContent;
+  try {
+    const res = await fetch('AUTHORING.md', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('fetch failed (' + res.status + ')');
+    const text = await res.text();
+    const m = text.match(/^=== BEGIN AI PROMPT ===\s*([\s\S]*?)^=== END AI PROMPT ===/m);
+    if (!m) throw new Error('prompt block not found in AUTHORING.md');
+    await navigator.clipboard.writeText(m[1].trim());
+    btn.textContent = '✓ Copied — paste into your AI';
+    setTimeout(function() { btn.textContent = original; }, 2400);
+  } catch (e) {
+    btn.textContent = '✗ ' + e.message;
+    setTimeout(function() { btn.textContent = original; }, 3000);
+  }
+});
 
-```
-rank 4   .  .  .  d4 .  f4 .  h4 .  .  .       opp back row
-rank 3   .  b3 c3 d3 e3 f3 g3 h3 i3 j3 .       opp deployment
-rank 2   a3 b2 c2 d2 e2 f2 g2 h2 i2 j2 k3
-rank 1   a2 b1 c1 d1 e1 f1 g1 h1 i1 j1 k2
-rank 0   a1 b0 c1 d0 e1 f0 g1 h0 i1 j0 k1      midline (zero only on odd cols)
-rank -1  -a1 -b1 -c1 -d1 -e1 -f1 -g1 -h1 -i1 -j1 -k1
-rank -2  -a2 -b2 -c2 -d2 -e2 -f2 -g2 -h2 -i2 -j2 -k2
-rank -3  -a3 -b3 -c3 -d3 -e3 -f3 -g3 -h3 -i3 -j3 -k3      your deployment
-rank -4   .   .  -c4 -d4 -e4 -f4 -g4 -h4 -i4  .   .       your back row
-```
+document.getElementById('poll-reset').addEventListener('click', function() {
+  if (!currentGame) return;
+  if (!confirm('Clear your answer for this step?')) return;
+  resetStepAnswers(currentGame.id, currentStep);
+  renderPoll(currentGame, currentStep);
+});
 
-Note: rank 0 (midline) has 5 hexes (b0, d0, f0, h0, j0) — only odd columns. Rank labels apply to odd-column hexes; even-column hexes sit halfway between consecutive labels.
+document.addEventListener('keydown', function(e) {
+  if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === 'ArrowLeft')  { goStep(-1); e.preventDefault(); }
+  if (e.key === 'ArrowRight') { goStep(1); e.preventDefault(); }
+});
 
----
-
-## Available warbands (full reference)
-
-### Headsmen's Curse
-- **W** — Wielder of Doom (leader). 5 wounds, Move 4, Block 2.
-- **B** — Bearer of Punishment. 4 wounds, Move 3, Dodge 2.
-- **S** — Scriptor of Suffering. 3 wounds, Move 4, Dodge 1.
-- **H** — Sharpener of Sins. 3 wounds, Move 4, Dodge 2.
-
-### Ardorn's Emberwatch
-- **A** — Ardorn (leader). 5 wounds, Move 3, Block 1.
-- **F** — Farasa. 5 wounds, Move 3, Block 1.
-- **Y** — Yurik Velzaine. 5 wounds, Move 3, Block 1. Two attack profiles (axe range 1 + crossbow range 4).
-
-### Kurnoth's Heralds
-- **Y** — Ylarin, Master of the Paths (leader). 5 wounds, Move 4, Block 1. Spear range 2, 2 hammers, 2 damage, Crit-Grievous (inspired: 3 hammers, flat Grievous). Plus shared Hooves attack (range 1, 4 swords, 1 damage, Grapple).
-- **C** — Cullon, Axe of Kurnoth. 5 wounds, Move 4, Dodge 1. Axe range 1, 2 hammers, 2 damage (inspired: 3 hammers, 3 damage, Cleave). Plus Hooves.
-- **L** — Lenwythe, Eye of the Forest. 5 wounds, Move 4, Dodge 1. Bow range 3, 2 hammers, 1 damage, Crit-Stagger (inspired: 3 hammers, flat Stagger). Plus Hooves.
-- Warband abilities: Swift Sentinels (Flying + can't be Flanked while in friendly territory), The Endless Hunt (push attacker 2 hexes after attacking, once per game), Herald's Pride (Ylarin: Cleave or Ensnare once per game), Precision Volley (Lenwythe: second ranged attack on a different target).
-
----
-
-## Where to put your hex coordinates
-
-The `hex` string format is exactly what the board displays. If the board shows `b0` in a hex, you write `"b0"`. If it shows `-f3`, you write `"-f3"`. The dash is a literal minus sign character; the file letter follows immediately, no space.
-
-Invalid examples that will fail:
-- `"f-3"` — wrong place for the dash. Use `"-f3"`.
-- `"a0"` — column a has no 0 hex. Use `"a1"` (just above midline) or `"-a1"` (just below).
-- `"f+1"` — no plus prefix on positives. Use `"f1"`.
-- `"f10"` — ranks go 0 to ±4 only. Max is `"f4"` or `"-f4"`.
+// Initial load: prefer the first game in the user's persisted tag filter.
+// If their saved tag filter is empty (or its pool is empty), fall back
+// to the very first game in GAMES.
+(function initialLoad() {
+  const pool = getFilteredGames();
+  const first = (pool.length ? pool[0] : GAMES[0]);
+  if (first) loadGame(first.id);
+})();

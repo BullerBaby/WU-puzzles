@@ -24,8 +24,8 @@
 export const GAMES = [
   {
     id: 'headsmen-vs-emberwatch-r3-finale',
-    title: "Headsmen's Curse vs. Emberwatch",
-    description: "Round 3, last activation of the game. You are one glory behind",
+    title: "Demo - Wielder vs. Ardorn",
+    description: "Round 3 of a Headsmen's Curse vs. Emberwatch match. Each side is down to one fighter, both inspired. Glory is tied 15-15. Opponent has burned all 4 activations; you have one left. What's the play?",
     tags: ['demo'],
     difficulty: 1,
     date: '',
@@ -43,7 +43,7 @@ export const GAMES = [
       {
         notation: '(R3 — last activation, glory 15-15)',
         title: 'Last stand — your final activation',
-        explanation: "Round 3, last activation of the game. You are one glory behind",
+        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
         poll: {
           question: "What's your move?",
           options: [
@@ -52,7 +52,7 @@ export const GAMES = [
             'Guard — accept the 15-15 tie and go to tiebreaker',
             'Move to treasure token 4 on i1',
           ],
-          correct: 0,
+          correct: 3,
         },
         state: {
           positions: {
@@ -66,7 +66,7 @@ export const GAMES = [
           wounds: { W: 1, A: 2 },
           slain: ['B', 'S', 'H', 'F', 'Y'],
           inspired: ['W', 'A'],
-          glory: [14, 15],
+          glory: [15, 15],
           tokens: { W: ['move'], A: ['charge'] },
           upgrades: {
             W: ['Great Fortitude'],
@@ -96,8 +96,8 @@ export const GAMES = [
 
   {
     id: 'yurik-attack-choice',
-    title: "Kurnoth's Heralds vs Headsmen's Curse",
-    description: "Round 2. Which attack should Cullon use?",
+    title: "Demo - Cullon's choice",
+    description: "Round 2. Cullon, Axe of Kurnoth, has two attacks — sweeping hooves (4 sword dice, 1 dmg, Grapple) or chopping axe (2 hammer dice, 2 dmg). The Sharpener of the Blade sits adjacent with 1 wound left. Which attack should Cullon use?",
     tags: ['demo'],
     difficulty: 2,
     date: '',
@@ -115,14 +115,14 @@ export const GAMES = [
       {
         notation: '(R2 — Cullon to attack)',
         title: 'Two attacks, one activation',
-        explanation: "Round 2. Which attack should Cullon use?",
+        explanation: "Cullon's last activation — he's the only me fighter who hasn't acted yet, and the Headsmen have spent all four of theirs. The Sharpener (H) at f1 is the only adjacent target, 1 wound left, Dodge save. Either attack can kill on a single landed hit, but Hooves' 4 sword dice spread the risk — Axe whiffs on a double miss (~25% of the time), while Hooves only completely whiffs ~6%. Grapple on a crit also locks the Sharpener down for next round, so even a partial result has value.",
         poll: {
           question: "Cullon's activation — which attack?",
           options: [
-            'Hooves — 4 sword dice for 1 damage (Grapple on crit)',
             'Axe — 2 hammer dice for 2 damage',
+            'Hooves — 4 sword dice for 1 damage (Grapple on crit)',
           ],
-          correct: 0,
+          correct: 1,
         },
         state: {
           positions: {
@@ -136,7 +136,7 @@ export const GAMES = [
             B: 'd3',
             S: 'h3',
           },
-          wounds: { W: 3, H: 1 },
+          wounds: { W: 3, H: 2 },
           slain: [],
           inspired: [],
           glory: [3, 4],
@@ -178,7 +178,7 @@ export const GAMES = [
   {
     id: 'ylarin-last-activation-tiebreaker',
     title: "Kurnoth's Heralds vs. Emberwatch — Last Activation",
-    description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, and the game is on its final activation.",
+    description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, the opponent has one power card left, and the game is on its final activation.",
     tags: ['puzzle'],
     difficulty: 3,
     date: '',
@@ -197,7 +197,7 @@ export const GAMES = [
         notation: '(R3 — last activation, glory 20-20)',
         title: 'Last activation decision',
         revealOnCorrect: true,
-        explanation: "Last activation of the game. Glory is tied at 20-20. What to do?",
+        explanation: "Ylarin stands on j3 while Ardorn clings to 3 wounds remaining on -c1. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
         poll: {
           question: "What's your move?",
           options: [

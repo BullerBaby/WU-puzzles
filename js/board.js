@@ -370,7 +370,11 @@ export function renderBoard(game) {
   }
 
   // For each rotated rank, find a visible canonical hex that maps to it and
-  // use that hex's leftmost visual position for the rank-number label.
+  // use that hex's leftmost visual position for the rank-number label. We
+  // collect all rank Y positions first so the "0" label can be centred on the
+  // boundary line between the +1 and -1 rows (its own 0-hex, if any, is
+  // half-step staggered and would sit off the midline).
+  const rankY = {}; // displayed n -> label baseline Y
   for (let dispRk = 1; dispRk <= dispRows; dispRk++) {
     let leftX = Infinity, leftY = null;
     for (let i = 0; i < canonCols; i++) {
@@ -386,18 +390,33 @@ export function renderBoard(game) {
         if (p.x < leftX) { leftX = p.x; leftY = p.y; }
       }
     }
-    if (leftY !== null) {
-      const n = dispRk - dispMid;
-      const t = svgEl('text', {
-        x: rowLabelX.toFixed(1),
-        y: (leftY + 3).toFixed(1),
-        'text-anchor': 'end',
-        class: 'coord-label' + (n === 0 ? ' midline' : ''),
-      });
-      t.textContent = String(n);
-      svg.appendChild(t);
-    }
+    if (leftY !== null) rankY[dispRk - dispMid] = leftY;
   }
+
+  Object.keys(rankY).forEach(function (key) {
+    const n = Number(key);
+    let baseY = rankY[n];
+    // Align 0 to the true midline. The board is vertically symmetric about its
+    // centre, so the centre of the visible span is exactly the line between the
+    // +1 and -1 rows — independent of which columns are present or excluded.
+    // (Its own 0-hex is half-step staggered and can sit off that line.)
+    if (n === 0) {
+      if (rankY[1] != null && rankY[-1] != null) {
+        // The line between the +1 and -1 rows — exactly where "0" belongs.
+        baseY = (rankY[1] + rankY[-1]) / 2;
+      } else if (isFinite(visMinY) && isFinite(visMaxY)) {
+        baseY = (visMinY + visMaxY) / 2;
+      }
+    }
+    const t = svgEl('text', {
+      x: rowLabelX.toFixed(1),
+      y: (baseY + 3).toFixed(1),
+      'text-anchor': 'end',
+      class: 'coord-label' + (n === 0 ? ' midline' : ''),
+    });
+    t.textContent = String(n);
+    svg.appendChild(t);
+  });
 
   svg.appendChild(svgEl('g', { id: 'fighters-layer' }));
   svg.appendChild(svgEl('g', { id: 'features-layer' }));

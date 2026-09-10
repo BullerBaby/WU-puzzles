@@ -162,6 +162,7 @@ section { margin-bottom: 1.5rem; }
   .right-column { display: contents; }
   .left-column > section,
   .left-column > .poll-panel { margin-bottom: 0; }
+  .challenge-panel { order: 0; }
   .game-row      { order: 1; }
   .board-card    { order: 2; }
   .poll-panel    { order: 3; }
@@ -176,6 +177,7 @@ section { margin-bottom: 1.5rem; }
   gap: 8px;
   margin-bottom: 0.75rem;
 }
+.game-info[hidden] { display: none; }
 .game-info {
   display: flex;
   flex-direction: column;
@@ -668,6 +670,7 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 
 
 .custom-section { margin-top: 1.25rem; }
+.custom-section[hidden] { display: none; }
 .custom-details {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 0 1.25rem;
@@ -1034,37 +1037,48 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 }
 .attack-profile-stats {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
   font-family: ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: 14px;
   color: var(--text-2);
 }
 .attack-profile-stats .ap-stat strong { color: var(--text); font-weight: 600; }
 .attack-profile-stats .ap-icon {
-  width: 12px; height: 12px;
+  width: 15px; height: 15px;
   flex: none;
-  vertical-align: -2px;
+  vertical-align: -3px;
 }
-/* Weapon-class runemark sits slightly apart, like on the printed cards. */
-.attack-profile-stats .ap-class { margin-right: 1px; color: var(--text-2); }
-.attack-profile-stats .ap-stat { display: inline-flex; align-items: center; gap: 3px; }
+.attack-profile-stats .ap-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 14px;
+}
+.attack-profile-stats .ap-stat strong {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+}
+/* Weapon-class runemark, then a dotted rule separating it from the stats —
+ * mirrors the divider printed on the fighter cards. */
+.attack-profile-stats .ap-class { color: var(--text-2); margin-right: 1px; }
+.attack-profile-stats .ap-divider {
+  display: inline-block;
+  align-self: stretch;
+  width: 0;
+  min-height: 15px;
+  margin: 0 1px;
+  border-left: 1.5px dotted var(--border-strong);
+}
 /* Dice runemarks keep the sword/hammer colour coding. */
 .attack-profile-stats .ap-dice.sword  { color: #1F4878; }
 .attack-profile-stats .ap-dice.hammer { color: #7A3413; }
 .attack-profile-stats .ap-dice.sword strong,
 .attack-profile-stats .ap-dice.hammer strong { color: inherit; }
-.attack-profile-stats .ap-note { color: var(--text-3); font-style: italic; }
-/* Labels kept for screen readers / tooltips but hidden visually. */
-.ap-sr {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
+.attack-profile-stats .ap-note { color: var(--text-3); font-style: italic; font-size: 11.5px; }
 @media (prefers-color-scheme: dark) {
   .attack-profile-stats .ap-dice.sword  { color: #B5D4F4; }
   .attack-profile-stats .ap-dice.hammer { color: #F5C4B3; }

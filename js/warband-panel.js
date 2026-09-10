@@ -280,7 +280,7 @@ const AP_ICONS = {
 function apIcon(name, label) {
   const body = AP_ICONS[name];
   if (!body) return '';
-  return '<svg class="ap-icon ap-icon-' + name + '" viewBox="0 0 12 12" width="12" height="12" '
+  return '<svg class="ap-icon ap-icon-' + name + '" viewBox="0 0 12 12" width="15" height="15" '
        + 'role="img" aria-label="' + (label || name) + '">' + body + '</svg>';
 }
 
@@ -301,10 +301,9 @@ function buildAttackProfileNode(attack, inspired) {
   stats.className = 'attack-profile-stats';
   const bits = [];
 
-  // Weapon class. Melee weapons reach up to 2 hexes (spears, chains, flails);
-  // range 3+ is a ranged attack. That's only a heuristic, so an attack can
-  // state it outright with `melee: true` / `ranged: true` (or
-  // `weapon: 'melee' | 'ranged'`), which wins over the range check.
+  // Weapon class runemark, then a dotted divider, then the stat runemarks —
+  // the same arrangement as the printed cards. The SVGs carry aria-labels, so
+  // no visible words are needed.
   if (attack.range != null) {
     let cls;
     if (attack.weapon === 'melee' || attack.weapon === 'ranged') cls = attack.weapon;
@@ -312,23 +311,22 @@ function buildAttackProfileNode(attack, inspired) {
     else if (attack.ranged === true) cls = 'ranged';
     else cls = attack.range > 2 ? 'ranged' : 'melee';
     const clsLabel = cls === 'ranged' ? 'Ranged attack' : 'Melee attack';
-    bits.push('<span class="ap-stat ap-class" title="' + clsLabel + '">'
-      + apIcon(cls, clsLabel) + '</span>');
-    bits.push('<span class="ap-stat" title="Range"><span class="ap-sr">Range </span>'
-      + apIcon('range', 'Range') + '<strong>' + attack.range + '</strong></span>');
+    bits.push('<span class="ap-stat ap-class">' + apIcon(cls, clsLabel) + '</span>');
+    bits.push('<span class="ap-divider" aria-hidden="true"></span>');
+    bits.push('<span class="ap-stat">' + apIcon('range', 'Range')
+      + '<strong>' + attack.range + '</strong></span>');
   }
 
   if (attack.dice != null) {
     const dt = (attack.type === 'sword' || attack.type === 'hammer') ? attack.type : null;
     const label = dt ? (dt === 'sword' ? 'Sword dice' : 'Hammer dice') : 'Attack dice';
-    bits.push('<span class="ap-stat ap-dice' + (dt ? ' ' + dt : '') + '" title="' + label + '">'
-      + '<span class="ap-sr">' + label + ' </span>'
+    bits.push('<span class="ap-stat ap-dice' + (dt ? ' ' + dt : '') + '">'
       + (dt ? apIcon(dt, label) : '') + '<strong>' + attack.dice + '</strong></span>');
   }
 
   if (attack.damage != null) {
-    bits.push('<span class="ap-stat" title="Damage"><span class="ap-sr">Damage </span>'
-      + apIcon('damage', 'Damage') + '<strong>' + attack.damage + '</strong></span>');
+    bits.push('<span class="ap-stat">' + apIcon('damage', 'Damage')
+      + '<strong>' + attack.damage + '</strong></span>');
   }
 
   if (attack.cleave) bits.push('<span class="ap-stat"><strong>Cleave</strong></span>');

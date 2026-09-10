@@ -54,25 +54,6 @@
   </div>
 </div>
 
-<section class="game-row">
-  <div class="game-info">
-    <span class="game-title" id="game-title"></span>
-    <span class="game-counter" id="game-counter"></span>
-    <span class="game-meta" id="game-meta" hidden></span>
-  </div>
-  <label class="tag-filter-wrap" id="tag-filter-wrap" hidden>
-    <span class="tag-filter-label">Tag:</span>
-    <select id="tag-filter" class="tag-filter" aria-label="Filter puzzles by tag">
-      <option value="">All puzzles</option>
-    </select>
-  </label>
-  <div class="game-nav-buttons">
-    <button id="game-prev" type="button" class="game-nav-btn" title="Previous puzzle" aria-label="Previous puzzle">←</button>
-    <button id="game-next" type="button" class="game-nav-btn" title="Next puzzle" aria-label="Next puzzle">→</button>
-    <button id="game-random" type="button" class="game-nav-btn" title="Random puzzle" aria-label="Random puzzle">🎲</button>
-  </div>
-</section>
-
 <section class="challenge-panel" id="challenge-panel">
   <div class="challenge-head">
     <span class="challenge-title">⚔ Challenge run</span>
@@ -113,7 +94,28 @@
   </div>
 </section>
 
-<section class="custom-section">
+<section class="game-row">
+  <!-- Puzzle title/counter kept in the DOM (other code writes to them) but
+       hidden, so the panel leads with the challenge box instead. -->
+  <div class="game-info" id="game-info" hidden>
+    <span class="game-title" id="game-title"></span>
+    <span class="game-counter" id="game-counter"></span>
+    <span class="game-meta" id="game-meta" hidden></span>
+  </div>
+  <div class="game-nav-buttons">
+    <button id="game-prev" type="button" class="game-nav-btn" title="Previous puzzle" aria-label="Previous puzzle">←</button>
+    <button id="game-next" type="button" class="game-nav-btn" title="Next puzzle" aria-label="Next puzzle">→</button>
+    <button id="game-random" type="button" class="game-nav-btn" title="Random puzzle" aria-label="Random puzzle">🎲</button>
+  </div>
+  <label class="tag-filter-wrap" id="tag-filter-wrap" hidden>
+    <span class="tag-filter-label">Tag:</span>
+    <select id="tag-filter" class="tag-filter" aria-label="Filter puzzles by tag">
+      <option value="">All puzzles</option>
+    </select>
+  </label>
+</section>
+
+<section class="custom-section" id="custom-section" hidden>
   <details class="custom-details" id="custom-details">
     <summary>Load your own game (paste JSON)</summary>
     <div class="custom-body">

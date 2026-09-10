@@ -172,6 +172,28 @@ Returns every puzzle easiest-first with `rating`, `attempts`, and
 `solveRate` — the empirical difficulty of each puzzle, which is what drives
 run ordering.
 
+## The `.assetsignore` file
+
+`.assetsignore` keeps `worker/`, `wrangler.toml` and the `.md` docs out of the
+published site. Cloudflare requires that exact filename — it can't be renamed.
+
+GitHub's **drag-and-drop uploader silently skips dotfiles**, so if you upload
+a zip this file won't make it. Add it once via **Add file → Create new file**
+in the GitHub web UI (the editor accepts leading-dot names), with:
+
+```
+worker/
+wrangler.toml
+*.md
+.git/
+```
+
+It only needs doing once — later uploads won't remove it.
+
+Leaving it out isn't dangerous: Cloudflare already excludes `wrangler.toml`
+and the Worker entry point automatically, so the only effect is that your
+`.md` files become readable at e.g. `/README.md`.
+
 ## Notes
 
 **Free tier** covers 100,000 requests/day — far more than this needs.

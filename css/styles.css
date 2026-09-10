@@ -1041,24 +1041,33 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
   color: var(--text-2);
 }
 .attack-profile-stats .ap-stat strong { color: var(--text); font-weight: 600; }
-.attack-profile-stats .ap-suffix {
-  font-family: -apple-system, system-ui, sans-serif;
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  padding: 1px 4px;
-  border-radius: 3px;
-  margin-left: 2px;
-  line-height: 1;
-  display: inline-block;
-  vertical-align: middle;
+.attack-profile-stats .ap-icon {
+  width: 12px; height: 12px;
+  flex: none;
+  vertical-align: -2px;
 }
-.attack-profile-stats .ap-suffix.sword  { background: #CCE0F2; color: #1F4878; }
-.attack-profile-stats .ap-suffix.hammer { background: #FAD5C0; color: #7A3413; }
+/* Weapon-class runemark sits slightly apart, like on the printed cards. */
+.attack-profile-stats .ap-class { margin-right: 1px; color: var(--text-2); }
+.attack-profile-stats .ap-stat { display: inline-flex; align-items: center; gap: 3px; }
+/* Dice runemarks keep the sword/hammer colour coding. */
+.attack-profile-stats .ap-dice.sword  { color: #1F4878; }
+.attack-profile-stats .ap-dice.hammer { color: #7A3413; }
+.attack-profile-stats .ap-dice.sword strong,
+.attack-profile-stats .ap-dice.hammer strong { color: inherit; }
+.attack-profile-stats .ap-note { color: var(--text-3); font-style: italic; }
+/* Labels kept for screen readers / tooltips but hidden visually. */
+.ap-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 @media (prefers-color-scheme: dark) {
-  .attack-profile-stats .ap-suffix.sword  { background: rgba(135, 175, 220, 0.18); color: #B5D4F4; }
-  .attack-profile-stats .ap-suffix.hammer { background: rgba(220, 140, 110, 0.18); color: #F5C4B3; }
+  .attack-profile-stats .ap-dice.sword  { color: #B5D4F4; }
+  .attack-profile-stats .ap-dice.hammer { color: #F5C4B3; }
 }
 .attack-profile-empty {
   font-size: 11px;

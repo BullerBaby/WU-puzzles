@@ -250,6 +250,40 @@ export function renderFighterTokens(fighterId, tokens, slain) {
  * fighter's badge, name, current wounds taken (red pill), and upgrades attached.
  * Hover reveals a tooltip with Move / Wounds / Glory stats and attack profiles.
  */
+/* ---- Attack-profile symbols ----------------------------------------------
+ * The printed fighter cards use runemarks rather than words: a weapon class
+ * (melee / ranged), then range, dice type (sword or hammer) and damage.
+ * These are inline SVGs rather than Unicode (⚔, 🏹) because those render as
+ * inconsistent colour emoji across platforms.
+ */
+const AP_ICONS = {
+  // Crossed blades — melee weapon
+  melee: '<path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>'
+       + '<circle cx="6" cy="6" r="1.1" fill="currentColor"/>',
+  // Bow and arrow — ranged weapon
+  ranged: '<path d="M3.2 1.8a6.2 6.2 0 010 8.4" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/>'
+        + '<path d="M3.2 1.8L3.2 10.2" stroke="currentColor" stroke-width="0.9" fill="none"/>'
+        + '<path d="M2.2 6h7.6M7.6 4.2L9.8 6 7.6 7.8" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  // Concentric target — range value
+  range: '<circle cx="6" cy="6" r="4.4" stroke="currentColor" stroke-width="1.3" fill="none"/>'
+       + '<circle cx="6" cy="6" r="1.5" fill="currentColor"/>',
+  // Blade — sword dice
+  sword: '<path d="M6 1.2l1.5 5.2-1.5 1.6-1.5-1.6L6 1.2z" fill="currentColor"/>'
+       + '<path d="M4 8.6h4M6 8.6v2.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+  // Mallet — hammer dice
+  hammer: '<rect x="2.1" y="1.7" width="7.8" height="3.4" rx="0.8" fill="currentColor"/>'
+        + '<path d="M6 5.1v5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
+  // Starburst — damage
+  damage: '<path d="M6 1.1l1.05 3.1 3.1-1.05-1.9 2.85 1.9 2.85-3.1-1.05L6 10.9l-1.05-3.1-3.1 1.05L3.75 6 1.85 3.15l3.1 1.05L6 1.1z" fill="currentColor"/>',
+};
+
+function apIcon(name, label) {
+  const body = AP_ICONS[name];
+  if (!body) return '';
+  return '<svg class="ap-icon ap-icon-' + name + '" viewBox="0 0 12 12" width="12" height="12" '
+       + 'role="img" aria-label="' + (label || name) + '">' + body + '</svg>';
+}
+
 function buildAttackProfileNode(attack, inspired) {
   const row = document.createElement('div');
   row.className = 'attack-profile' + (inspired ? ' inspired-profile' : '');
@@ -266,17 +300,39 @@ function buildAttackProfileNode(attack, inspired) {
   const stats = document.createElement('div');
   stats.className = 'attack-profile-stats';
   const bits = [];
-  if (attack.range != null) bits.push('<span class="ap-stat">Rng <strong>' + attack.range + '</strong></span>');
-  if (attack.dice  != null) {
-    let dicePart = 'Dice <strong>' + attack.dice + '</strong>';
-    if (attack.type === 'sword' || attack.type === 'hammer') {
-      dicePart += ' <span class="ap-suffix ' + attack.type + '">' + attack.type + '</span>';
-    }
-    bits.push('<span class="ap-stat">' + dicePart + '</span>');
+
+  // Weapon class. Melee weapons reach up to 2 hexes (spears, chains, flails);
+  // range 3+ is a ranged attack. That's only a heuristic, so an attack can
+  // state it outright with `melee: true` / `ranged: true` (or
+  // `weapon: 'melee' | 'ranged'`), which wins over the range check.
+  if (attack.range != null) {
+    let cls;
+    if (attack.weapon === 'melee' || attack.weapon === 'ranged') cls = attack.weapon;
+    else if (attack.melee === true) cls = 'melee';
+    else if (attack.ranged === true) cls = 'ranged';
+    else cls = attack.range > 2 ? 'ranged' : 'melee';
+    const clsLabel = cls === 'ranged' ? 'Ranged attack' : 'Melee attack';
+    bits.push('<span class="ap-stat ap-class" title="' + clsLabel + '">'
+      + apIcon(cls, clsLabel) + '</span>');
+    bits.push('<span class="ap-stat" title="Range"><span class="ap-sr">Range </span>'
+      + apIcon('range', 'Range') + '<strong>' + attack.range + '</strong></span>');
   }
-  if (attack.damage != null) bits.push('<span class="ap-stat">Dmg <strong>' + attack.damage + '</strong></span>');
+
+  if (attack.dice != null) {
+    const dt = (attack.type === 'sword' || attack.type === 'hammer') ? attack.type : null;
+    const label = dt ? (dt === 'sword' ? 'Sword dice' : 'Hammer dice') : 'Attack dice';
+    bits.push('<span class="ap-stat ap-dice' + (dt ? ' ' + dt : '') + '" title="' + label + '">'
+      + '<span class="ap-sr">' + label + ' </span>'
+      + (dt ? apIcon(dt, label) : '') + '<strong>' + attack.dice + '</strong></span>');
+  }
+
+  if (attack.damage != null) {
+    bits.push('<span class="ap-stat" title="Damage"><span class="ap-sr">Damage </span>'
+      + apIcon('damage', 'Damage') + '<strong>' + attack.damage + '</strong></span>');
+  }
+
   if (attack.cleave) bits.push('<span class="ap-stat"><strong>Cleave</strong></span>');
-  if (attack.note) bits.push('<span class="ap-stat">' + attack.note + '</span>');
+  if (attack.note) bits.push('<span class="ap-stat ap-note">' + attack.note + '</span>');
   stats.innerHTML = bits.join(' ');
   row.appendChild(stats);
   return row;

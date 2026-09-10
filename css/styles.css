@@ -1193,10 +1193,6 @@ footer code { font-family: ui-monospace, monospace; background: var(--surface-2)
 .result-actions { display: flex; gap: 8px; margin-top: 20px; }
 .result-actions button { flex: 1; padding: 9px; font-size: 13px; }
 
-/* Difficulty pip shown next to the puzzle title */
-.difficulty-pips { display: inline-flex; gap: 2px; margin-left: 8px; vertical-align: middle; }
-.difficulty-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); }
-.difficulty-pip.on { background: var(--inspired); }
 
 /* ==================== PUZZLE FEEDBACK (thumbs up/down) ==================== */
 .puzzle-feedback {
@@ -1234,3 +1230,26 @@ footer code { font-family: ui-monospace, monospace; background: var(--surface-2)
 }
 .feedback-btn.chosen .feedback-count { color: var(--accent); }
 
+
+/* ---- Puzzle Elo rating ---- */
+.puzzle-elo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  cursor: help;
+}
+.puzzle-elo[hidden] { display: none; }
+.puzzle-elo-rating { font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.puzzle-elo-meta { font-size: 11px; color: var(--text-3); }
+.result-elo { font-size: 12.5px; font-weight: 600; margin-top: 8px; color: var(--text-2); }
+.result-elo.up { color: var(--danger); }
+.result-elo.down { color: var(--success); }
+/* Avoid a double divider when the rating row sits directly above the thumbs. */
+.puzzle-elo:not([hidden]) + .puzzle-feedback {
+  border-top: none;
+  margin-top: 6px;
+  padding-top: 0;
+}

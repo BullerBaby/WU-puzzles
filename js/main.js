@@ -33,6 +33,7 @@ import * as Challenge from './challenge.js';
 import * as Leaderboard from './leaderboard.js';
 import * as Progress from './progress.js';
 import * as Feedback from './feedback.js';
+import * as Elo from './elo.js';
 
 /* ==================== STATE ==================== */
 let currentGame  = null;
@@ -242,7 +243,6 @@ function loadGame(gameId) {
     });
   }
   rebuildGameNav(game.id);
-  decorateDifficulty(game);
   // Feedback row: free play only, and only once this puzzle has been answered.
   if (!Challenge.isActive() && hasAnswered(game.id, (game.steps || []).length)) showFeedback(game.id);
   else hideFeedback();
@@ -313,6 +313,7 @@ function showFeedback(puzzleId) {
   const row = $('puzzle-feedback');
   if (!row || !puzzleId) return;
   row.hidden = false;
+  showPuzzleElo(puzzleId);
   renderFeedback(puzzleId, null);
   Feedback.fetchTotals(puzzleId).then(function (t) {
     if (feedbackPuzzleId === puzzleId && t.ok) renderFeedback(puzzleId, t);
@@ -322,7 +323,36 @@ function showFeedback(puzzleId) {
 function hideFeedback() {
   const row = $('puzzle-feedback');
   if (row) row.hidden = true;
+  const elo = $('puzzle-elo');
+  if (elo) elo.hidden = true;
   feedbackPuzzleId = null;
+}
+
+/* Show a puzzle's Elo rating once it's been answered. The rating is how hard
+ * the puzzle has actually proved to be: it falls each time someone solves it
+ * and rises each time someone fails. */
+function showPuzzleElo(puzzleId) {
+  const wrap = $('puzzle-elo');
+  const val = $('puzzle-elo-rating');
+  const meta = $('puzzle-elo-meta');
+  if (!wrap || !val || !meta) return;
+  wrap.hidden = false;
+  val.textContent = 'Puzzle rating …';
+  meta.textContent = '';
+  Elo.fetchPuzzleRating(puzzleId).then(function (r) {
+    if (feedbackPuzzleId !== puzzleId) return;   // moved on already
+    if (r.ok) {
+      val.textContent = 'Puzzle rating ' + r.rating;
+      meta.textContent = r.provisional ? '(provisional)' : '';
+      wrap.title = 'Falls when players solve it, rises when they fail. '
+                 + 'Every puzzle starts at 1000.';
+    } else if (r.unrated) {
+      val.textContent = 'Puzzle rating ' + (r.start || 1000);
+      meta.textContent = '(not yet rated)';
+    } else {
+      wrap.hidden = true;
+    }
+  });
 }
 
 
@@ -343,24 +373,6 @@ function hideFeedback() {
   });
 })();
 
-/* Append 1–5 difficulty pips to the puzzle title. */
-function decorateDifficulty(game) {
-  const titleEl = $('game-title');
-  if (!titleEl) return;
-  const existing = titleEl.querySelector('.difficulty-pips');
-  if (existing) existing.remove();
-  const d = Number(game && game.difficulty);
-  if (!(d >= 1 && d <= 5)) return;
-  const wrap = document.createElement('span');
-  wrap.className = 'difficulty-pips';
-  wrap.title = 'Difficulty ' + d + '/5';
-  for (let i = 1; i <= 5; i++) {
-    const pip = document.createElement('span');
-    pip.className = 'difficulty-pip' + (i <= d ? ' on' : '');
-    wrap.appendChild(pip);
-  }
-  titleEl.appendChild(wrap);
-}
 
 /* Called by the poll result hook for every fresh option click. */
 function onPollResult(game, result) {
@@ -375,6 +387,8 @@ function onPollResult(game, result) {
   if (result.correct && result.firstTry) {
     const award = Challenge.solved();
     Progress.markSolved(game.id);
+    // Rate it: the player beat this puzzle.
+    Elo.reportAttempt(game.id, true).then(applyEloResult);
     updateHud(true, award);
     // Give the solved state a beat to show, then load the next puzzle — or
     // finish the run if every puzzle has been cleared.
@@ -389,6 +403,11 @@ function onPollResult(game, result) {
     }, 850);
   } else if (!result.correct) {
     // Any wrong click ends the run (first try or not — you already committed).
+    // Rate it: the puzzle beat the player. Clear the previous attempt's
+    // result first so the results screen doesn't briefly show a stale delta
+    // while this request is in flight.
+    lastEloResult = null;
+    Elo.reportAttempt(game.id, false).then(applyEloResult);
     const snap = Challenge.failed();
     finishRun(snap);
   }
@@ -398,16 +417,24 @@ function startRun() {
   const nameInput = $('challenge-name');
   if (nameInput) Leaderboard.setPlayerName(nameInput.value);
   const pool = getFilteredGames();
-  const firstId = Challenge.startRun(pool);
-  if (!firstId) {
-    setLeaderboardNote('No scorable puzzles in this pool.');
-    return;
-  }
-  $('challenge-idle').hidden = true;
-  $('challenge-hud').hidden = false;
-  hideResult();
-  updateHud(false, 0);
-  loadGame(firstId);
+  const startBtn = $('challenge-start');
+  if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Loading…'; }
+
+  // Order the run by measured puzzle rating (Elo), easiest first.
+  Elo.fetchPuzzleRatings().then(function (res) {
+    if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start run ▶'; }
+    const firstId = Challenge.startRun(pool, res.ratings);
+    if (!firstId) {
+      setLeaderboardNote('No scorable puzzles in this pool.');
+      return;
+    }
+    $('challenge-idle').hidden = true;
+    $('challenge-hud').hidden = false;
+    hideResult();
+    lastEloResult = null;
+    updateHud(false, 0);
+    loadGame(firstId);
+  });
 }
 
 function quitRun() {
@@ -423,7 +450,6 @@ function finishRun(snap, quiet) {
     name: Leaderboard.getPlayerName() || 'Anon',
     score: snap.score,
     cleared: snap.cleared,
-    difficultyReached: snap.difficultyReached,
     ts: Date.now(),
   };
   const { isBest } = Leaderboard.recordPersonal(entry);
@@ -481,6 +507,9 @@ function showResult(snap, isBest, entry) {
   } else {
     badge.hidden = true;
   }
+
+  renderResultElo();
+
   const rankEl = $('result-rank');
   rankEl.textContent = Leaderboard.isGlobalEnabled() && snap.score > 0
     ? 'Submitting to global board…'
@@ -490,6 +519,37 @@ function showResult(snap, isBest, entry) {
 function hideResult() { $('result-overlay').hidden = true; }
 
 /* ---- Personal best line + leaderboard ---- */
+/* Puzzles carry the rating, not the player, so there's nothing personal to
+ * show in the panel header. Attempts are still reported so ratings adjust. */
+let lastEloResult = null;
+function applyEloResult(res) {
+  if (!res || !res.ok) return;
+  lastEloResult = res;
+  // The rating usually lands after the results overlay has rendered, so
+  // paint it in when it arrives.
+  const overlay = $('result-overlay');
+  if (overlay && !overlay.hidden) renderResultElo();
+}
+
+/* Show what the run's final puzzle is now rated, and how this attempt moved
+ * it. Rising means players are failing it; falling means it's proving easy. */
+function renderResultElo() {
+  const el = $('result-elo');
+  if (!el) return;
+  if (lastEloResult && lastEloResult.counted && typeof lastEloResult.puzzleRating === 'number') {
+    const d = lastEloResult.puzzleDelta;
+    const sign = d > 0 ? '+' : '';
+    el.textContent = 'That puzzle is now rated ' + lastEloResult.puzzleRating
+                   + (d ? ' (' + sign + d + ')' : '');
+    el.className = 'result-elo ' + (d > 0 ? 'up' : d < 0 ? 'down' : '');
+    el.title = 'Puzzle ratings rise when players fail and fall when they solve.';
+  } else {
+    el.textContent = '';
+    el.className = 'result-elo';
+  }
+}
+
+/* Personal best score (not a rating — puzzles hold the ratings). */
 function renderBest() {
   const best = Leaderboard.getPersonalBest();
   const el = $('challenge-best');

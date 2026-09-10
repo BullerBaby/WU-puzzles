@@ -15,7 +15,7 @@ any static host (GitHub Pages, Netlify, Cloudflare Pages).
 │   ├── boards.js           BOARD_SHAPE + BOARDS — built-in board definitions
 │   ├── warbands.js         WARBANDS — shared warband definitions (fighters + abilities)
 │   ├── cards.js            CARDS — universal Rivals card catalogue + lookups
-│   └── games.js            GAMES — built-in replayable games (with difficulty)
+│   └── games.js            GAMES — built-in replayable games
 └── js/
     ├── main.js             Entry point: state, applyStep, controls, event wiring
     ├── state.js            resolveWarbands, expandSteps, diff merging
@@ -29,23 +29,21 @@ any static host (GitHub Pages, Netlify, Cloudflare Pages).
 
 ## Challenge mode
 
-The left panel has a **Challenge run**: an endless mode that serves puzzles
-easiest-first by their `difficulty` (1–5). Solve each puzzle's decision on the
-first try to score points and grow your streak; a wrong answer ends the run.
-When you clear the hardest puzzle the run loops back at a higher "ramp", so the
-same puzzles are worth progressively more.
+The left panel has a **Challenge run**: puzzles are served **easiest-first by
+their measured Elo rating**, with a random wobble so the order varies between
+runs. Solve each puzzle's decision on the first try to score 1 point; a wrong
+answer ends the run. Each puzzle appears once per run.
 
-- **Score** = `100 × difficulty × streakMultiplier × rampMultiplier`.
-- **Personal best** is always kept locally (`localStorage`), no network needed.
-- **Global board** is optional. Because this is a static site with no backend,
-  it talks to a small hosted key-value endpoint. To enable it, open
-  `js/leaderboard.js` and set `REMOTE.url` — e.g. create a free bin at
-  [jsonblob.com](https://jsonblob.com) (initialise it to `[]`) and paste its
-  API URL. Leave `REMOTE.url` empty to ship with local-only scores. The UI
-  degrades gracefully when the board is unset or unreachable.
+- **Score** = 1 point per puzzle solved on the first try.
+- **Leaderboards** are global, with **This week** (resets Mondays 06:00) and
+  **Today** (resets 06:00) views.
+- **Puzzle ratings** — puzzles carry an Elo rating, players don't. Solving a
+  puzzle lowers its rating, failing raises it, so each converges on its real
+  difficulty. Every puzzle starts at 1000. There is no authored difficulty
+  field; difficulty is measured, not declared.
 
-Set a puzzle's tier with a `difficulty: 1..5` field in `data/games.js`
-(untagged puzzles default to 3).
+The backend (leaderboards, ratings, progress, feedback) is a Cloudflare
+Worker in `worker/` backed by Workers KV — see `SETUP-BACKEND.md`.
 
 ## Adding content
 

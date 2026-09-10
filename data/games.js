@@ -3,10 +3,8 @@
  * reference shared warband definitions via `warbands: { me, opp }` (see
  * warbands.js) or inline its own `fighters` + `abilities`.
  *
- * Game shape: { id, title, description?, tags?, difficulty?, date?, location?,
+ * Game shape: { id, title, description?, tags?, date?, location?,
  *               credit?, board, round, boardRotation?,
- *   - difficulty: integer 1 (easiest) .. 5 (hardest). Drives ordering and
- *     scoring in Challenge mode (js/challenge.js). Untagged games default to 3.
  *               warbands?: { me, opp }, fighters?, abilities?: { me, opp },
  *               decks?: { me, opp }, steps: [...] }
  *
@@ -27,7 +25,6 @@ export const GAMES = [
     title: "Headsmen's Curse vs Emberwatch, Last activation",
     description: "Round 3, last activation of the game. Glory is tied 15-15.",
     tags: ['Tiebreaker'],
-    difficulty: 1,
     date: '',
     location: '',
     credit: '',
@@ -97,7 +94,6 @@ export const GAMES = [
     title: "Demo - Cullon's choice",
     description: "Round 2. Which attack should Cullon use?",
     tags: ['Probability'],
-    difficulty: 2,
     date: '',
     location: '',
     credit: '',
@@ -176,7 +172,6 @@ export const GAMES = [
     title: "Kurnoth's Heralds vs. Emberwatch — Last Activation",
     description: "Round 3 finale of Kurnoth's Heralds into Ardorn's Emberwatch. Your leader is still standing, one Emberwatch fighter remains, glory is tied 20-20, the opponent has one power card left, and the game is on its final activation.",
     tags: ['Cards'],
-    difficulty: 3,
     date: '',
     location: '',
     credit: '',

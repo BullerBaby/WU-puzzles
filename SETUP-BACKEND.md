@@ -80,6 +80,9 @@ for later analysis:
 |---|---|
 | `board:week:<YYYY-MM-DD>` | weekly leaderboard (week starting that Monday 06:00) |
 | `board:day:<YYYY-MM-DD>` | daily leaderboard (06:00 to 06:00) |
+| `elo:puzzle:<puzzleId>` | `{ rating, attempts, solves }` |
+| `elo:player:<saveCode>` | `{ rating, attempts, solves }` |
+| `elorated:<puzzleId>:<saveCode>` | marker so a pairing only rates once |
 | `feedback:<puzzleId>` | `{ up, down, updated }` — running totals |
 | `vote:<puzzleId>:<voterId>` | `{ vote, ts }` — one row per voter |
 
@@ -100,7 +103,7 @@ curl https://wu-puzzles.<you>.workers.dev/api/feedback
 
 Sorted by total votes, so your most-played puzzles come first. A puzzle with a
 high 👎 ratio is worth revisiting — though note a *hard* puzzle and a *bad*
-puzzle can both attract thumbs-down, so read it alongside the difficulty tier.
+puzzle can both attract thumbs-down, so read it alongside the puzzle's rating.
 
 The `voterId` is the same random save code used for progress — not an account,
 just enough to dedupe. No personal data is stored.
@@ -130,6 +133,44 @@ Read a specific board:
 curl 'https://wu-puzzles.<you>.workers.dev/api/scores?period=week'
 curl 'https://wu-puzzles.<you>.workers.dev/api/scores?period=day'
 ```
+
+## Puzzle Elo ratings
+
+**Puzzles carry a rating; players don't.** Each attempt is scored against a
+fixed nominal player (1200), so:
+
+- a player **solves** it → the puzzle "lost" → its rating **falls**
+- a player **fails** it → the puzzle "won" → its rating **rises**
+
+A puzzle therefore converges on the rating matching how often people actually
+fail it: failed ~50% of the time settles near 1000, failed more often settles
+higher. **Every puzzle starts at 1000** and moves from there purely on
+results — there is no authored difficulty field.
+
+Rating changes are large while a puzzle is provisional and taper as evidence
+accumulates (`K = 40/sqrt(attempts)`, floor 8). **Only a player's first
+attempt at a given puzzle counts**, so replaying a small set can't skew the
+numbers.
+
+### Used for run ordering
+
+Challenge runs serve puzzles **easiest-first by rating**, with a random
+wobble of ±120 rating points so the order isn't identical every time.
+Puzzles rated close together shuffle freely; a much harder puzzle won't leap
+to the front. If the API is unreachable every puzzle is treated as unrated
+(1000), so the order is effectively random.
+
+Tune the wobble via `ORDER_JITTER` in `js/challenge.js`.
+
+### Reading the data
+
+```bash
+curl https://wu-puzzles.<you>.workers.dev/api/elo
+```
+
+Returns every puzzle easiest-first with `rating`, `attempts`, and
+`solveRate` — the empirical difficulty of each puzzle, which is what drives
+run ordering.
 
 ## Notes
 

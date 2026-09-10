@@ -303,6 +303,130 @@ async function handleFeedbackList(env) {
   return json({ ok: true, feedback: out });
 }
 
+/* ==================== PUZZLE ELO ====================
+ * Only puzzles carry a rating — players don't. Each attempt is scored
+ * against a fixed nominal player (ELO_ANCHOR), so:
+ *
+ *   player solves it  → the puzzle "lost"  → its rating falls
+ *   player fails it   → the puzzle "won"   → its rating rises
+ *
+ * A puzzle therefore converges on the rating that matches how often people
+ * actually fail it: failed ~50% of the time settles near the anchor, failed
+ * more often settles higher.
+ *
+ *   elo:puzzle:<puzzleId>          → { rating, attempts, solves, updated }
+ *   elorated:<puzzleId>:<playerId> → marker: this player already rated it
+ *
+ * Only a player's FIRST attempt at a puzzle counts, so replaying a small
+ * set can't skew the ratings.
+ *
+ * Every puzzle starts at ELO_START and moves from there based purely on
+ * results — there is no authored difficulty tier.
+ */
+const ELO_START = 1000;                  // where an unrated puzzle begins
+const ELO_ANCHOR = 1000;                 // nominal "average player"
+
+
+/* Ratings move a lot while provisional, then settle. */
+function puzzleK(attempts) {
+  return Math.max(8, 40 / Math.sqrt(Math.max(1, attempts)));
+}
+
+function expectedScore(a, b) {
+  return 1 / (1 + Math.pow(10, (b - a) / 400));
+}
+
+async function readRating(env, key, fallback) {
+  const raw = await env.SCORES.get(key);
+  if (!raw) return { rating: fallback, attempts: 0, solves: 0, updated: null };
+  try {
+    const r = JSON.parse(raw);
+    return {
+      rating: Number(r.rating) || fallback,
+      attempts: Number(r.attempts) || 0,
+      solves: Number(r.solves) || 0,
+      updated: r.updated || null,
+    };
+  } catch (e) {
+    return { rating: fallback, attempts: 0, solves: 0, updated: null };
+  }
+}
+
+async function handleElo(request, env, url) {
+  /* GET /api/elo → every puzzle's rating, easiest first.
+   * The app uses this to order a challenge run. */
+  if (request.method === 'GET') {
+    const list = await env.SCORES.list({ prefix: 'elo:puzzle:' });
+    const out = [];
+    for (const k of list.keys) {
+      const r = await readRating(env, k.name, ELO_START);
+      out.push({
+        puzzleId: k.name.slice('elo:puzzle:'.length),
+        rating: Math.round(r.rating),
+        attempts: r.attempts,
+        solves: r.solves,
+        solveRate: r.attempts ? Math.round((r.solves / r.attempts) * 100) : null,
+        provisional: r.attempts < 5,
+        updated: r.updated,
+      });
+    }
+    out.sort((a, b) => a.rating - b.rating);   // easiest first
+    return json({ ok: true, anchor: ELO_ANCHOR, start: ELO_START, puzzles: out });
+  }
+
+  if (request.method !== 'POST') return bad('method not allowed', 405);
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return bad('invalid JSON'); }
+
+  const puzzleId = String(body.puzzleId || '').trim();
+  if (!/^[A-Za-z0-9._-]{1,100}$/.test(puzzleId)) return bad('bad puzzle id');
+
+  const playerId = String(body.playerId || '').trim();
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(playerId)) return bad('bad player id');
+
+  if (typeof body.solved !== 'boolean') return bad('solved must be a boolean');
+  const solved = body.solved;
+
+  const zKey = 'elo:puzzle:' + puzzleId;
+  const markKey = 'elorated:' + puzzleId + ':' + playerId;
+
+  const puzzle = await readRating(env, zKey, ELO_START);
+
+  // This player has already rated this puzzle → report, change nothing.
+  if (await env.SCORES.get(markKey)) {
+    return json({
+      ok: true, counted: false, reason: 'already rated by this player',
+      puzzleRating: Math.round(puzzle.rating), puzzleDelta: 0,
+    });
+  }
+
+  // From the puzzle's point of view: it "wins" when the player fails.
+  const expPuzzleWin = expectedScore(puzzle.rating, ELO_ANCHOR);
+  const actualPuzzleWin = solved ? 0 : 1;
+  const k = puzzleK(puzzle.attempts);
+  const delta = k * (actualPuzzleWin - expPuzzleWin);
+
+  const updated = {
+    rating: Math.max(100, puzzle.rating + delta),
+    attempts: puzzle.attempts + 1,
+    solves: puzzle.solves + (solved ? 1 : 0),
+    updated: Date.now(),
+  };
+
+  await env.SCORES.put(zKey, JSON.stringify(updated));
+  await env.SCORES.put(markKey, JSON.stringify({ solved: solved, ts: Date.now() }));
+
+  return json({
+    ok: true,
+    counted: true,
+    puzzleRating: Math.round(updated.rating),
+    puzzleDelta: Math.round(delta),
+    attempts: updated.attempts,
+  });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -320,6 +444,10 @@ export default {
     const prog = path.match(/^\/api\/progress\/([^/]+)$/);
     if (prog) {
       return handleProgress(request, env, decodeURIComponent(prog[1]));
+    }
+
+    if (path === '/api/elo') {
+      return handleElo(request, env, url);
     }
 
     if (path === '/api/feedback') {

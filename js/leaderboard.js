@@ -5,38 +5,33 @@
  *      browser. Never needs a network. This is the source of truth for
  *      "your best".
  *
- *   2. Global board — optional, shared across everyone. Because this app is
- *      a static site with no backend, the global board talks to a small
- *      hosted key-value endpoint (see REMOTE below). If that endpoint is
- *      unset or unreachable, everything still works — the UI just shows the
- *      personal board and a quiet "global board offline" note.
+ *   2. Global board — shared across everyone, served by the Cloudflare
+ *      Worker in worker/index.js and stored in Workers KV. Because the site
+ *      and the API are served by the same Worker, the endpoint is just a
+ *      relative path — nothing to configure. If the API is unreachable the
+ *      UI falls back to the personal board with a quiet offline note.
  *
- * Swapping the backend: set REMOTE.url to any endpoint that supports
- * GET (returns the JSON array) and PUT (replaces it with the posted JSON
- * array). jsonblob.com works with no signup; a Firebase RTDB URL, a
- * Cloudflare Worker KV, or your own tiny API work just as well. If you
- * prefer no global board at all, set REMOTE.url to '' (empty string).
+ * Hosting the site somewhere other than the Worker? Set API_BASE to the
+ * Worker's absolute URL, e.g. 'https://wu-puzzles.<you>.workers.dev'.
  *
- * Score entry shape: { name, score, streak, cleared, difficultyReached, ts }
+ * Score entry shape: { name, score, cleared, ts }
  */
 
 const PB_KEY = 'underworlds-challenge-pb-v1';
 const NAME_KEY = 'underworlds-challenge-name-v1';
 
-/* ---- Remote config -------------------------------------------------------
- * Default is empty so the project ships without calling any third party.
- * Drop in a jsonblob URL (create one at https://jsonblob.com — it hands you
- * a URL like https://jsonblob.com/api/jsonBlob/<id>) to enable the shared
- * board. The blob must be initialised to an empty array: []
- */
+/* Same-origin by default. Only set this if the site is hosted separately
+ * from the Worker that serves /api/*. */
+const API_BASE = '';
+
 const REMOTE = {
-  url: '',            // e.g. 'https://jsonblob.com/api/jsonBlob/1234567890'
+  url: API_BASE + '/api/scores',
   timeoutMs: 6000,
-  maxEntries: 25,     // keep the board small
+  maxEntries: 25,     // how many rows the UI shows
 };
 
 export function isGlobalEnabled() {
-  return typeof REMOTE.url === 'string' && REMOTE.url.length > 0;
+  return true;   // the API ships with the app
 }
 
 /* ---- Player name ---- */
@@ -81,39 +76,40 @@ function withTimeout(promise, ms) {
   });
 }
 
-/* Fetch the global board, sorted high→low. Resolves to [] on any failure. */
+/* Fetch the global board, sorted high→low. Resolves with entries: [] on any
+ * failure so the UI can degrade quietly. */
 export async function fetchGlobal() {
-  if (!isGlobalEnabled()) return { ok: false, entries: [], reason: 'disabled' };
   try {
     const res = await withTimeout(fetch(REMOTE.url, { cache: 'no-cache' }), REMOTE.timeoutMs);
     if (!res.ok) throw new Error('http ' + res.status);
     const data = await res.json();
-    const entries = Array.isArray(data) ? data : [];
+    const entries = Array.isArray(data.entries) ? data.entries : [];
     entries.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-    return { ok: true, entries: entries };
+    return { ok: true, entries: entries.slice(0, REMOTE.maxEntries) };
   } catch (e) {
     return { ok: false, entries: [], reason: String(e && e.message || e) };
   }
 }
 
-/* Submit a finished run to the global board. Best-effort: read-merge-write.
+/* Submit a finished run. We POST just this one entry and let the Worker
+ * merge it into the board server-side — no read-modify-write from the
+ * browser, so simultaneous finishers can't clobber each other.
  * Resolves to { ok, rank?, entries } — ok:false means it stayed local-only. */
 export async function submitGlobal(entry) {
-  if (!isGlobalEnabled()) return { ok: false, entries: [], reason: 'disabled' };
   try {
-    const current = await fetchGlobal();
-    const entries = current.ok ? current.entries.slice() : [];
-    entries.push(entry);
-    entries.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-    const trimmed = entries.slice(0, REMOTE.maxEntries);
     const res = await withTimeout(fetch(REMOTE.url, {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(trimmed),
+      body: JSON.stringify({
+        name: entry.name,
+        score: entry.score,
+        cleared: entry.cleared,
+      }),
     }), REMOTE.timeoutMs);
     if (!res.ok) throw new Error('http ' + res.status);
-    const rank = trimmed.indexOf(entry) + 1;
-    return { ok: true, rank: rank, entries: trimmed };
+    const data = await res.json();
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    return { ok: true, rank: data.rank || null, entries: entries };
   } catch (e) {
     return { ok: false, entries: [], reason: String(e && e.message || e) };
   }

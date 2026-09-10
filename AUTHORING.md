@@ -169,8 +169,6 @@ Format the values however you like — they're treated as plain text.
 Each step:
 
 {
-  "notation": "(short tag for the activity log, e.g. '(R2 — Yurik to attack)')",
-  "title": "Step title shown above the explanation",
   "explanation": "Longer prose explaining what's happening.",
   "poll": {
     "question": "What's your move?",
@@ -258,8 +256,6 @@ Output:
   },
   "steps": [
     {
-      "notation": "(R3 — last activation, glory 15-15)",
-      "title": "Last stand — your final activation",
       "explanation": "Wielder is the last fighter standing on your side, inspired with one wound left. Ardorn stands adjacent, inspired, with two wounds left. Both sides have burned every activation; only your last one remains.",
       "poll": {
         "question": "What's your move?",
@@ -356,8 +352,6 @@ Per step:
 
 | Field | Type | Notes |
 |---|---|---|
-| `notation` | string | Tag for the log line |
-| `title` | string | Bold heading above explanation |
 | `explanation` | string | Prose describing the situation |
 | `poll` | object | `{question, options, correct}` |
 | `state` | object | First step only; later steps can use `diff` |

@@ -10,7 +10,7 @@
  *               warbands?: { me, opp }, fighters?, abilities?: { me, opp },
  *               decks?: { me, opp }, steps: [...] }
  *
- * Step shape: { notation, title, explanation, dice?, anim?, poll?,
+ * Step shape: { explanation, dice?, anim?, poll?,
  *               state | diff }
  *   - state: { ... }    → full snapshot
  *   - diff:  { ... }    → merged onto previous step's expanded state
@@ -24,7 +24,7 @@
 export const GAMES = [
   {
     id: 'headsmen-vs-emberwatch-r3-finale',
-    title: "Demo - Wielder vs. Ardorn",
+    title: "Headsmen's Curse vs Emberwatch, Last activation",
     description: "Round 3, last activation of the game. Glory is tied 15-15.",
     tags: ['Tiebreaker'],
     difficulty: 1,
@@ -41,13 +41,11 @@ export const GAMES = [
     },
     steps: [
       {
-        notation: '(R3 — last activation, glory 15-15)',
-        title: 'Last stand — your final activation',
-        explanation: "Your three retinue fighters are slain; only the Wielder remains, inspired but wounded. Two of the Emberwatch are down; Ardorn stands directly adjacent, inspired and bloodied. Both sides have burned every warscroll ability, the opponent has spent all four activations, and five treasure tokens still lie unclaimed across the board. You have one swing left. Killing the leader nets +3 bounty and scores 'Off with Their Heads' — winning outright. Anything less and the round ends 15-15 → tiebreaker.",
+        explanation: "Round 3, last activation of the game. Glory is tied 15-15 and opponent has no power cards or objective cards left. How to secure victory?",
         poll: {
           question: "What's your move?",
           options: [
-            'Move to the aqua ghyranis token',
+            'Move to your own aqua ghyranis token',
             'Attack Ardorn for the kill',
             'Guard — accept the 15-15 tie and go to tiebreaker',
             'Move to treasure token 4 on i1',
@@ -113,14 +111,12 @@ export const GAMES = [
     },
     steps: [
       {
-        notation: '(R2 — Cullon to attack)',
-        title: 'Two attacks, one activation',
-        explanation: "Cullon's last activation — he's the only me fighter who hasn't acted yet, and the Headsmen have spent all four of theirs. The Sharpener (H) at f1 is the only adjacent target, 1 wound left, Dodge save. Either attack can kill on a single landed hit, but Hooves' 4 sword dice spread the risk — Axe whiffs on a double miss (~25% of the time), while Hooves only completely whiffs ~6%. Grapple on a crit also locks the Sharpener down for next round, so even a partial result has value.",
+        explanation: "Cullon is about to attack. Which attack is best?",
         poll: {
           question: "Cullon's activation — which attack?",
           options: [
             'Axe — 2 hammer dice for 2 damage',
-            'Hooves — 4 sword dice for 1 damage (Grapple on crit)',
+            'Hooves — 4 sword dice for 1 damage [Crit Grapple]',
           ],
           correct: 1,
         },
@@ -194,10 +190,8 @@ export const GAMES = [
     },
     steps: [
       {
-        notation: '(R3 — last activation, glory 20-20)',
-        title: 'Last activation decision',
         revealOnCorrect: true,
-        explanation: "Ylarin stands on j3 while Ardorn clings to 3 wounds remaining on -c1. With glory tied at 20-20, both warscrolls spent, and the final activation of the game remaining, the question is whether to secure a tie-breaker edge rather than make an unnecessary combat play.",
+        explanation: "Glory is tied 20-20, the opponent has one power card left, and the game is on its final activation.",
         poll: {
           question: "What's your move?",
           options: [
@@ -235,9 +229,7 @@ export const GAMES = [
         },
       },
       {
-        notation: '(R3 — Emberwatch reveals power card)',
-        title: 'Violent Blast in opponent\'s hand',
-        explanation: "Ardorn's last power card is revealed: Violent Blast. A gambit that could have struck Ylarin had he closed within range — pushing for treasure 5 on f2 would have put him in danger. Stepping onto i1 for treasure 4 keeps Ylarin clear of the threat while still claiming the tiebreaker.",
+        explanation: "Ardorn's last power card is revealed: Violent Blast.",
         diff: {
           hand: { opp: { power: ['Violent Blast'] } },
         },

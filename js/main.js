@@ -31,6 +31,7 @@ import {
 } from './custom-games.js';
 import * as Challenge from './challenge.js';
 import * as Leaderboard from './leaderboard.js';
+import * as Progress from './progress.js';
 
 /* ==================== STATE ==================== */
 let currentGame  = null;
@@ -131,8 +132,6 @@ function applyStep(idx) {
   const gl = state.glory || [0, 0];
   document.getElementById('glory-me').textContent = gl[0];
   document.getElementById('glory-opp').textContent = gl[1];
-  document.getElementById('curr-notation').textContent = step.notation || '';
-  document.getElementById('curr-title').textContent = step.title || '';
   document.getElementById('curr-explanation').textContent = step.explanation || '';
   document.getElementById('step-indicator').textContent = (idx + 1) + ' / ' + game.steps.length;
   document.getElementById('current-round').textContent = game.round || 1;
@@ -157,26 +156,6 @@ function applyStep(idx) {
     onPollResult(game, result);
   });
 
-  const lines = document.querySelectorAll('.notation-line');
-  for (let i = 0; i < lines.length; i++) {
-    lines[i].classList.toggle('current', i === idx);
-  }
-  // Scroll the active line into view, but ONLY within the notation-log container.
-  // Using element.scrollIntoView() would scroll the whole document when the log
-  // doesn't have its own scroll context — making the page jump when changing
-  // puzzles or stepping through. This manual version is contained.
-  const active = lines[idx];
-  if (active) {
-    const container = active.parentElement;
-    if (container) {
-      const cTop = container.scrollTop;
-      const cBot = cTop + container.clientHeight;
-      const aTop = active.offsetTop;
-      const aBot = aTop + active.offsetHeight;
-      if (aTop < cTop)      container.scrollTop = aTop;
-      else if (aBot > cBot) container.scrollTop = aBot - container.clientHeight;
-    }
-  }
   document.getElementById('btn-prev').disabled = (idx === 0);
   document.getElementById('btn-next').disabled = (idx === game.steps.length - 1);
 }
@@ -244,18 +223,6 @@ function goStep(delta) {
   applyStep(currentStep);
 }
 
-function buildLog(game) {
-  const log = document.getElementById('notation-log');
-  log.innerHTML = '';
-  game.steps.forEach(function(s, i) {
-    const div = document.createElement('div');
-    div.className = 'notation-line';
-    div.textContent = (i + 1) + '.  ' + (s.notation || s.title || '(step ' + (i+1) + ')');
-    div.onclick = function() { currentStep = i; applyStep(i); };
-    log.appendChild(div);
-  });
-}
-
 function loadGame(gameId) {
   const game = GAMES.find(function(g) { return g.id === gameId; });
   if (!game) return;
@@ -279,7 +246,6 @@ function loadGame(gameId) {
   renderFighterCards(game);
   renderWarbandLabels(game);
   renderDecks(game);
-  buildLog(game);
   setTimeout(function() { applyStep(0); }, 50);
 }
 
@@ -341,6 +307,7 @@ function onPollResult(game, result) {
 
   if (result.correct && result.firstTry) {
     const award = Challenge.solved();
+    Progress.markSolved(game.id);
     updateHud(true, award);
     // Give the solved state a beat to show, then load the next puzzle — or
     // finish the run if every puzzle has been cleared.

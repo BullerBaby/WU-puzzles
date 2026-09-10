@@ -242,8 +242,6 @@ function normalizeGame(g) {
       positions: {}, wounds: {}, slain: [],
       inspired: [], glory: [0, 0], tokens: {}, upgrades: {}, abilitiesUsed: {}, activationsUsed: {}, features: [], hand: { me: 0, opp: 0 }, powerStep: [],
     }, s.state || {});
-    if (!s.notation) s.notation = s.title || '(step)';
-    if (typeof s.title !== 'string') s.title = '';
     if (typeof s.explanation !== 'string') s.explanation = '';
     return s;
   });

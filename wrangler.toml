@@ -1,0 +1,19 @@
+name = "wu-puzzles"
+main = "worker/index.js"
+compatibility_date = "2026-09-01"
+
+# Serve the repo root as the static site. Everything that isn't /api/* is
+# handled by the asset server (index.html, css/, js/, data/).
+[assets]
+directory = "."
+binding = "ASSETS"
+# Fall back to index.html for unknown paths so deep links still load.
+not_found_handling = "single-page-application"
+
+# Key-value store for highscores and saved progress.
+# Create it once with:
+#   npx wrangler kv namespace create SCORES
+# then paste the returned id below (and keep preview_id for `wrangler dev`).
+[[kv_namespaces]]
+binding = "SCORES"
+id = "e2aa2729d6fb4012b127cf09e4aea244"

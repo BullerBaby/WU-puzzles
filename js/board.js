@@ -369,54 +369,51 @@ export function renderBoard(game) {
     }
   }
 
-  // For each rotated rank, find a visible canonical hex that maps to it and
-  // use that hex's leftmost visual position for the rank-number label. We
-  // collect all rank Y positions first so the "0" label can be centred on the
-  // boundary line between the +1 and -1 rows (its own 0-hex, if any, is
-  // half-step staggered and would sit off the midline).
-  const rankY = {}; // displayed n -> label baseline Y
-  for (let dispRk = 1; dispRk <= dispRows; dispRk++) {
-    let leftX = Infinity, leftY = null;
-    for (let i = 0; i < canonCols; i++) {
-      for (let rk = 1; rk <= canonRows; rk++) {
-        const canonId = formatHex(FILES[i], rk, canonRows, 'flat-top');
-        if (excludedSet.has(canonId)) continue;
-        const dispId = rotateHex(canonId, rotation, canonCols, canonRows);
-        const { rank: dRank } = parseHex(dispId, dispRows, dispOrient);
-        if (dRank !== dispRk) continue;
-        const x = BASE_X + i * COL_STEP;
-        const y = BASE_Y + (canonRows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
-        const p = rotPoint(x, y);
-        if (p.x < leftX) { leftX = p.x; leftY = p.y; }
-      }
+  // Rank-number labels down the left edge. Rather than anchor each label to
+  // one hex (whichever is leftmost), which mis-aligns because flat-top ranks
+  // interleave vertically and stagger by column parity, we fit a straight line
+  // y = a + b·n through the (rank, y) positions of every visible hex. The fit
+  // gives evenly-spaced labels centred on each rank's row, and it works under
+  // any rotation because it uses the hexes' final rotated positions.
+  const samples = [];       // { n, y } for every visible hex, in rotated space
+  let dispMinN = Infinity, dispMaxN = -Infinity;
+  for (let i = 0; i < canonCols; i++) {
+    for (let rk = 1; rk <= canonRows; rk++) {
+      const canonId = formatHex(FILES[i], rk, canonRows, 'flat-top');
+      if (excludedSet.has(canonId)) continue;
+      const dispId = rotateHex(canonId, rotation, canonCols, canonRows);
+      const { rank: dRank } = parseHex(dispId, dispRows, dispOrient);
+      const n = dRank - dispMid;
+      const x = BASE_X + i * COL_STEP;
+      const y = BASE_Y + (canonRows - rk) * ROW_STEP + (i % 2) * COL_OFFSET;
+      const p = rotPoint(x, y);
+      samples.push({ n: n, y: p.y });
+      if (n < dispMinN) dispMinN = n;
+      if (n > dispMaxN) dispMaxN = n;
     }
-    if (leftY !== null) rankY[dispRk - dispMid] = leftY;
   }
 
-  Object.keys(rankY).forEach(function (key) {
-    const n = Number(key);
-    let baseY = rankY[n];
-    // Align 0 to the true midline. The board is vertically symmetric about its
-    // centre, so the centre of the visible span is exactly the line between the
-    // +1 and -1 rows — independent of which columns are present or excluded.
-    // (Its own 0-hex is half-step staggered and can sit off that line.)
-    if (n === 0) {
-      if (rankY[1] != null && rankY[-1] != null) {
-        // The line between the +1 and -1 rows — exactly where "0" belongs.
-        baseY = (rankY[1] + rankY[-1]) / 2;
-      } else if (isFinite(visMinY) && isFinite(visMaxY)) {
-        baseY = (visMinY + visMaxY) / 2;
-      }
+  if (samples.length) {
+    // Least-squares fit y = a + b·n.
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    const N = samples.length;
+    for (const s of samples) { sx += s.n; sy += s.y; sxx += s.n * s.n; sxy += s.n * s.y; }
+    const denom = N * sxx - sx * sx;
+    const slope = denom !== 0 ? (N * sxy - sx * sy) / denom : 0;
+    const intercept = (sy - slope * sx) / N;
+
+    for (let n = dispMinN; n <= dispMaxN; n++) {
+      const baseY = intercept + slope * n;
+      const t = svgEl('text', {
+        x: rowLabelX.toFixed(1),
+        y: (baseY + 3).toFixed(1),
+        'text-anchor': 'end',
+        class: 'coord-label' + (n === 0 ? ' midline' : ''),
+      });
+      t.textContent = String(n);
+      svg.appendChild(t);
     }
-    const t = svgEl('text', {
-      x: rowLabelX.toFixed(1),
-      y: (baseY + 3).toFixed(1),
-      'text-anchor': 'end',
-      class: 'coord-label' + (n === 0 ? ' midline' : ''),
-    });
-    t.textContent = String(n);
-    svg.appendChild(t);
-  });
+  }
 
   svg.appendChild(svgEl('g', { id: 'fighters-layer' }));
   svg.appendChild(svgEl('g', { id: 'features-layer' }));

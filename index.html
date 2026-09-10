@@ -37,6 +37,17 @@
     <span class="poll-hint">Click an option to check your answer.</span>
     <button class="poll-reset" id="poll-reset" type="button">Clear your answer</button>
   </div>
+  <div class="puzzle-feedback" id="puzzle-feedback" hidden>
+    <span class="feedback-label" id="feedback-label">Was this a good puzzle?</span>
+    <div class="feedback-buttons">
+      <button class="feedback-btn" id="feedback-up" type="button" title="Good puzzle" aria-label="Thumbs up">
+        <span aria-hidden="true">&#128077;</span><span class="feedback-count" id="feedback-up-count"></span>
+      </button>
+      <button class="feedback-btn" id="feedback-down" type="button" title="Not a good puzzle" aria-label="Thumbs down">
+        <span aria-hidden="true">&#128078;</span><span class="feedback-count" id="feedback-down-count"></span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <section class="game-row">

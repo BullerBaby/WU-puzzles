@@ -12,6 +12,10 @@
  *      GET  /api/progress/:id      → { solved: [...], updated }
  *      POST /api/progress/:id      → { solved: [...] } replace saved progress
  *
+ *      GET  /api/feedback          → all puzzles' up/down totals (analysis)
+ *      GET  /api/feedback/:puzzle  → { up, down } for one puzzle
+ *      POST /api/feedback/:puzzle  → { vote: 'up'|'down', voterId }
+ *
  * The progress `:id` is a random UUID the browser generates and keeps in
  * localStorage (a "save code"). It's the whole identity — no login, no
  * passwords, no personal data. Players can paste the code on another device
@@ -133,6 +137,103 @@ async function handleProgress(request, env, id) {
   return bad('method not allowed', 405);
 }
 
+/* ---- Puzzle feedback (thumbs up / down) ----
+ * Stored two ways so it's useful now and analysable later:
+ *
+ *   feedback:<puzzleId>          → { up, down, updated }  running totals,
+ *                                   cheap to read for display
+ *   vote:<puzzleId>:<voterId>    → { vote, ts }  one row per voter so a
+ *                                   person can change their mind without
+ *                                   double-counting, and so you can export
+ *                                   the raw data later
+ *
+ * voterId is the browser's save code (a random UUID). It isn't an account —
+ * it just stops one person spamming the counter and lets a vote be updated.
+ */
+async function handleFeedback(request, env, puzzleId) {
+  if (!/^[A-Za-z0-9._-]{1,100}$/.test(puzzleId)) return bad('bad puzzle id');
+  const aggKey = 'feedback:' + puzzleId;
+
+  async function readAgg() {
+    const raw = await env.SCORES.get(aggKey);
+    if (!raw) return { up: 0, down: 0, updated: null };
+    try {
+      const a = JSON.parse(raw);
+      return {
+        up: Number(a.up) || 0,
+        down: Number(a.down) || 0,
+        updated: a.updated || null,
+      };
+    } catch (e) { return { up: 0, down: 0, updated: null }; }
+  }
+
+  if (request.method === 'GET') {
+    const agg = await readAgg();
+    return json({ ok: true, puzzleId: puzzleId, up: agg.up, down: agg.down });
+  }
+
+  if (request.method === 'POST') {
+    let body;
+    try { body = await request.json(); }
+    catch (e) { return bad('invalid JSON'); }
+
+    const vote = body.vote === 'up' ? 'up' : body.vote === 'down' ? 'down' : null;
+    if (!vote) return bad("vote must be 'up' or 'down'");
+
+    const voter = String(body.voterId || '').trim();
+    if (!/^[A-Za-z0-9-]{8,64}$/.test(voter)) return bad('bad voter id');
+
+    const voteKey = 'vote:' + puzzleId + ':' + voter;
+    const prevRaw = await env.SCORES.get(voteKey);
+    let prev = null;
+    if (prevRaw) {
+      try { prev = JSON.parse(prevRaw).vote; } catch (e) { prev = null; }
+    }
+
+    // Same vote again → no change, just report current totals.
+    if (prev === vote) {
+      const agg = await readAgg();
+      return json({ ok: true, puzzleId: puzzleId, up: agg.up, down: agg.down, unchanged: true });
+    }
+
+    const agg = await readAgg();
+    if (prev === 'up') agg.up = Math.max(0, agg.up - 1);
+    if (prev === 'down') agg.down = Math.max(0, agg.down - 1);
+    if (vote === 'up') agg.up += 1;
+    else agg.down += 1;
+    agg.updated = Date.now();
+
+    await env.SCORES.put(voteKey, JSON.stringify({ vote: vote, ts: Date.now() }));
+    await env.SCORES.put(aggKey, JSON.stringify(agg));
+
+    return json({ ok: true, puzzleId: puzzleId, up: agg.up, down: agg.down, changed: prev ? 'updated' : 'new' });
+  }
+
+  return bad('method not allowed', 405);
+}
+
+/* All feedback totals at once, for your own analysis.
+ * GET /api/feedback  →  [{ puzzleId, up, down }, ...] */
+async function handleFeedbackList(env) {
+  const list = await env.SCORES.list({ prefix: 'feedback:' });
+  const out = [];
+  for (const k of list.keys) {
+    const raw = await env.SCORES.get(k.name);
+    if (!raw) continue;
+    try {
+      const a = JSON.parse(raw);
+      out.push({
+        puzzleId: k.name.slice('feedback:'.length),
+        up: Number(a.up) || 0,
+        down: Number(a.down) || 0,
+        updated: a.updated || null,
+      });
+    } catch (e) { /* skip malformed */ }
+  }
+  out.sort((a, b) => (b.up + b.down) - (a.up + a.down));
+  return json({ ok: true, feedback: out });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -150,6 +251,15 @@ export default {
     const prog = path.match(/^\/api\/progress\/([^/]+)$/);
     if (prog) {
       return handleProgress(request, env, decodeURIComponent(prog[1]));
+    }
+
+    if (path === '/api/feedback') {
+      return handleFeedbackList(env);
+    }
+
+    const fb = path.match(/^\/api\/feedback\/([^/]+)$/);
+    if (fb) {
+      return handleFeedback(request, env, decodeURIComponent(fb[1]));
     }
 
     if (path.startsWith('/api/')) {

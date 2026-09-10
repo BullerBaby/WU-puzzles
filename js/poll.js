@@ -52,6 +52,15 @@ export function resetStepAnswers(gameId, stepIdx) {
   if (all[k]) { delete all[k]; saveAll(all); }
 }
 
+/* True if the player has clicked any option on any step of this game.
+ * Used to decide whether the puzzle-feedback row should already be visible. */
+export function hasAnswered(gameId, stepCount) {
+  for (let i = 0; i < (stepCount || 1); i++) {
+    if (getClicked(gameId, i).length) return true;
+  }
+  return false;
+}
+
 export function renderPoll(game, stepIdx, onCorrect, onResult) {
   const panel = document.getElementById('poll-panel');
   if (!panel || !game) return;

@@ -71,6 +71,38 @@ settings add it under **Domains & Routes**. DNS is automatic if the domain is
 in the same account. Nothing in the code needs to change, because the API is
 same-origin.
 
+## Puzzle feedback
+
+After answering a puzzle, players get a 👍 / 👎 row. Votes are stored in KV
+for later analysis:
+
+| Key | Contents |
+|---|---|
+| `feedback:<puzzleId>` | `{ up, down, updated }` — running totals |
+| `vote:<puzzleId>:<voterId>` | `{ vote, ts }` — one row per voter |
+
+Storing individual votes means a player can change their mind without
+double-counting, and you keep the raw data (with timestamps) for later.
+
+To pull all the feedback at once for analysis:
+
+```bash
+curl https://wu-puzzles.<you>.workers.dev/api/feedback
+```
+
+```json
+{ "ok": true, "feedback": [
+  { "puzzleId": "yurik-attack-choice", "up": 12, "down": 2, "updated": 1789... }
+] }
+```
+
+Sorted by total votes, so your most-played puzzles come first. A puzzle with a
+high 👎 ratio is worth revisiting — though note a *hard* puzzle and a *bad*
+puzzle can both attract thumbs-down, so read it alongside the difficulty tier.
+
+The `voterId` is the same random save code used for progress — not an account,
+just enough to dedupe. No personal data is stored.
+
 ## Notes
 
 **Free tier** covers 100,000 requests/day — far more than this needs.

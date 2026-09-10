@@ -23,7 +23,7 @@ import {
   renderAbilities, renderActivations, renderDecks, renderWarbandLabels,
   renderHands, renderDice, renderPowerStep, tokenLabel,
 } from './warband-panel.js';
-import { renderPoll, resetStepAnswers } from './poll.js';
+import { renderPoll, resetStepAnswers, hasAnswered } from './poll.js';
 import {
   rebuildGameNav, loadCustomFromInput, fillTemplate,
   downloadCurrent, clearCustoms, loadSavedCustoms,
@@ -32,6 +32,7 @@ import {
 import * as Challenge from './challenge.js';
 import * as Leaderboard from './leaderboard.js';
 import * as Progress from './progress.js';
+import * as Feedback from './feedback.js';
 
 /* ==================== STATE ==================== */
 let currentGame  = null;
@@ -242,6 +243,9 @@ function loadGame(gameId) {
   }
   rebuildGameNav(game.id);
   decorateDifficulty(game);
+  // Feedback row: visible only once this puzzle has been answered.
+  if (hasAnswered(game.id, (game.steps || []).length)) showFeedback(game.id);
+  else hideFeedback();
   renderBoard(game);
   renderFighterCards(game);
   renderWarbandLabels(game);
@@ -280,6 +284,64 @@ function navRandom() {
 
 const $ = function (id) { return document.getElementById(id); };
 
+/* ==================== PUZZLE FEEDBACK ====================
+ * The thumbs row appears once the player has answered the puzzle, so we're
+ * asking for an opinion only after they've actually engaged with it. */
+
+let feedbackPuzzleId = null;
+
+function renderFeedback(puzzleId, totals) {
+  const row = $('puzzle-feedback');
+  if (!row) return;
+  feedbackPuzzleId = puzzleId;
+  const mine = Feedback.getMyVote(puzzleId);
+  const upBtn = $('feedback-up');
+  const downBtn = $('feedback-down');
+  if (upBtn) upBtn.classList.toggle('chosen', mine === 'up');
+  if (downBtn) downBtn.classList.toggle('chosen', mine === 'down');
+  const label = $('feedback-label');
+  if (label) label.textContent = mine ? 'Thanks for the feedback!' : 'Was this a good puzzle?';
+  if (totals) {
+    const u = $('feedback-up-count'), d = $('feedback-down-count');
+    if (u) u.textContent = totals.up ? ' ' + totals.up : '';
+    if (d) d.textContent = totals.down ? ' ' + totals.down : '';
+  }
+}
+
+/* Reveal the feedback row for a puzzle and pull its current totals. */
+function showFeedback(puzzleId) {
+  const row = $('puzzle-feedback');
+  if (!row || !puzzleId) return;
+  row.hidden = false;
+  renderFeedback(puzzleId, null);
+  Feedback.fetchTotals(puzzleId).then(function (t) {
+    if (feedbackPuzzleId === puzzleId && t.ok) renderFeedback(puzzleId, t);
+  });
+}
+
+function hideFeedback() {
+  const row = $('puzzle-feedback');
+  if (row) row.hidden = true;
+  feedbackPuzzleId = null;
+}
+
+(function wireFeedback() {
+  ['up', 'down'].forEach(function (dir) {
+    const btn = $('feedback-' + dir);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      if (!feedbackPuzzleId) return;
+      const id = feedbackPuzzleId;
+      renderFeedback(id, null);              // optimistic
+      Feedback.sendVote(id, dir).then(function (res) {
+        if (feedbackPuzzleId === id && res.ok) {
+          renderFeedback(id, { up: res.up, down: res.down });
+        }
+      });
+    });
+  });
+})();
+
 /* Append 1–5 difficulty pips to the puzzle title. */
 function decorateDifficulty(game) {
   const titleEl = $('game-title');
@@ -301,6 +363,10 @@ function decorateDifficulty(game) {
 
 /* Called by the poll result hook for every fresh option click. */
 function onPollResult(game, result) {
+  // Any answer (right or wrong) unlocks the thumbs row for this puzzle.
+  // Done before the challenge guard so it works in free play too.
+  if (game && game.id) showFeedback(game.id);
+
   if (!Challenge.isActive()) return;
   if (!currentGame || game.id !== currentGame.id) return;
   if (game.id !== Challenge.currentPuzzleId()) return;

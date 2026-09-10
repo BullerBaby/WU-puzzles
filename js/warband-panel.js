@@ -15,6 +15,7 @@
 import { svgEl } from './board.js';
 import { WARBANDS } from '../data/warbands.js';
 import { lookupDeck } from '../data/decks.js';
+import { findCard } from '../data/cards.js';
 
 /* Tap-outside-to-close handler for fighter-card tooltips on mobile.
  * Registered once at module load. Clicking anywhere outside an open
@@ -92,7 +93,17 @@ function fillCards(elId, names, count, cls) {
       const chip = document.createElement('span');
       chip.className = 'card-chip ' + cls;
       chip.textContent = name;
-      chip.title = name;
+      // Hover shows the card's rule text when we have it (see data/cards.js),
+      // falling back to just the name for cards with no text recorded yet.
+      const card = findCard(name);
+      if (card && card.text) {
+        chip.title = card.name + ' (' + card.code + ' · ' + card.category + ')\n\n' + card.text;
+        chip.classList.add('has-text');
+      } else if (card) {
+        chip.title = card.name + ' (' + card.code + ' · ' + card.category + ')';
+      } else {
+        chip.title = name;
+      }
       el.appendChild(chip);
     });
   } else {

@@ -2,13 +2,17 @@ name = "wu-puzzles"
 main = "worker/index.js"
 compatibility_date = "2026-09-01"
 
-# Serve the repo root as the static site. Everything that isn't /api/* is
-# handled by the asset server (index.html, css/, js/, data/).
+# Serve the repo root as the static site.
 [assets]
 directory = "."
 binding = "ASSETS"
-# Fall back to index.html for unknown paths so deep links still load.
-not_found_handling = "single-page-application"
+# IMPORTANT: static assets are served *before* the Worker runs. With the
+# "single-page-application" fallback, /api/... would be answered with
+# index.html and the API would never be reached. "none" means unmatched
+# paths fall through to the Worker instead, which handles /api/* and
+# forwards everything else back to the asset server. (This app has no
+# client-side routing, so it doesn't need the SPA fallback.)
+not_found_handling = "none"
 
 # Key-value store for highscores and saved progress.
 # Create it once with:

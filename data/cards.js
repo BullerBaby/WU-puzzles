@@ -1,18 +1,33 @@
 /* ==================== RIVALS CARDS ====================
  * Flat catalogue of universal Rivals cards (objectives, ploys, upgrades),
  * parsed from the printed card lists. Each card:
- *   { code, set, number, category, name }
+ *   { code, set, number, category, name, text? }
  *   - code:     unique short id, e.g. 'CC17' (set prefix + number)
  *   - set:      two-letter deck/set prefix (see CARD_SETS below)
  *   - number:   the printed number within that set
  *   - category: 'Objective' | 'Ploy' | 'Upgrade'
  *   - name:     printed card name
+ *   - text:     OPTIONAL rule text, shown on hover in the app.
  *
  * 384 cards total: 144 objectives, 120 ploys, 120 upgrades, across 12 sets.
  *
+ * ---- Adding rule text -------------------------------------------------
+ * Only a few cards carry `text` so far (see CARD_TEXT below). The rest fall
+ * back to showing just the name on hover. To add one, drop an entry into
+ * CARD_TEXT keyed by card code — no need to touch the CARDS array:
+ *
+ *   CC17: 'Pick a stagger hex. Push each fighter within 1 hex ...',
+ *
+ * Keeping the text in a separate map means the big CARDS list stays diffable
+ * and you can fill text in gradually as you need it.
+ *
  * Helpers:
- *   CARD_BY_CODE   — { code: card } lookup
- *   cardName(code) — returns the card's name, or the code itself if unknown
+ *   CARD_BY_CODE     — { code: card } lookup, with `text` merged in
+ *   CARD_BY_NAME     — { lowercased name: card } lookup (names are not
+ *                      globally unique; first match wins)
+ *   cardName(code)   — the card's name, or the code itself if unknown
+ *   cardText(code)   — the rule text, or '' if none recorded
+ *   findCard(nameOrCode) — resolve either a code or a printed name
  *   cardsBySet(prefix) / cardsByCategory(cat) — filtered arrays
  */
 
@@ -416,14 +431,49 @@ export const CARDS = [
   { code: 'NP32', set: 'NP', number: 32, category: 'Upgrade', name: 'Starmaw' },
 ];
 
+/* ---- Rule text ----------------------------------------------------------
+ * Keyed by card code. Add entries as you need them; anything not listed
+ * simply has no text and falls back to showing the card name on hover.
+ */
+export const CARD_TEXT = {
+  CC17: 'Pick a stagger hex. Push each fighter within 1 hex of that stagger hex 1 hex.',
+};
+
+/* Merge the text in so each card object carries its own `text`. */
+CARDS.forEach(function (c) {
+  if (CARD_TEXT[c.code]) c.text = CARD_TEXT[c.code];
+});
+
 export const CARD_BY_CODE = CARDS.reduce(function (m, c) {
   m[c.code] = c;
   return m;
 }, {});
 
+/* Printed names are not globally unique (several decks share e.g. 'Sidestep'
+ * or 'Keen Eye'), so this resolves to the first match. Good enough for
+ * looking up a card the puzzle data refers to by name. */
+export const CARD_BY_NAME = CARDS.reduce(function (m, c) {
+  const k = c.name.toLowerCase();
+  if (!m[k]) m[k] = c;
+  return m;
+}, {});
+
+/* Resolve either a card code ('CC17') or a printed name ('Violent Blast'). */
+export function findCard(nameOrCode) {
+  if (!nameOrCode) return null;
+  const raw = String(nameOrCode).trim();
+  return CARD_BY_CODE[raw.toUpperCase()] || CARD_BY_NAME[raw.toLowerCase()] || null;
+}
+
 export function cardName(code) {
   const c = CARD_BY_CODE[code];
   return c ? c.name : code;
+}
+
+/* Rule text for a card code or name; '' when none is recorded. */
+export function cardText(nameOrCode) {
+  const c = findCard(nameOrCode);
+  return (c && c.text) ? c.text : '';
 }
 
 export function cardsBySet(prefix) {

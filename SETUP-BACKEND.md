@@ -78,6 +78,8 @@ for later analysis:
 
 | Key | Contents |
 |---|---|
+| `board:week:<YYYY-MM-DD>` | weekly leaderboard (week starting that Monday 06:00) |
+| `board:day:<YYYY-MM-DD>` | daily leaderboard (06:00 to 06:00) |
 | `feedback:<puzzleId>` | `{ up, down, updated }` — running totals |
 | `vote:<puzzleId>:<voterId>` | `{ vote, ts }` — one row per voter |
 
@@ -102,6 +104,32 @@ puzzle can both attract thumbs-down, so read it alongside the difficulty tier.
 
 The `voterId` is the same random save code used for progress — not an account,
 just enough to dedupe. No personal data is stored.
+
+## Leaderboard periods
+
+The board has two views, both global: **This week** and **Today**.
+
+Rather than wiping data on a schedule, scores are written into time-boxed
+buckets, so boards "reset" on their own and past periods stay in KV for
+analysis:
+
+- **Weekly** resets **Mondays at 06:00**
+- **Daily** resets at **06:00** each day
+
+Both boundaries use `Europe/Copenhagen` local time (handled with `Intl`, so
+CET/CEST daylight saving is automatic — it's genuinely 06:00 year-round).
+A run counts towards both the week and the day it was played in, and
+late-night play before 06:00 still counts towards the previous day.
+
+To change the timezone or reset hour, edit `BOARD_TZ` / `RESET_HOUR` at the
+top of `worker/index.js`.
+
+Read a specific board:
+
+```bash
+curl 'https://wu-puzzles.<you>.workers.dev/api/scores?period=week'
+curl 'https://wu-puzzles.<you>.workers.dev/api/scores?period=day'
+```
 
 ## Notes
 

@@ -78,14 +78,21 @@ function withTimeout(promise, ms) {
 
 /* Fetch the global board, sorted high→low. Resolves with entries: [] on any
  * failure so the UI can degrade quietly. */
-export async function fetchGlobal() {
+export async function fetchGlobal(period) {
+  const p = period === 'day' ? 'day' : 'week';
   try {
-    const res = await withTimeout(fetch(REMOTE.url, { cache: 'no-cache' }), REMOTE.timeoutMs);
+    const url = REMOTE.url + '?period=' + p;
+    const res = await withTimeout(fetch(url, { cache: 'no-cache' }), REMOTE.timeoutMs);
     if (!res.ok) throw new Error('http ' + res.status);
     const data = await res.json();
     const entries = Array.isArray(data.entries) ? data.entries : [];
     entries.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-    return { ok: true, entries: entries.slice(0, REMOTE.maxEntries) };
+    return {
+      ok: true,
+      period: data.period || p,
+      periodKey: data.periodKey || null,
+      entries: entries.slice(0, REMOTE.maxEntries),
+    };
   } catch (e) {
     return { ok: false, entries: [], reason: String(e && e.message || e) };
   }
@@ -109,7 +116,13 @@ export async function submitGlobal(entry) {
     if (!res.ok) throw new Error('http ' + res.status);
     const data = await res.json();
     const entries = Array.isArray(data.entries) ? data.entries : [];
-    return { ok: true, rank: data.rank || null, entries: entries };
+    return {
+      ok: true,
+      rank: data.rank || null,
+      weekRank: data.weekRank || null,
+      dayRank: data.dayRank || null,
+      entries: entries,
+    };
   } catch (e) {
     return { ok: false, entries: [], reason: String(e && e.message || e) };
   }

@@ -53,8 +53,55 @@ function cleanName(raw) {
     .slice(0, MAX_NAME_LEN) || 'Anon';
 }
 
-async function readBoard(env) {
-  const raw = await env.SCORES.get('board');
+/* ---- Score periods -------------------------------------------------------
+ * Boards are stored in time-boxed buckets instead of being wiped on a
+ * schedule, so they "reset" automatically and old periods stay available:
+ *
+ *   board:week:<YYYY-MM-DD>   week starting that Monday at 06:00 local
+ *   board:day:<YYYY-MM-DD>    that day from 06:00 to 06:00 local
+ *
+ * Both boundaries are 06:00 in BOARD_TZ, so a late-night session still
+ * counts towards the day it started in.
+ */
+const BOARD_TZ = 'Europe/Copenhagen';
+const RESET_HOUR = 6;
+
+/* Y/M/D of a timestamp as seen in BOARD_TZ. */
+function localYMD(date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: BOARD_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date);
+  const get = (t) => parts.find(p => p.type === t).value;
+  return { y: Number(get('year')), m: Number(get('month')), d: Number(get('day')) };
+}
+
+const pad = (n) => String(n).padStart(2, '0');
+
+/* Which day/week bucket a moment belongs to. Shifting back by RESET_HOUR
+ * makes 06:00 the rollover point rather than midnight. */
+export function periodKeys(now) {
+  const shifted = new Date(now.getTime() - RESET_HOUR * 3600 * 1000);
+  const { y, m, d } = localYMD(shifted);
+  const dayKey = y + '-' + pad(m) + '-' + pad(d);
+
+  // Find the Monday of that (shifted) local date.
+  const asUTC = Date.UTC(y, m - 1, d);
+  const dow = new Date(asUTC).getUTCDay();          // 0=Sun … 6=Sat
+  const sinceMonday = (dow + 6) % 7;                 // Monday → 0
+  const monday = localYMD(new Date(asUTC - sinceMonday * 86400000 + 12 * 3600000));
+  const weekKey = monday.y + '-' + pad(monday.m) + '-' + pad(monday.d);
+
+  return { day: dayKey, week: weekKey };
+}
+
+function boardKey(period, keys) {
+  return period === 'day'
+    ? 'board:day:' + keys.day
+    : 'board:week:' + keys.week;
+}
+
+async function readBoardAt(env, key) {
+  const raw = await env.SCORES.get(key);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -64,11 +111,19 @@ async function readBoard(env) {
   }
 }
 
-async function handleScores(request, env) {
+async function handleScores(request, env, url) {
+  const keys = periodKeys(new Date());
+  const period = (url && url.searchParams.get('period')) === 'day' ? 'day' : 'week';
+
   if (request.method === 'GET') {
-    const board = await readBoard(env);
+    const board = await readBoardAt(env, boardKey(period, keys));
     board.sort((a, b) => (b.score || 0) - (a.score || 0));
-    return json({ ok: true, entries: board.slice(0, MAX_ENTRIES) });
+    return json({
+      ok: true,
+      period: period,
+      periodKey: period === 'day' ? keys.day : keys.week,
+      entries: board.slice(0, MAX_ENTRIES),
+    });
   }
 
   if (request.method === 'POST') {
@@ -90,14 +145,28 @@ async function handleScores(request, env) {
       ts: Date.now(),
     };
 
-    const board = await readBoard(env);
-    board.push(entry);
-    board.sort((a, b) => (b.score || 0) - (a.score || 0));
-    const trimmed = board.slice(0, MAX_ENTRIES);
-    await env.SCORES.put('board', JSON.stringify(trimmed));
+    // A run counts towards both the current week and the current day.
+    const written = {};
+    for (const p of ['week', 'day']) {
+      const key = boardKey(p, keys);
+      const board = await readBoardAt(env, key);
+      board.push(entry);
+      board.sort((a, b) => (b.score || 0) - (a.score || 0));
+      const trimmed = board.slice(0, MAX_ENTRIES);
+      await env.SCORES.put(key, JSON.stringify(trimmed));
+      written[p] = trimmed;
+    }
 
-    const rank = trimmed.findIndex(e => e.ts === entry.ts && e.name === entry.name) + 1;
-    return json({ ok: true, rank: rank || null, entries: trimmed });
+    const shown = written[period];
+    const rank = shown.findIndex(e => e.ts === entry.ts && e.name === entry.name) + 1;
+    return json({
+      ok: true,
+      period: period,
+      rank: rank || null,
+      entries: shown,
+      weekRank: written.week.findIndex(e => e.ts === entry.ts && e.name === entry.name) + 1 || null,
+      dayRank: written.day.findIndex(e => e.ts === entry.ts && e.name === entry.name) + 1 || null,
+    });
   }
 
   return bad('method not allowed', 405);
@@ -245,7 +314,7 @@ export default {
     }
 
     if (path === '/api/scores') {
-      return handleScores(request, env);
+      return handleScores(request, env, url);
     }
 
     const prog = path.match(/^\/api\/progress\/([^/]+)$/);
@@ -266,7 +335,14 @@ export default {
       return bad('not found', 404);
     }
 
-    // Everything else: the static site.
-    return env.ASSETS.fetch(request);
+    // Everything else: the static site. Assets are normally served before
+    // this Worker even runs; we only get here for paths the asset server
+    // didn't match, so fall back to index.html (the SPA behaviour we can't
+    // use in wrangler.toml without shadowing /api/*).
+    const assetRes = await env.ASSETS.fetch(request);
+    if (assetRes.status === 404) {
+      return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+    }
+    return assetRes;
   },
 };

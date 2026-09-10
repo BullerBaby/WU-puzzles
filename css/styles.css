@@ -662,6 +662,9 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .card-chip.obj { background: var(--obj-bg); color: var(--obj-text); border: 0.5px solid var(--obj-border); }
 .card-chip.power { background: var(--pow-bg); color: var(--pow-text); border: 0.5px solid var(--pow-border); }
 .card-chip.hidden { background: var(--hidden); color: transparent; width: 18px; padding: 2px 0; user-select: none; }
+/* Cards with rule text recorded get a help cursor + dotted underline so it's
+ * discoverable that hovering shows the card's effect. */
+.card-chip.has-text { cursor: help; text-decoration: underline dotted currentColor 1px; text-underline-offset: 2px; }
 
 
 .custom-section { margin-top: 1.25rem; }
@@ -1230,3 +1233,4 @@ footer code { font-family: ui-monospace, monospace; background: var(--surface-2)
   font-variant-numeric: tabular-nums;
 }
 .feedback-btn.chosen .feedback-count { color: var(--accent); }
+

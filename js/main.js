@@ -243,8 +243,8 @@ function loadGame(gameId) {
   }
   rebuildGameNav(game.id);
   decorateDifficulty(game);
-  // Feedback row: visible only once this puzzle has been answered.
-  if (hasAnswered(game.id, (game.steps || []).length)) showFeedback(game.id);
+  // Feedback row: free play only, and only once this puzzle has been answered.
+  if (!Challenge.isActive() && hasAnswered(game.id, (game.steps || []).length)) showFeedback(game.id);
   else hideFeedback();
   renderBoard(game);
   renderFighterCards(game);
@@ -325,6 +325,7 @@ function hideFeedback() {
   feedbackPuzzleId = null;
 }
 
+
 (function wireFeedback() {
   ['up', 'down'].forEach(function (dir) {
     const btn = $('feedback-' + dir);
@@ -363,9 +364,9 @@ function decorateDifficulty(game) {
 
 /* Called by the poll result hook for every fresh option click. */
 function onPollResult(game, result) {
-  // Any answer (right or wrong) unlocks the thumbs row for this puzzle.
-  // Done before the challenge guard so it works in free play too.
-  if (game && game.id) showFeedback(game.id);
+  // Rating is a free-play-only feature. During a challenge run the puzzle
+  // auto-advances immediately, so we don't show the thumbs row at all.
+  if (game && game.id && !Challenge.isActive()) showFeedback(game.id);
 
   if (!Challenge.isActive()) return;
   if (!currentGame || game.id !== currentGame.id) return;
@@ -437,9 +438,14 @@ function finishRun(snap, quiet) {
     Leaderboard.submitGlobal(entry).then(function (res) {
       if (res.ok) {
         const rankEl = $('result-rank');
-        if (rankEl) rankEl.textContent = 'Global rank #' + res.rank;
+        if (rankEl) {
+          const parts = [];
+          if (res.weekRank) parts.push('#' + res.weekRank + ' this week');
+          if (res.dayRank) parts.push('#' + res.dayRank + ' today');
+          rankEl.textContent = parts.length ? parts.join(' · ') : '';
+        }
       }
-      if (lbTab === 'global') renderLeaderboard();
+      renderLeaderboard();   // the run counts towards both boards
     });
   }
 }
@@ -490,7 +496,7 @@ function renderBest() {
   if (el) el.textContent = best ? 'Your best: ' + best.score : '';
 }
 
-let lbTab = Leaderboard.isGlobalEnabled() ? 'global' : 'personal';
+let lbTab = 'week';   // 'week' = this week's global board, 'day' = today's
 
 function setLeaderboardNote(txt) {
   const n = $('leaderboard-note');
@@ -522,29 +528,24 @@ function renderLeaderboardList(entries, opts) {
 
 function renderLeaderboard() {
   // Toggle tab visuals
-  $('lb-tab-global').classList.toggle('active', lbTab === 'global');
-  $('lb-tab-personal').classList.toggle('active', lbTab === 'personal');
+  $('lb-tab-global').classList.toggle('active', lbTab === 'week');
+  $('lb-tab-daily').classList.toggle('active', lbTab === 'day');
 
-  if (lbTab === 'personal') {
-    const best = Leaderboard.getPersonalBest();
-    renderLeaderboardList(best ? [best] : [], { emptyText: 'No personal best yet.', highlightSelf: false });
-    setLeaderboardNote('Saved on this device.');
-    return;
-  }
-  // Global
-  if (!Leaderboard.isGlobalEnabled()) {
-    renderLeaderboardList([], { emptyText: 'Global board not configured.' });
-    setLeaderboardNote('Set a remote URL in js/leaderboard.js to enable the shared board.');
-    return;
-  }
+  const isDay = lbTab === 'day';
   setLeaderboardNote('Loading…');
-  Leaderboard.fetchGlobal().then(function (res) {
+  Leaderboard.fetchGlobal(isDay ? 'day' : 'week').then(function (res) {
+    if (lbTab !== (isDay ? 'day' : 'week')) return;   // tab changed mid-flight
     if (res.ok) {
-      renderLeaderboardList(res.entries, { emptyText: 'No scores yet — be the first!', highlightSelf: true });
-      setLeaderboardNote('Shared with everyone.');
+      renderLeaderboardList(res.entries, {
+        emptyText: isDay ? 'No scores today yet — be the first!' : 'No scores this week yet — be the first!',
+        highlightSelf: true,
+      });
+      setLeaderboardNote(isDay
+        ? 'Everyone\u2019s scores today. Resets daily at 06:00.'
+        : 'Everyone\u2019s scores this week. Resets Mondays at 06:00.');
     } else {
       renderLeaderboardList([], { emptyText: 'Global board offline.' });
-      setLeaderboardNote('Couldn’t reach the shared board — showing nothing.');
+      setLeaderboardNote('Couldn\u2019t reach the shared board.');
     }
   });
 }
@@ -566,10 +567,10 @@ function renderLeaderboard() {
   const close = $('result-close');
   if (close) close.addEventListener('click', function () { hideResult(); renderLeaderboard(); });
 
-  const gTab = $('lb-tab-global');
-  const pTab = $('lb-tab-personal');
-  if (gTab) gTab.addEventListener('click', function () { lbTab = 'global'; renderLeaderboard(); });
-  if (pTab) pTab.addEventListener('click', function () { lbTab = 'personal'; renderLeaderboard(); });
+  const wTab = $('lb-tab-global');
+  const dTab = $('lb-tab-daily');
+  if (wTab) wTab.addEventListener('click', function () { lbTab = 'week'; renderLeaderboard(); });
+  if (dTab) dTab.addEventListener('click', function () { lbTab = 'day'; renderLeaderboard(); });
 })();
 
 /* ==================== INIT ==================== */

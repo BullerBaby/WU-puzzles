@@ -21,6 +21,61 @@
 
 export const GAMES = [
   {
+    id: 'briar-queen-charge-choice',
+    title: "Thorns of the Briar Queen vs Kurnoth's Heralds — Briar Queen's charge",
+    description: "Round 2. The Briar Queen is ready to charge. Which hex should she charge to?",
+    tags: ['Positioning'],
+    date: '',
+    location: '',
+    credit: '',
+    round: 2,
+    board: 'spitewood-1',
+    boardRotation: 90,
+    warbands: { me: 'thorns-of-the-briar-queen', opp: 'kurnoths-heralds' },
+    decks: {
+      opp: { pair: 'Hunting Grounds / Pillage and Plunder' },
+    },
+    steps: [
+      {
+        explanation: "The Briar Queen is on d0 with Move 3. Ylarin (c4) and Lenwythe (d4) are both 4 hexes away, so she needs her full move to reach either. Three hexes put her in melee: b3 reaches only Ylarin, d3 reaches only Lenwythe, and c3 reaches both. Since she deals 2 damage against 5-wound fighters she isn't killing anyone this activation, so the charge is about position, not damage \u2014 and c3 is the only hex that leaves her adjacent to two enemies, which is what the warband's Surrounded ability wants.",
+        poll: {
+          question: "Which hex should the Briar Queen charge to?",
+          options: [
+            'b3 \u2014 adjacent to Ylarin, and onto treasure 1',
+            'c3 \u2014 adjacent to both Ylarin and Lenwythe',
+            'd3 \u2014 adjacent to Lenwythe',
+            'Stay put and go on guard',
+          ],
+          correct: 1,
+        },
+        state: {
+          positions: {
+            B: 'd0', V: '-e1', X: '-c4', S: '-c3', U: '-g3',
+            oY: 'c4', oL: 'd4',
+          },
+          wounds:   {},
+          slain:    ['H', 'I', 'oC'],
+          inspired: [],
+          glory:    [0, 0],
+          tokens:   {},
+          activationsUsed: { me: 1, opp: 1 },
+          features: [
+            { type: 'treasure', label: '1', hex: 'b3'  },
+            { type: 'treasure', label: '2', hex: 'g3'  },
+            { type: 'treasure', label: '3', hex: 'e0'  },
+            { type: 'treasure', label: '4', hex: '-d4' },
+            { type: 'treasure', label: '5', hex: '-g3' },
+            { type: 'aqua', hex: '-e4' },
+          ],
+          hand: {
+            me:  { objectives: 3, power: 3 },
+            opp: { objectives: 3, power: 3 },
+          },
+        },
+      },
+    ],
+  },
+  {
     id: 'headsmen-vs-emberwatch-r3-finale',
     title: "Headsmen's Curse vs Emberwatch, Last activation",
     description: "Round 3, last activation of the game. Glory is tied 15-15.",

@@ -32,10 +32,19 @@ export const BOARDS = {
     stagger:  ['-b2', 'j2'], blocked: ['-e1', 'g2'], waystone: [],
     starting: ['-c4','-e4','-g4','-i4','-d3','-f3','-h3', 'c5','e5','g5','i5','d3','f3','h3'],
   }, BOARD_SHAPE),
+  /* Spitewood 1 — VERIFIED against a photo of the physical board (Sept 2026).
+   Feature positions were read off the board and cross-checked: the set is
+   fully 180°-rotationally symmetric (7 starting hexes per side) and no
+   starting hex collides with an excluded hex. Don't "tidy" these values
+   without re-checking against the board; the previous list was a generic
+   copy that put four starting hexes (c5/e5/g5/i5) on excluded hexes. */
   'spitewood-1': Object.assign({
     name: 'Spitewood 1 — brown',
-    stagger:  ['-d2', 'h2'], blocked: [], waystone: ['-c2', 'i3'],
-    starting: ['-c4','-e4','-g4','-i4','-d3','-f3','-h3', 'c5','e5','g5','i5','d3','f3','h3'],
+    stagger: ['d2', '-h2'], blocked: [], waystone: ['-c2', 'i2'],
+    starting: [
+      '-b2', 'b2', '-c1', 'c2', '-d2', 'e3', '-e2',
+      'g2', '-g3', 'h2', 'i1', '-i2', '-j2', 'j2',
+    ],
   }, BOARD_SHAPE),
   'spitewood-2': Object.assign({
     name: 'Spitewood 2 — green',

@@ -145,7 +145,21 @@ export function resolveBoard(boardId, rotation) {
   };
 }
 
+/* Actual drawn centre of every hex, keyed by DISPLAY id, filled in by
+ * renderBoard(). Hexes are drawn at canonical positions and the whole group
+ * is then rotated by an SVG transform, so on a rotated board the visual
+ * centre is NOT what the plain lattice formula produces. Fighters and feature
+ * tokens live outside the rotation group (so they stay upright), so they must
+ * be positioned from these post-rotation centres. */
+let HEX_CENTERS = {};
+
 export function hexCenter(hexStr, board) {
+  // Prefer the real drawn position recorded by renderBoard — correct for any
+  // rotation. Fall back to the lattice formula when the board hasn't been
+  // rendered yet (or for an unknown hex).
+  const known = HEX_CENTERS[hexStr];
+  if (known) return { x: known.x, y: known.y };
+
   // Accept either a board object or a plain numeric rows (legacy callers).
   const orientation = (typeof board === 'object' && board) ? (board.orientation || 'flat-top') : 'flat-top';
   const rows = (typeof board === 'object' && board) ? board.rows : board;
@@ -207,6 +221,8 @@ export function renderBoard(game) {
   const isQuarter = (rotation === 90 || rotation === 270);
 
   svg.innerHTML = '';
+  // Positions are re-recorded below; drop any from a previous board/rotation.
+  HEX_CENTERS = {};
 
   const canonCols = board.cols;
   const canonRows = board.rows;
@@ -288,6 +304,9 @@ export function renderBoard(game) {
       title.textContent = displayId + (hexTypeDesc ? ' — ' + hexTypeDesc : '');
       poly.appendChild(title);
       hexGroup.appendChild(poly);
+      // Remember where this hex actually ends up on screen.
+      const vc = rotPoint(x, y);
+      HEX_CENTERS[displayId] = { x: vc.x, y: vc.y };
 
       // Per-hex coord label — counter-rotated so it reads upright after the
       // parent rotation.

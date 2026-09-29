@@ -428,3 +428,34 @@ Invalid examples that will fail:
 - `"a0"` — column a has no 0 hex. Use `"a1"` (just above midline) or `"-a1"` (just below).
 - `"f+1"` — no plus prefix on positives. Use `"f1"`.
 - `"f10"` — ranks go 0 to ±4 only. Max is `"f4"` or `"-f4"`.
+
+
+# MOVE-THE-FIGHTERS PUZZLES
+
+Instead of a `poll`, a step can be answered by moving your fighters on the
+board. Add a `solution` to the step:
+
+```json
+"solution": {
+  "prompt": "Optional heading for the answer panel",
+  "accept": {
+    "I": "slain",
+    "C": "e2",
+    "B": ["c1", "d1"]
+  }
+}
+```
+
+- `accept` lists each fighter's required END position: a hex, a list of hexes
+  (any one will do), or `"slain"`.
+- Fighters **not listed** must finish where they started (set
+  `"othersMayMove": true` to ignore them).
+- Only your side (`me`) can be moved; set `"movable": "opp"` to change that.
+- Moves are **not** checked against Move distance or other rules — the accepted
+  end positions decide what is correct.
+- **Traps:** a fighter entering a hex with a `trap` feature takes 2 damage
+  (slain if that reaches their Wounds) and the trap is removed, so the order of
+  moves matters.
+- Solve puzzles count as scorable in Challenge runs, exactly like polls.
+- `revealOnCorrect: true` on the step works here too: a correct answer moves on
+  to the next step, which keeps showing the position you moved to.

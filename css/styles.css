@@ -1329,3 +1329,25 @@ footer code { font-family: ui-monospace, monospace; background: var(--surface-2)
   margin-top: 6px;
   padding-top: 0;
 }
+
+/* ==================== SOLVE MODE (move the fighters) ==================== */
+.poll-panel.solve-mode #poll-options,
+.poll-panel.solve-mode .poll-actions { display: none; }
+.solve-controls { margin-top: 4px; }
+.solve-controls[hidden] { display: none; }
+.solve-status {
+  font-size: 12.5px; line-height: 1.45; color: var(--text-2);
+  min-height: 2.9em; margin-bottom: 8px;
+}
+.solve-status.ok  { color: var(--success); font-weight: 600; }
+.solve-status.bad { color: var(--danger);  font-weight: 600; }
+.solve-buttons { display: flex; gap: 6px; }
+.solve-buttons button { flex: 1; padding: 7px 10px; font-size: 13px; }
+.solve-buttons button:disabled { opacity: 0.45; cursor: default; }
+/* On the board: hexes are tappable, and the selected fighter is ringed. */
+#board-svg.solving .hex-poly { cursor: pointer; }
+.fighter.selected .bg {
+  stroke: var(--inspired);
+  stroke-width: 3.4;
+  filter: drop-shadow(0 0 3px var(--inspired));
+}

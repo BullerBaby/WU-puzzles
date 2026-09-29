@@ -64,6 +64,10 @@ export function hasAnswered(gameId, stepCount) {
 export function renderPoll(game, stepIdx, onCorrect, onResult) {
   const panel = document.getElementById('poll-panel');
   if (!panel || !game) return;
+  // A move-the-fighters step (js/solve.js) may have used this panel.
+  panel.classList.remove('solve-mode');
+  const solveCtl = document.getElementById('solve-controls');
+  if (solveCtl) solveCtl.hidden = true;
   const step = game.steps[stepIdx];
   const poll = step && step.poll;
   if (!poll || !Array.isArray(poll.options) || !poll.options.length) {

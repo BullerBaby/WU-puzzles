@@ -29,7 +29,7 @@ let cleared = 0;        // puzzles solved this run (== score here)
 export function isActive() { return active; }
 
 function hasPoll(game) {
-  return Array.isArray(game.steps) && game.steps.some(function (s) { return s && s.poll; });
+  return Array.isArray(game.steps) && game.steps.some(function (s) { return s && (s.poll || s.solution); });
 }
 
 /* How far a puzzle can jump from its "true" position in the order. Ratings

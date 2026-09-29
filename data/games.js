@@ -242,16 +242,14 @@ export const GAMES = [
     steps: [
       {
         revealOnCorrect: true,
-        explanation: "Glory is tied 20-20, the opponent has one power card left, and the game is on its final activation.",
-        poll: {
-          question: "What's your move?",
-          options: [
-            'Move to treasure token 5 on f2',
-            'Move to treasure token 4 on i1',
-            'Charge Ardorn on -c1',
-            'Go on guard',
-          ],
-          correct: 1,
+        explanation: '',
+        // Answered by moving Ylarin on the board (see js/solve.js). The answer
+        // box shows the situation text below as its heading. The only correct
+        // move is onto treasure 4 on i1; staying put (going on guard) or
+        // moving anywhere else is wrong.
+        solution: {
+          prompt: "Glory is tied 20-20, the opponent has one power card left, and the game is on its final activation.",
+          accept: { Y: 'i1' },
         },
         state: {
           positions: { Y: 'j3', A: '-c1' },
@@ -290,7 +288,6 @@ export const GAMES = [
   {
     // Position transcribed from a photo of a real game (Embergard 1). The
     // opening is round 1, first activation, with The Exiled Dead going first.
-    // The poll below still needs its answer options.
     //
     // Fighter identities were matched to the miniatures against the card art.
     // The ones marked (?) are best guesses and worth checking.
@@ -310,11 +307,18 @@ export const GAMES = [
     steps: [
       {
         explanation: 'You want to surround Hrothgorn, how to do that?',
-        // poll: {
-        //   question: '',
-        //   options: ['', '', '', ''],
-        //   correct: 0,
-        // },
+        // Answered by moving the Exiled Dead on the board (see js/solve.js).
+        // Ione must enter c1 first: the trap deals 2 damage, kills her and is
+        // removed, which frees c1 for Bault or Vlash. Anyone not listed here
+        // has to stay where they started.
+        solution: {
+          accept: {
+            I: 'slain',
+            C: 'e2',
+            B: ['c1', 'd1'],
+            V: ['c1', 'c2'],
+          },
+        },
         state: {
           positions: {
             // The Exiled Dead (bottom player) — all seven on their starting hexes

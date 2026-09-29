@@ -34,6 +34,7 @@ import * as Leaderboard from './leaderboard.js';
 import * as Progress from './progress.js';
 import * as Feedback from './feedback.js';
 import * as Elo from './elo.js';
+import * as Solve from './solve.js';
 
 /* ==================== STATE ==================== */
 let currentGame  = null;
@@ -88,7 +89,16 @@ function applyStep(idx) {
   const game = currentGame;
   const board = currentBoard;
   const step = game.steps[idx];
-  const state = step._state || step.state;
+  const baseState = step._state || step.state;
+  let state = baseState;
+  // Move-the-fighters step: draw the position with the player's moves applied.
+  if (Solve.hasSolution(step)) {
+    Solve.ensureSession(game, idx, baseState);
+    state = Solve.currentState(baseState);
+  } else if (Solve.carriesTo(game, idx)) {
+    state = Solve.currentState(baseState);   // keep the solved position visible
+  }
+  document.getElementById('board-svg').classList.toggle('solving', Solve.hasSolution(step));
 
   for (const id in game.fighters) {
     const pos = state.positions[id];
@@ -146,7 +156,7 @@ function applyStep(idx) {
   updateFighterCards(state, game);
   renderAbilities(game, state);
   renderActivations(state);
-  renderPoll(game, idx, function(stepIdx) {
+  if (Solve.hasSolution(step)) { renderSolvePanel(game, idx); } else renderPoll(game, idx, function(stepIdx) {
     // If this step opts in, reveal the next step (e.g. the opponent's hidden
     // power card) as soon as the correct option is chosen.
     const s = game.steps[stepIdx];
@@ -238,14 +248,16 @@ function loadGame(gameId) {
   // In a challenge run, clear any stored poll answers for this game so it
   // plays fresh (important when the run loops back to an already-solved
   // puzzle on a higher ramp).
+  Solve.clearSession();
   if (Challenge.isActive()) {
     (game.steps || []).forEach(function(s, i) {
       if (s && s.poll) resetStepAnswers(game.id, i);
     });
+    Solve.resetAttempts(game.id);
   }
   rebuildGameNav(game.id);
   // Feedback row: free play only, and only once this puzzle has been answered.
-  if (!Challenge.isActive() && hasAnswered(game.id, (game.steps || []).length)) showFeedback(game.id);
+  if (!Challenge.isActive() && (hasAnswered(game.id, (game.steps || []).length) || Solve.hasAttempted(game.id))) showFeedback(game.id);
   else hideFeedback();
   renderBoard(game);
   renderFighterCards(game);
@@ -276,6 +288,79 @@ function navRandom() {
   const pick = pickRandomUnseen(currentGame.id);
   if (pick) loadGame(pick.id);
 }
+
+/* ==================== SOLVE MODE (UI) ====================
+ * Answer a puzzle by moving fighters — see js/solve.js. Tap one of your
+ * fighters, then tap the hex to move it to; Check answer submits the result
+ * through the same path as a poll answer, so scoring, ratings and thumbs
+ * feedback all work unchanged. */
+function renderSolvePanel(game, idx) {
+  const sol = game.steps[idx].solution;
+  const s = Solve.getSession();
+  const panel = document.getElementById('poll-panel');
+  if (!panel || !s) return;
+  panel.hidden = false;
+  panel.classList.add('solve-mode');
+  document.getElementById('poll-question').textContent = sol.prompt || 'Move your fighters into position.';
+  document.getElementById('poll-meta').textContent = '';
+  document.getElementById('solve-controls').hidden = false;
+  const st = document.getElementById('solve-status');
+  st.textContent = s.message || 'Tap one of your fighters, then tap where it should go.';
+  st.className = 'solve-status' + (s.result === 'correct' ? ' ok' : s.result === 'wrong' ? ' bad' : '');
+  document.getElementById('solve-undo').disabled = Solve.moveCount() === 0;
+  document.getElementById('solve-reset').disabled = Solve.moveCount() === 0 && !s.result;
+  document.getElementById('solve-check').disabled = s.locked;
+  document.querySelectorAll('.fighter.selected').forEach(function (el) { el.classList.remove('selected'); });
+  if (s.selected) {
+    const el = document.getElementById('f-' + s.selected);
+    if (el) el.classList.add('selected');
+  }
+}
+
+function submitSolution() {
+  const game = currentGame;
+  if (!game || !Solve.isActive(game.id, currentStep)) return;
+  const s = Solve.getSession();
+  if (s.locked) return;
+  const res = Solve.check(game);
+  const rec = Solve.recordAttempt(game.id, res.correct);
+  s.result = res.correct ? 'correct' : 'wrong';
+  s.selected = null;
+  if (res.correct) {
+    s.locked = true;
+    s.message = 'Correct!';
+  } else {
+    // In a Challenge run a wrong answer ends the run, so freeze the board.
+    if (Challenge.isActive()) s.locked = true;
+    s.message = 'Not quite \u2014 adjust your moves and check again.';
+  }
+  applyStep(currentStep);
+  // Same as polls: a correct answer can reveal the next step.
+  const solvedStep = game.steps[currentStep];
+  if (res.correct && solvedStep.revealOnCorrect && currentStep + 1 < game.steps.length) {
+    goStep(1);
+  }
+  onPollResult(game, { stepIdx: currentStep, correct: res.correct, firstTry: rec.firstTry });
+}
+
+(function wireSolve() {
+  const svg = document.getElementById('board-svg');
+  if (svg) svg.addEventListener('click', function (e) {
+    if (!currentGame || !Solve.isActive(currentGame.id, currentStep)) return;
+    const poly = e.target.closest ? e.target.closest('polygon.hex-poly') : null;
+    if (!poly) return;
+    const r = Solve.clickHex(currentGame, poly.getAttribute('data-hex'),
+      { blocked: poly.getAttribute('data-hextype') === 'Blocked hex' });
+    if (r.changed) applyStep(currentStep);
+  });
+  const bind = function (id, fn) {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', fn);
+  };
+  bind('solve-undo',  function () { if (Solve.undo())  applyStep(currentStep); });
+  bind('solve-reset', function () { Solve.reset();     applyStep(currentStep); });
+  bind('solve-check', submitSolution);
+})();
 
 /* ==================== CHALLENGE MODE ====================
  * Wires the Challenge controller (js/challenge.js) and leaderboard

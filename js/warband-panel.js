@@ -417,6 +417,30 @@ function buildFighterCard(id, info) {
   }
   tip.appendChild(ts);
 
+  // Stats that change on the inspired side of the card (Move, Def, Wounds,
+  // Glory). Only the values that differ from the base card are listed, e.g.
+  // inspiredStats: { move: 4, save: { dice: 2, type: 'dodge' } }.
+  const ins = info.inspiredStats;
+  if (ins && (ins.move != null || ins.save || ins.wounds != null || ins.glory != null)) {
+    const il = document.createElement('div');
+    il.className = 'fighter-tooltip-section-label';
+    il.textContent = 'When inspired';
+    tip.appendChild(il);
+    const is = document.createElement('div');
+    is.className = 'fighter-tooltip-stats';
+    if (ins.move   != null) is.appendChild(statBit('Move',   ins.move));
+    if (ins.save && ins.save.dice != null) {
+      const s2 = document.createElement('span');
+      s2.className = 'stat';
+      s2.innerHTML = '<span class="stat-label">Def</span><span class="stat-value">' + ins.save.dice
+        + '</span>' + (ins.save.type ? '<span class="stat-suffix">' + ins.save.type + '</span>' : '');
+      is.appendChild(s2);
+    }
+    if (ins.wounds != null) is.appendChild(statBit('Wounds', ins.wounds));
+    if (ins.glory  != null) is.appendChild(statBit('Glory',  ins.glory));
+    tip.appendChild(is);
+  }
+
   const attacks = (info.attacks || []).slice();
   const attacksInspired = (info.attacksInspired || []).slice();
   if (attacks.length || attacksInspired.length) {

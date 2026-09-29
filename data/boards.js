@@ -22,6 +22,12 @@ export const BOARD_SHAPE = {
 };
 
 export const BOARDS = {
+  /* Embergard 1 — VERIFIED against a photo of the physical board (Sept 2026).
+     Fitted a perspective transform to the photo and checked every feature:
+     both stagger hexes (-g3, e3) land on the two red hexes, and all 14
+     starting hexes are accounted for — 7 show a crosshair and the other 7
+     each had a miniature standing on them. Left as-is; don't "tidy" without
+     re-checking against the board. */
   'embergard-1': Object.assign({
     name: 'Embergard 1 — Spinning Scythes',
     stagger:  ['-g3', 'e3'], blocked: [], waystone: [],

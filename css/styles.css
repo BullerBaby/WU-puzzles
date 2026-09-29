@@ -738,10 +738,16 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 .feature-token { pointer-events: none; }
 .feature-circle.treasure { fill: var(--treasure-bg); stroke: var(--treasure-border); stroke-width: 0.6; }
 .feature-circle.aqua { fill: var(--aqua-bg); stroke: var(--aqua-border); stroke-width: 0.6; }
+.feature-circle.trap { fill: #E9D3CE; stroke: #8C2F1A; stroke-width: 0.8; stroke-dasharray: 1.6 1; }
 .feature-circle.delved { stroke: var(--danger); stroke-width: 1.4; }
 .feature-label { font-size: 4.8px; font-family: ui-monospace, monospace; font-weight: 700; pointer-events: none; }
 .feature-label.treasure { fill: var(--treasure-text); }
 .feature-label.aqua { fill: var(--aqua-text); }
+.feature-label.trap { fill: #5A1A0C; }
+@media (prefers-color-scheme: dark) {
+  .feature-circle.trap { fill: #4A2620; stroke: #E8967A; }
+  .feature-label.trap { fill: #F3C6B8; }
+}
 @keyframes dmgPop {
   0% { opacity: 0; transform: translateY(0) scale(0.7); }
   20% { opacity: 1; transform: translateY(-6px) scale(1.15); }

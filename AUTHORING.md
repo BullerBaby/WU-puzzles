@@ -198,8 +198,10 @@ State object — all fields optional; omit what doesn't apply:
   "powerStepsUsed":  { "me": <0-4>, "opp": <0-4> },  // optional; defaults to mirror activationsUsed
   "features": [
     { "type": "treasure", "label": "1"|"2"|"3"|"4"|"5", "hex": "<hex>" },
-    { "type": "aqua",                                    "hex": "<hex>" }
+    { "type": "aqua",                                    "hex": "<hex>" },
+    { "type": "trap",                                    "hex": "<hex>" }
     // "delved": true on a treasure shows a red outline on the token
+    // "trap" is a friendly trap model (e.g. Hrothgorn's Mantrappers)
   ],
   "hand": {
     "me":  { "objectives": <int>, "power": <int> },  // cards in hand

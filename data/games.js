@@ -287,4 +287,79 @@ export const GAMES = [
       },
     ],
   },
+  {
+    // DRAFT — position transcribed from a photo of a real game. Title,
+    // description, explanation and the poll are deliberately left empty for
+    // you to fill in. Until a `poll` is added below this puzzle can be browsed
+    // but is skipped by Challenge runs (they only serve puzzles with a poll).
+    //
+    // Fighter identities were matched to the miniatures against the card art.
+    // The ones marked (?) are best guesses and worth checking.
+    id: 'exiled-dead-vs-mantrappers',
+    title: '',
+    description: '',
+    tags: [],
+    date: '',
+    location: '',
+    credit: '',
+    round: 1,                     // placeholder — the round isn't visible in the photo
+    board: 'embergard-1',
+    boardRotation: 90,            // matches the photo's orientation (your side at the bottom)
+    warbands: { me: 'the-exiled-dead', opp: 'hrothgorns-mantrappers' },
+    // Bushwakka shares the label 'B' with Bault, so the opponent's key is 'oB'.
+
+    steps: [
+      {
+        explanation: '',
+        // poll: {
+        //   question: '',
+        //   options: ['', '', '', ''],
+        //   correct: 0,
+        // },
+        state: {
+          positions: {
+            // The Exiled Dead (bottom player)
+            D:  '-g5',   // Deintalos — robed figure with staff
+            M:  '-b3',   // Marcov — crouching figure
+            R:  '-g4',   // Regulus — armoured, halberd (?)
+            B:  'c1',    // Bault — arms outstretched (?)
+            V:  'd1',    // Vlash — stooped, weapon held low (?)
+            C:  'e2',    // Coyl (?)
+            // Hrothgorn's Mantrappers (top player)
+            H:  'd2',    // Hrothgorn — with the iron trap
+            T:  'h2',    // Thrafnir — the boar
+            Q:  'c4',    // Quiv — gnoblar with a long spear
+            L:  'g4',    // Luggit and Thwak — gnoblar, standing on treasure 5 (?)
+            oB: 'g3',    // Bushwakka — gnoblar with a round shield (?)
+          },
+          wounds:   {},
+          // Ione's miniature is lying on her card rather than on the board,
+          // so she's recorded as slain.
+          slain:    ['I'],
+          // The Exiled Dead's minions begin the game inspired, and their five
+          // cards are on the gold side in the photo; Deintalos and Marcov are
+          // still on the grey side.
+          inspired: ['R', 'B', 'V', 'I', 'C'],
+          glory:    [0, 0],
+          tokens:   {},
+          activationsUsed: { me: 0, opp: 0 },
+          features: [
+            { type: 'treasure', label: '1', hex: 'd4'  },
+            { type: 'treasure', label: '2', hex: 'g0'  },
+            { type: 'treasure', label: '3', hex: 'd0'  },
+            { type: 'treasure', label: '4', hex: '-d4' },
+            { type: 'treasure', label: '5', hex: 'g4'  },
+            { type: 'aqua', hex: 'e4'  },
+            { type: 'aqua', hex: '-e4' },
+            // A Mantrappers trap model (Ravenous Traps), on their side of the board.
+            { type: 'trap', hex: 'e3' },
+          ],
+          hand: {
+            me:  { objectives: 0, power: 0 },
+            opp: { objectives: 0, power: 0 },
+          },
+        },
+      },
+    ],
+  },
 ];

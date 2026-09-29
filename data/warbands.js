@@ -6,7 +6,14 @@
  * still work and override (or augment) anything from the warband.
  *
  * Fighter shape: { label, name?, isLeader?, move?, wounds?, glory?,
- *                  save?: { dice, type }, attacks?: [...], attacksInspired?: [...] }
+ *                  save?: { dice, type }, attacks?: [...], attacksInspired?: [...],
+ *                  inspiredStats?: { move?, save?, wounds?, glory? },
+ *                  traits?: [...] }
+ *   - inspiredStats: only the stats that CHANGE on the inspired side of the
+ *     card; shown in the fighter tooltip under "When inspired".
+ *   - traits: free-text tags from the card (e.g. 'minion', 'conductive',
+ *     'gnoblar'). Not used by the app yet — recorded so rules text that refers
+ *     to them (e.g. "friendly conductive fighters") can be wired up later.
  * Attack shape:  { name, range, dice, damage, type ('sword'|'hammer'),
  *                  cleave?, note? }
  */
@@ -851,6 +858,148 @@ export const WARBANDS = {
            ],
            attacksInspired: [
              { name: 'Bite', range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+    },
+  },
+
+  /* The Exiled Dead — transcribed from the warscroll and both fighter-card
+     sides (Feb 2026 rules updates). The tiny weapon-ability runemarks printed
+     at the end of some attack lines are not recorded. */
+  'the-exiled-dead': {
+    name: 'The Exiled Dead',
+    abilities: ['Dynamic Enhancer', 'Overload', 'Dynamic Surge', 'Puppeteer', 'Danse Dynamic'],
+    fighters: {
+      D: { label: 'D', name: 'Deintalos', isLeader: true,
+           move: 3, wounds: 4, glory: 1,
+           save: { dice: 1, type: 'block' },
+           inspiredStats: { save: { dice: 2, type: 'block' } },
+           attacks: [
+             { range: 2, dice: 2, damage: 2, type: 'hammer' },
+             { range: 3, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 2, dice: 3, damage: 2, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'hammer' },
+           ] },
+      M: { label: 'M', name: 'Marcov',
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      R: { label: 'R', name: 'Regulus', traits: ['minion'],
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'block' },
+           attacks: [
+             { range: 2, dice: 2, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 2, dice: 2, damage: 2, type: 'hammer' },
+           ] },
+      B: { label: 'B', name: 'Bault', traits: ['minion', 'conductive'],
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'block' },
+           inspiredStats: { move: 3 },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ] },
+      V: { label: 'V', name: 'Vlash', traits: ['minion', 'conductive'],
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'block' },
+           inspiredStats: { move: 3 },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ] },
+      I: { label: 'I', name: 'Ione', traits: ['minion', 'conductive'],
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'block' },
+           inspiredStats: { move: 3 },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ] },
+      C: { label: 'C', name: 'Coyl', traits: ['minion', 'conductive'],
+           move: 2, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'block' },
+           inspiredStats: { move: 3 },
+           attacks: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
+           ] },
+    },
+  },
+
+  /* Hrothgorn's Mantrappers — transcribed from the warscroll and both
+     fighter-card sides (Feb 2026 rules updates). Weapon-ability runemarks at
+     the end of some attack lines are not recorded. The three Gnoblars carry
+     the 'gnoblar' trait used by More Traps / Surprising Competence. */
+  'hrothgorns-mantrappers': {
+    name: "Hrothgorn's Mantrappers",
+    abilities: ['Everwinter Ambush', 'Ravenous Traps', 'More Traps', 'Surprising Competence'],
+    fighters: {
+      H: { label: 'H', name: 'Hrothgorn', isLeader: true,
+           move: 4, wounds: 6, glory: 3,
+           save: { dice: 1, type: 'block' },
+           inspiredStats: { save: { dice: 2, type: 'block' } },
+           attacks: [
+             { range: 1, dice: 2, damage: 3, type: 'hammer' },
+             { range: 3, dice: 3, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 3, type: 'hammer' },
+             { range: 3, dice: 4, damage: 1, type: 'sword' },
+           ] },
+      T: { label: 'T', name: 'Thrafnir',
+           move: 5, wounds: 3, glory: 1,
+           save: { dice: 2, type: 'dodge' },
+           attacks: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 2, type: 'sword' },
+           ] },
+      L: { label: 'L', name: 'Luggit and Thwak', traits: ['gnoblar'],
+           move: 3, wounds: 3, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           inspiredStats: { move: 4 },
+           attacks: [
+             { range: 1, dice: 1, damage: 1, type: 'hammer' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      Q: { label: 'Q', name: 'Quiv', traits: ['gnoblar'],
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           inspiredStats: { move: 4, save: { dice: 2, type: 'dodge' } },
+           attacks: [
+             { range: 1, dice: 2, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 3, damage: 1, type: 'sword' },
+           ] },
+      B: { label: 'B', name: 'Bushwakka', traits: ['gnoblar'],
+           move: 3, wounds: 2, glory: 1,
+           save: { dice: 1, type: 'dodge' },
+           inspiredStats: { move: 4, save: { dice: 2, type: 'dodge' } },
+           attacks: [
+             { range: 1, dice: 1, damage: 1, type: 'sword' },
+           ],
+           attacksInspired: [
+             { range: 1, dice: 2, damage: 2, type: 'sword' },
            ] },
     },
   },

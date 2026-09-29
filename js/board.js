@@ -560,8 +560,12 @@ function stackXOffsets(n, yOff) {
 
 function drawFeatureToken(layer, feature, cx, cy) {
   const r = FEATURE_R;
+  // Feature kinds: treasure (numbered), aqua (Aqua Ghyranis) and trap (a
+  // friendly trap model, e.g. Hrothgorn's Mantrappers). Anything unknown falls
+  // back to aqua, as before.
   const isTreasure = feature.type === 'treasure';
-  const cls = isTreasure ? 'treasure' : 'aqua';
+  const isTrap = feature.type === 'trap';
+  const cls = isTreasure ? 'treasure' : (isTrap ? 'trap' : 'aqua');
   const g = svgEl('g', { class: 'feature-token', transform: 'translate(' + cx.toFixed(2) + ',' + cy.toFixed(2) + ')' });
   // Delved → red outline on the token itself (mirrors how inspired colours the fighter's stroke).
   const circleCls = 'feature-circle ' + cls + (feature.delved ? ' delved' : '');
@@ -572,7 +576,7 @@ function drawFeatureToken(layer, feature, cx, cy) {
     'text-anchor': 'middle', 'dominant-baseline': 'central',
     class: 'feature-label ' + cls,
   });
-  lbl.textContent = isTreasure ? String(feature.label || '?') : 'A';
+  lbl.textContent = isTreasure ? String(feature.label || '?') : (isTrap ? 'T' : 'A');
   g.appendChild(lbl);
   layer.appendChild(g);
 }

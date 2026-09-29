@@ -181,6 +181,7 @@ function rebuildHexTitles(state, game) {
     let d;
     if (f.type === 'treasure')  d = 'Treasure ' + (f.label || '?');
     else if (f.type === 'aqua') d = 'Aqua Ghyranis';
+    else if (f.type === 'trap') d = 'Trap';
     else                        d = (f.type || 'Feature');
     if (f.delved) d += ' (delved)';
     (featByHex[f.hex] = featByHex[f.hex] || []).push(d);
@@ -192,7 +193,7 @@ function rebuildHexTitles(state, game) {
     const hex = positions[id];
     if (!hex || slain.indexOf(id) >= 0) continue;
     const info = game.fighters[id] || {};
-    let d = 'Fighter ' + (info.name || id);
+    let d = 'Fighter ' + (info.name || info.label || id);
     const extras = [];
     if (inspired.indexOf(id) >= 0) extras.push('inspired');
     if (wounds[id] > 0) extras.push(wounds[id] + ' wound' + (wounds[id] > 1 ? 's' : ''));

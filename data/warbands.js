@@ -5,6 +5,15 @@
  * instead of inlining `fighters` + `abilities`. Per-game `fighters`/`abilities`
  * still work and override (or augment) anything from the warband.
  *
+ * Warband shape: { name, abilities?, inspire?, fighters }
+ *   - abilities: each entry is a plain name string, or an object
+ *     { name, flavor?, text } holding the warscroll text. Objects get a hover
+ *     card in the ability chips (flavor shown in italics). In `text`, a
+ *     newline starts a new paragraph and a line beginning with "\u2022 " is a bullet.
+ *     Names are what `abilitiesUsed` in a game's state refers to.
+ *   - inspire: the warscroll's Inspire condition text, shown as an "Inspire"
+ *     chip ahead of the abilities.
+ *
  * Fighter shape: { label, name?, isLeader?, move?, wounds?, glory?,
  *                  save?: { dice, type }, attacks?: [...], attacksInspired?: [...],
  *                  inspiredStats?: { move?, save?, wounds?, glory? },
@@ -867,7 +876,21 @@ export const WARBANDS = {
      at the end of some attack lines are not recorded. */
   'the-exiled-dead': {
     name: 'The Exiled Dead',
-    abilities: ['Dynamic Enhancer', 'Overload', 'Dynamic Surge', 'Puppeteer', 'Danse Dynamic'],
+    inspire: "Friendly minions begin the game Inspired.\nAfter an enemy fighter is slain by a friendly minion, Inspire Deintalos and Marcov.",
+    abilities: [
+      { name: 'Dynamic Enhancer',
+        text: "Friendly conductive fighters have +X Move, where X is the number of slain friendly conductive fighters." },
+      { name: 'Overload',
+        text: "Friendly conductive fighters cannot hold treasure tokens or Delve. Friendly conductive fighters' melee weapons (excluding Upgrades) have Grievous if the target has any Stagger tokens." },
+      { name: 'Dynamic Surge',
+        text: "You can re-roll 1 Attack dice in an Attack roll for a friendly conductive fighter while any other friendly conductive fighters are adjacent to the attacker." },
+      { name: 'Puppeteer',
+        flavor: "Prentice Marcov is not yet the equal of his master's necromantic power, but he is certainly working to develop his dark skills.",
+        text: "Pick a friendly Marcov to use this ability if they have no Move or Charge tokens. Pick 1 of the following:\n\u2022 That fighter and a friendly Regulus can each use a Core ability that they are eligible to use.\n\u2022 If a friendly Regulus is slain, Raise them and place them in an empty hex adjacent to that fighter.\nThis ability can only be used once per battle round." },
+      { name: 'Danse Dynamic',
+        flavor: "Deintalos is a master of the Force Dynamic, sending its crackling power through unliving limbs with ease.",
+        text: "Pick your leader to use this ability if they have no Move or Charge tokens. Pick either the Move ability or the Attack ability. Each friendly conductive fighter can use that ability.\nThen, you can pick a slain friendly conductive fighter. Raise that conductive fighter, place them in an empty hex adjacent to your leader and then inflict 1 damage on them." },
+    ],
     fighters: {
       D: { label: 'D', name: 'Deintalos', isLeader: true,
            move: 3, wounds: 4, glory: 1,
@@ -948,7 +971,21 @@ export const WARBANDS = {
      the 'gnoblar' trait used by More Traps / Surprising Competence. */
   'hrothgorns-mantrappers': {
     name: "Hrothgorn's Mantrappers",
-    abilities: ['Everwinter Ambush', 'Ravenous Traps', 'More Traps', 'Surprising Competence'],
+    inspire: "After an enemy fighter is slain by a melee Attack made by your leader, Inspire each friendly fighter.",
+    abilities: [
+      { name: 'Everwinter Ambush',
+        flavor: "A beast of primordial snow and ice, Thrafnir is never more deadly than when striking from out of an enchanted blizzard.",
+        text: "When you deploy a friendly Thrafnir, you can place them in an empty hex in enemy territory that is not a starting hex and does not contain a feature token." },
+      { name: 'Ravenous Traps',
+        flavor: "Hrothgorn's sobriquet of \u2018Mantrapper\u2019 is well earned; he and his gnoblar crew have a knack for leaving cruel, iron-toothed snap-traps in truly lethal spots. They just mustn't forget where they put them\u2026",
+        text: "At the start of the first Action step in the first battle round, place a friendly trap model in an empty hex in friendly territory.\nIf a fighter is placed in, is pushed into or enters a hex containing a friendly trap model, inflict 2 damage on that fighter and then remove the trap model from the battlefield." },
+      { name: 'More Traps',
+        flavor: "\u2018Always more where they came from\u2026\u2019",
+        text: "Use this in your Power step if there are no friendly trap models on the battlefield. Place a friendly trap model in an empty hex adjacent to a friendly Gnoblar. Then push that Gnoblar 1 hex." },
+      { name: 'Surprising Competence',
+        flavor: "Hrothgorn's quick-fingered gnoblar toadies are handy for shifting around traps in a pinch. They just mustn't snip their own hands off \u2013 well, that's a bonus.",
+        text: "Use this immediately after a friendly Gnoblar Moves if that fighter is adjacent to a friendly trap model. Remove that trap model from the battlefield and place it in a different empty hex adjacent to that Gnoblar. Then give that Gnoblar a Guard token." },
+    ],
     fighters: {
       H: { label: 'H', name: 'Hrothgorn', isLeader: true,
            move: 4, wounds: 6, glory: 3,

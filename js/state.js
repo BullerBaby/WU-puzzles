@@ -26,12 +26,14 @@ export function resolveWarbands(game) {
   if (!game.warbands) return;
   const fighters = {};
   const abilities = { me: [], opp: [] };
+  const inspire = { me: '', opp: '' };   // warscroll Inspire condition text
   ['me', 'opp'].forEach(function(side) {
     const wbId = game.warbands[side];
     if (!wbId) return;
     const wb = WARBANDS[wbId];
     if (!wb) { console.warn('Unknown warband:', wbId); return; }
     abilities[side] = (wb.abilities || []).slice();
+    inspire[side] = wb.inspire || '';
     for (const code in wb.fighters) {
       // When me and opp share a fighter code (e.g. both warbands have 'Y'),
       // disambiguate by prefixing the later side's key with 'o'. me is
@@ -58,6 +60,7 @@ export function resolveWarbands(game) {
     if (!game.abilities.me)  game.abilities.me  = abilities.me;
     if (!game.abilities.opp) game.abilities.opp = abilities.opp;
   }
+  if (!game.inspire) game.inspire = inspire;
 }
 
 export function defaultState() {

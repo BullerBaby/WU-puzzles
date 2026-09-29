@@ -568,11 +568,77 @@ export function updateFighterCards(state, game) {
  * appears in state.abilitiesUsed[side], the token is removed (visually
  * outlined-only) and the name is struck through.
  */
+/* Build the hover card for one ability from its warscroll text. `text` may
+ * hold several paragraphs separated by a blank line; a line starting with
+ * "• " is rendered as a bullet. Everything is added via textContent, so the
+ * text is never interpreted as HTML. */
+function buildAbilityTooltip(info, isUsed) {
+  const tip = document.createElement('div');
+  tip.className = 'ability-tooltip';
+
+  const head = document.createElement('div');
+  head.className = 'ability-tooltip-name';
+  const nm = document.createElement('span');
+  nm.textContent = info.name;
+  head.appendChild(nm);
+  if (isUsed) {
+    const tag = document.createElement('span');
+    tag.className = 'ability-used-tag';
+    tag.textContent = 'Used';
+    head.appendChild(tag);
+  }
+  tip.appendChild(head);
+
+  if (info.flavor) {
+    const fl = document.createElement('div');
+    fl.className = 'ability-tooltip-flavor';
+    fl.textContent = info.flavor;
+    tip.appendChild(fl);
+  }
+  String(info.text || '').split('\n').forEach(function (line) {
+    if (!line.trim()) return;
+    const p = document.createElement('div');
+    if (line.indexOf('\u2022 ') === 0) {
+      p.className = 'ability-tooltip-line bullet';
+      p.textContent = line;
+    } else {
+      p.className = 'ability-tooltip-line';
+      p.textContent = line;
+    }
+    tip.appendChild(p);
+  });
+  return tip;
+}
+
+/* Keep the tooltip on-screen: if it would overflow the right edge, anchor it
+ * to the right of the chip instead. */
+function positionAbilityTooltip(wrap) {
+  const tip = wrap.querySelector('.ability-tooltip');
+  if (!tip) return;
+  tip.style.left = '';
+  tip.style.right = '';
+  const rect = tip.getBoundingClientRect();
+  if (rect.right > window.innerWidth - 8) {
+    tip.style.left = 'auto';
+    tip.style.right = '0';
+  }
+}
+
+let abilityTapHandlerBound = false;
+
+/* Abilities are listed per side. Each entry is either a plain name string, or
+ * an object { name, flavor?, text? } holding the warscroll text, which is then
+ * shown when you hover (or tap) the ability. A warband's Inspire condition, if
+ * it has one, is shown first as its own chip. */
 export function renderAbilities(game, state) {
   const abilities = game.abilities || {};
+  const inspire = game.inspire || {};
   const used = (state && state.abilitiesUsed) || {};
   ['me', 'opp'].forEach(function(side) {
-    const list = abilities[side] || [];
+    const list = (abilities[side] || []).slice();
+    if (inspire[side]) {
+      list.unshift({ name: 'Inspire', text: inspire[side], kind: 'inspire' });
+    }
     const usedList = used[side] || [];
     const group = document.getElementById('abilities-group-' + side);
     const container = document.getElementById('abilities-' + side);
@@ -584,10 +650,18 @@ export function renderAbilities(game, state) {
     }
     group.hidden = false;
     container.innerHTML = '';
-    list.forEach(function(name) {
+    list.forEach(function(entry) {
+      const info = (typeof entry === 'string') ? { name: entry } : entry;
+      const name = info.name;
+      const isInspire = info.kind === 'inspire';
+      const isUsed = !isInspire && usedList.indexOf(name) >= 0;
+      const hasText = !!(info.text || info.flavor);
+
+      const wrap = document.createElement('span');
+      wrap.className = 'ability-wrap';
+
       const chip = document.createElement('span');
-      chip.className = 'ability-chip';
-      const isUsed = usedList.indexOf(name) >= 0;
+      chip.className = 'ability-chip' + (isInspire ? ' inspire' : '');
       if (isUsed) chip.classList.add('used');
       const tok = document.createElement('span');
       tok.className = 'ability-token';
@@ -596,10 +670,39 @@ export function renderAbilities(game, state) {
       txt.className = 'ability-chip-name';
       txt.textContent = name;
       chip.appendChild(txt);
-      chip.title = (isUsed ? 'Used — ' : '') + name;
-      container.appendChild(chip);
+      wrap.appendChild(chip);
+
+      if (hasText) {
+        chip.tabIndex = 0;                       // reachable by keyboard
+        chip.classList.add('has-text');
+        wrap.appendChild(buildAbilityTooltip(info, isUsed));
+        wrap.addEventListener('mouseenter', function() { positionAbilityTooltip(wrap); });
+        chip.addEventListener('focus', function() { positionAbilityTooltip(wrap); });
+        // Tap to toggle on touch devices.
+        chip.addEventListener('click', function(e) {
+          const wasOpen = wrap.classList.contains('tooltip-open');
+          document.querySelectorAll('.ability-wrap.tooltip-open').forEach(function(w) {
+            w.classList.remove('tooltip-open');
+          });
+          if (!wasOpen) { wrap.classList.add('tooltip-open'); positionAbilityTooltip(wrap); }
+          e.stopPropagation();
+        });
+      } else {
+        chip.title = (isUsed ? 'Used \u2014 ' : '') + name;
+      }
+      container.appendChild(wrap);
     });
   });
+
+  // Tapping anywhere else closes an open ability card (bound once).
+  if (!abilityTapHandlerBound) {
+    abilityTapHandlerBound = true;
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.ability-wrap.tooltip-open').forEach(function(w) {
+        w.classList.remove('tooltip-open');
+      });
+    });
+  }
 }
 
 /* ==================== RENDER ACTIVATIONS ====================

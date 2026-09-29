@@ -904,6 +904,53 @@ button.primary:hover:not(:disabled) { background: var(--accent); opacity: 0.88; 
 }
 .side-panel.me  .ability-chip .ability-token { background: var(--me-stroke); }
 .side-panel.opp .ability-chip .ability-token { background: var(--opp-stroke); }
+/* Ability hover card (warscroll text). The chip has overflow:hidden, so the
+   card lives on a wrapper beside it rather than inside it. */
+.ability-wrap { position: relative; display: inline-block; max-width: 100%; }
+.ability-chip.has-text { cursor: help; }
+.ability-chip.has-text:hover,
+.ability-chip.has-text:focus { border-color: var(--border-strong); outline: none; }
+.ability-chip.inspire { border-color: var(--inspired); }
+.ability-chip.inspire .ability-token { background: var(--inspired) !important; }
+.ability-tooltip {
+  position: absolute;
+  z-index: 60;
+  left: 0;
+  top: calc(100% + 6px);
+  width: max-content;
+  min-width: 220px;
+  max-width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: left;
+  color: var(--text);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s, visibility 0.12s;
+}
+.ability-wrap:hover .ability-tooltip,
+.ability-wrap:focus-within .ability-tooltip,
+.ability-wrap.tooltip-open .ability-tooltip { opacity: 1; visibility: visible; }
+.ability-tooltip-name {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; font-size: 12.5px; margin-bottom: 4px;
+}
+.ability-used-tag {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 1px 6px; border-radius: 8px;
+  background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border);
+}
+.ability-tooltip-flavor { font-style: italic; color: var(--text-2); margin: 0 0 6px; }
+.ability-tooltip-line { margin: 0 0 6px; }
+.ability-tooltip-line:last-child { margin-bottom: 0; }
+.ability-tooltip-line.bullet { padding-left: 14px; text-indent: -10px; }
 .ability-chip.used {
   color: var(--text-3);
   text-decoration: line-through;
